@@ -378,3 +378,49 @@ class LLMProvider:
         """
         response = await self.get_llm_response(context, tools)
         return response.get("tool_calls", [])
+
+    async def get_embeddings(self, texts: List[str]) -> List[List[float]]:
+        """
+        Generate embeddings for a list of texts.
+
+        This method supports both OpenAI and Ollama embedding models.
+        For Ollama, ensure you're using an embedding-capable model
+        (e.g., nomic-embed-text, mxbai-embed-large).
+
+        Args:
+            texts: List of strings to generate embeddings for
+
+        Returns:
+            List of embedding vectors (one per input text)
+
+        Raises:
+            OpenAIError: If the API call fails
+            ValueError: If the response format is unexpected
+        """
+        logger.info(
+            f"Generating embeddings for {len(texts)} texts using {self.provider_name}"
+        )
+
+        try:
+            model_name = self._prepare_model_name(self.model)
+
+            # Call the embeddings endpoint
+            response = await asyncio.to_thread(
+                self.client.embeddings.create, model=model_name, input=texts
+            )
+
+            # Extract embeddings from response
+            embeddings = [item.embedding for item in response.data]
+
+            logger.debug(
+                f"Generated {len(embeddings)} embeddings, dimension: {len(embeddings[0]) if embeddings else 0}"
+            )
+
+            return embeddings
+
+        except OpenAIError as e:
+            logger.error(f"OpenAI API error generating embeddings: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error generating embeddings: {e}", exc_info=True)
+            raise
