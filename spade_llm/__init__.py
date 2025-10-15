@@ -21,6 +21,7 @@ from .routing import RoutingFunction, RoutingResponse
 from .tools import HumanInTheLoopTool, LLMTool
 from .utils import load_env_vars
 from .version import __version__
+from . import rag
 
 __all__ = [
     "LLMBehaviour",
@@ -48,5 +49,7 @@ __all__ = [
     "LLMGuardrail",
     "RegexGuardrail",
     "CustomFunctionGuardrail",
+    # RAG system
+    "rag",
     "__version__",
 ]
