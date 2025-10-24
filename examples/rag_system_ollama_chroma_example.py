@@ -37,7 +37,7 @@ from rich.table import Table
 from rich.text import Text
 
 
-OLLAMA_BASE_URL = "http://localhost:11434"
+OLLAMA_BASE_URL = "http://localhost:11434/v1"
 EMBEDDING_MODEL = "nomic-embed-text"
 
 console = Console()
@@ -87,7 +87,7 @@ async def demonstrate_basic_rag(retriever: VectorStoreRetriever):
     ]
     
     for query in queries:
-        results = await retriever.retrieve(query, k=2)
+        results = await retriever.retrieve(query, k=2, search_type="similarity")
         doc_id = results[0].metadata.get('document_id', 'unknown') if results else 'none'
         console.print(f"   [yellow]Query:[/yellow] {query}")
         console.print(f"   → [green]Best match:[/green] [blue]{doc_id}[/blue]\n")
@@ -100,11 +100,12 @@ async def demonstrate_filtered_search(retriever: VectorStoreRetriever):
     results = await retriever.retrieve(
         "programming and development tools",
         k=3,
+        search_type="similarity",
         filters={"category": "tools"}
     )
     
-    console.print(f"   [yellow]Query:[/yellow] 'programming and development tools'")
-    console.print(f"   [yellow]Filter:[/yellow] category='tools'")
+    console.print("   [yellow]Query:[/yellow] 'programming and development tools'")
+    console.print("   [yellow]Filter:[/yellow] category='tools'")
     console.print(f"   → [green]Found {len(results)} results[/green]")
     for i, doc in enumerate(results, 1):
         doc_id = doc.metadata.get('document_id', 'unknown')
@@ -122,7 +123,7 @@ async def demonstrate_scored_retrieval(retriever: VectorStoreRetriever):
     ]
     
     for query, expected_doc in test_queries:
-        results = await retriever.retrieve_with_scores(query, k=1)
+        results = await retriever.retrieve(query, k=1, search_type="similarity_score")
         if results:
             doc, score = results[0]
             doc_id = doc.metadata.get('document_id', 'unknown')
@@ -221,7 +222,7 @@ async def main():
         await demonstrate_scored_retrieval(retriever)
         await demonstrate_document_management(vector_store)
         
-        console.print(f"\n[bold green]Example completed successfully![/bold green]")
+        console.print("\n[bold green]Example completed successfully![/bold green]")
         
     except Exception as e:
         console.print(f"\n[bold red]Error: {e}[/bold red]")
