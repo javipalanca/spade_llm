@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://sosanzma.github.io/spade_llm/sitemap.xml
+Sitemap: https://spadeagents.eu/docs/spade_llm/sitemap.xml
 
 # Block specific paths that shouldn't be crawled
 Disallow: /assets/javascripts/

@@ -8,18 +8,19 @@
 
 [![PyPI Version](https://img.shields.io/pypi/v/spade-llm)](https://pypi.org/project/spade-llm/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Coverage Status](https://coveralls.io/repos/github/sosanzma/spade_llm/badge.svg?branch=main)](https://coveralls.io/github/sosanzma/spade_llm?branch=main)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/spade-llm?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/spade-llm)
+[![Coverage Status](https://coveralls.io/repos/github/javipalanca/spade_llm/badge.svg?branch=main)](https://coveralls.io/github/javipalanca/spade_llm?branch=main)
 ![Python Version](https://img.shields.io/badge/python-3.10%20to%203.12-orange?logo=python&logoColor=green)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/sosanzma/spade_llm/python-app.yml?label=build)](https://github.com/sosanzma/spade_llm/actions)
-[![Docs Status](https://img.shields.io/github/actions/workflow/status/sosanzma/spade_llm/docs.yml?label=docs)](https://github.com/sosanzma/spade_llm/actions/workflows/docs.yml)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/javipalanca/spade_llm/python-app.yml?label=build)](https://github.com/javipalanca/spade_llm/actions)
+[![Docs Status](https://img.shields.io/github/actions/workflow/status/javipalanca/spade_llm/docs.yml?label=docs)](https://github.com/javipalanca/spade_llm/actions/workflows/docs.yml)
 
-[**Documentation**](https://sosanzma.github.io/spade_llm/) | [**Quick Start**](https://sosanzma.github.io/spade_llm/getting-started/quickstart/) | [**Examples**](https://sosanzma.github.io/spade_llm/reference/examples/) | [**API Reference**](https://sosanzma.github.io/spade_llm/reference/)
+[**Documentation**](https://spadeagents.eu/docs/spade_llm/) | [**Quick Start**](https://spadeagents.eu/docs/spade_llm/getting-started/quickstart/) | [**Examples**](https://spadeagents.eu/docs/spade_llm/reference/examples/) | [**API Reference**](https://spadeagents.eu/docs/spade_llm/reference/)
 
 </div>
 
 # SPADE-LLM: Large Language Model Integration for Multi-Agent Systems
 
-**SPADE-LLM** is a Python framework that extends [SPADE](https://spadeagents.eu) multi-agent platform with Large Language Model capabilities. Build AI agents powered by OpenAI GPT, Ollama, LM Studio, and other LLM providers for multi-agent systems, distributed AI applications, and intelligent chatbots.
+**SPADE-LLM** is a Python framework that extends [SPADE](https://spadeagents.eu) multi-agent platform with Large Language Model capabilities. Build AI agents powered by OpenAI GPT, Ollama, LM Studio, and other LLM providers for multi-agent systems, with communication via XMPP for distributed AI applications.
 
 **Keywords**: SPADE, LLM, large language models, multi-agent systems, AI agents, OpenAI, GPT, Ollama, chatbot framework, distributed AI, Python AI, agent communication, XMPP agents, AI collaboration
 
@@ -318,12 +319,12 @@ graph LR
 
 ## Documentation
 
-- **[Installation](https://sosanzma.github.io/spade_llm/getting-started/installation/)** - Setup and requirements
-- **[Quick Start](https://sosanzma.github.io/spade_llm/getting-started/quickstart/)** - Basic usage examples
-- **[Providers](https://sosanzma.github.io/spade_llm/guides/providers/)** - LLM provider configuration
-- **[Tools](https://sosanzma.github.io/spade_llm/guides/tools-system/)** - Function calling system
-- **[Guardrails](https://sosanzma.github.io/spade_llm/guides/guardrails/)** - Content filtering and safety
-- **[API Reference](https://sosanzma.github.io/spade_llm/reference/)** - Complete API documentation
+- **[Installation](https://spadeagents.eu/docs/spade_llm/getting-started/installation/)** - Setup and requirements
+- **[Quick Start](https://spadeagents.eu/docs/spade_llm/getting-started/quickstart/)** - Basic usage examples
+- **[Providers](https://spadeagents.eu/docs/spade_llm/guides/providers/)** - LLM provider configuration
+- **[Tools](https://spadeagents.eu/docs/spade_llm/guides/tools-system/)** - Function calling system
+- **[Guardrails](https://spadeagents.eu/docs/spade_llm/guides/guardrails/)** - Content filtering and safety
+- **[API Reference](https://spadeagents.eu/docs/spade_llm/reference/)** - Complete API documentation
 
 ## Examples Directory
 
@@ -348,7 +349,7 @@ The `/examples` directory contains complete working examples:
 3. Add tests for new functionality
 4. Submit a pull request
 
-See [Contributing Guide](https://sosanzma.github.io/spade_llm/contributing/) for details.
+See [Contributing Guide](https://spadeagents.eu/docs/spade_llm/contributing/) for details.
 
 ## License
 

@@ -176,6 +176,69 @@ await chat_agent.run_interactive()  # Interactive chat
 await chat_agent.stop()
 ```
 
+## CoordinatorAgent
+
+Specialized agent for orchestrating multiple SPADE subagents through a single LLM-driven coordinator.
+
+### Constructor
+
+```python
+CoordinatorAgent(
+    jid: str,
+    password: str,
+    subagent_ids: List[str],
+    coordination_session: str = "main_coordination",
+    provider: LLMProvider,
+    routing_function: Optional[RoutingFunction] = None,
+    **kwargs
+)
+```
+
+**Parameters (in addition to `LLMAgent`):**
+
+- `subagent_ids` — JIDs of the subagents managed by the coordinator (required).
+- `coordination_session` — Thread identifier shared by all internal exchanges.
+- `_response_timeout` *(attribute)* — Maximum time (seconds) the coordinator waits for a subagent reply (default `30.0`).
+
+### Coordination Tools
+
+Two tools are registered automatically during `setup()`:
+
+| Tool | Purpose |
+|------|---------|
+| `send_to_agent(agent_id: str, command: str) -> str` | Sends a command to a registered subagent and waits for the reply within the coordination timeout. |
+| `list_subagents() -> str` | Returns the current list of subagents and their last known status. |
+
+### Behaviour
+
+- All messages from or to managed subagents are forced into the shared `coordination_session`, giving the LLM full visibility of the organizational state.
+- Custom routing ensures intermediate messages stay inside the organization, while termination markers (`<TASK_COMPLETE>`, `<END>`, `<DONE>`) trigger delivery to the original requester.
+- Subagent status is tracked automatically (`unknown`, `sent_command`, `responded`, `timeout`), allowing the LLM to plan next steps.
+
+### Example
+
+```python
+from spade_llm.agent import CoordinatorAgent
+from spade_llm.providers import LLMProvider
+
+subagents = [
+    "traffic-analyzer@xmpp.local",
+    "notification-service@xmpp.local",
+]
+
+coordinator = CoordinatorAgent(
+    jid="city-coordinator@xmpp.local",
+    password="secret",
+    subagent_ids=subagents,
+    provider=LLMProvider.create_openai(
+        api_key="sk-...",
+        model="gpt-4o-mini",
+    ),
+    coordination_session="city_ops"
+)
+await coordinator.start()
+```
+
 ## Agent Lifecycle
 
 ### Starting Agents

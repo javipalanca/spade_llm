@@ -195,6 +195,37 @@ prompt = context.get_prompt("coding_session")
 # Use with LLM provider
 ```
 
+## CoordinationContextManager
+
+Context manager tailored for coordination scenarios where a coordinator agent supervises several subagents.
+
+```python
+CoordinationContextManager(
+    coordination_session: str,
+    subagent_ids: Set[str],
+    **kwargs
+)
+```
+
+**Additional behaviour:**
+
+- Forces every message involving a registered subagent to use the shared `coordination_session` thread.
+- Preserves standard handling for external participants (messages outside the organization keep their original thread).
+- Provides `add_coordination_command(target_agent: str, command: str)` to record coordinator-issued instructions inside the shared context.
+
+**Usage Example:**
+
+```python
+from spade_llm.agent.coordinator_agent import CoordinationContextManager
+
+coordination_context = CoordinationContextManager(
+    coordination_session="city_ops",
+    subagent_ids={"traffic@xmpp.local", "alerts@xmpp.local"}
+)
+
+# Attach to CoordinatorAgent via `_context_override` or constructor kwargs
+```
+
 ## Context Management Strategies
 
 ### ContextManagement (Abstract Base)

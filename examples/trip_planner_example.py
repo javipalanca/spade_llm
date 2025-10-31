@@ -99,7 +99,7 @@ async def main():
     print("✓ Using auto-registration with built-in server")
 
     # Create LLM provider
-    UPV_OLLAMA_BASE_URL = "http://ollama.gti-ia.upv.es/v1"
+    OLLAMA_BASE_URL = "OLLAMA_BASE_URL"
 
     provider = LLMProvider.create_openai(
         api_key=api_key,
@@ -108,7 +108,7 @@ async def main():
     )
     provider = LLMProvider.create_ollama(
         model='qwen2.5:latest',
-        base_url=UPV_OLLAMA_BASE_URL,
+        base_url=OLLAMA_BASE_URL,
         temperature=0.7,
         timeout=60.0  # Timeout generoso para modelos grandes
     )
