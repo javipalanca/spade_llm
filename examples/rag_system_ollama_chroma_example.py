@@ -123,7 +123,7 @@ async def demonstrate_scored_retrieval(retriever: VectorStoreRetriever):
     ]
     
     for query, expected_doc in test_queries:
-        results = await retriever.retrieve(query, k=1, search_type="similarity_score")
+        results = await retriever.vector_store.similarity_search_with_score(query, k=1)
         if results:
             doc, score = results[0]
             doc_id = doc.metadata.get('document_id', 'unknown')
@@ -154,7 +154,7 @@ async def demonstrate_document_management(vector_store: Chroma):
             f"   [{status_style}]{status}[/{status_style}]: {len(ids_to_delete)} chunk(s) from 'ollama_info'"
         )
     else:
-        console.print(f"   [red]Not found: 'ollama_info'[/red]")
+        console.print("   [red]Not found: 'ollama_info'[/red]")
     
     count_after = await vector_store.get_document_count()
     console.print(f"   [blue]Documents after deletion:[/blue] {count_after}")
