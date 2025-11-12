@@ -83,6 +83,32 @@ class VectorStore(ABC):
         pass
 
     @abstractmethod
+    async def max_marginal_relevance_search(
+        self,
+        query: str,
+        k: int = 4,
+        fetch_k: int = 20,
+        lambda_mult: float = 0.5,
+        **kwargs
+    ) -> List[Document]:
+        """Return documents selected using maximal marginal relevance.
+        
+        Maximal marginal relevance optimizes for similarity to query AND diversity
+        among selected documents.
+        
+        Args:
+            query: Search query text
+            k: Number of documents to return. Defaults to 4
+            fetch_k: Number of documents to fetch for MMR algorithm
+            lambda_mult: Balance between diversity (0) and similarity (1). Defaults to 0.5
+            **kwargs: Additional keyword arguments
+            
+        Returns:
+            List of documents selected by maximal marginal relevance
+        """
+        pass
+
+    @abstractmethod
     async def delete(self, ids: List[str]) -> bool:
         """Delete documents by IDs.
         
