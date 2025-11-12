@@ -7,5 +7,4 @@ try:
     __all__ = ["VectorStore", "Chroma"]
 except ImportError:
     Chroma = None
-    Chroma = None
     __all__ = ["VectorStore"]

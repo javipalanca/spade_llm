@@ -3,7 +3,9 @@
 import json
 import logging
 import time
-from typing import Any, Callable, Dict, List, Optional, Set, Union
+from collections import deque
+from typing import Any, Callable, Dict, List, Optional
+from typing_extensions import TypedDict
 
 from spade.behaviour import CyclicBehaviour
 from spade.message import Message
@@ -12,6 +14,16 @@ from ..rag.retrievers import BaseRetriever
 from ..utils.retrieval_utils import create_retrieval_response_body
 
 logger = logging.getLogger("spade_llm.behaviour")
+
+
+class RetrievalStats(TypedDict):
+    """Type definition for retrieval statistics."""
+    total_queries: int
+    successful_retrievals: int
+    failed_retrievals: int
+    total_documents_retrieved: int
+    average_retrieval_time: float
+    last_query_time: Optional[float]
 
 
 class RetrievalBehaviour(CyclicBehaviour):
@@ -34,7 +46,6 @@ class RetrievalBehaviour(CyclicBehaviour):
         retriever: BaseRetriever,
         reply_to: Optional[str] = None,
         default_k: int = 4,
-        include_scores: bool = False,
         on_retrieval_complete: Optional[Callable[[str, List[Any]], None]] = None,
     ):
         """
@@ -44,7 +55,6 @@ class RetrievalBehaviour(CyclicBehaviour):
             retriever: The retriever to use for document search
             reply_to: JID to send responses to. If None, replies to the original sender
             default_k: Default number of documents to retrieve
-            include_scores: Whether to include similarity scores in responses
             on_retrieval_complete: Callback function when retrieval completes
                                   (receives query and results)
         """
@@ -52,14 +62,13 @@ class RetrievalBehaviour(CyclicBehaviour):
         self.retriever = retriever
         self.reply_to = reply_to
         self.default_k = default_k
-        self.include_scores = include_scores
         self.on_retrieval_complete = on_retrieval_complete
 
-        # Track processed messages to avoid duplicates
-        self._processed_messages: Set[Union[str, int]] = set()
+        # Track processed messages to avoid duplicates (with max size to prevent memory leak)
+        self._processed_messages: deque = deque(maxlen=1000)
 
         # Statistics tracking
-        self._stats = {
+        self._stats: RetrievalStats = {
             "total_queries": 0,
             "successful_retrievals": 0,
             "failed_retrievals": 0,
@@ -86,7 +95,7 @@ class RetrievalBehaviour(CyclicBehaviour):
             return
 
         # Mark message as processed
-        self._processed_messages.add(msg.id)
+        self._processed_messages.append(msg.id)
         logger.debug(f"RetrievalBehaviour received message: {msg}")
 
         # Extract query and parameters from message
@@ -95,12 +104,13 @@ class RetrievalBehaviour(CyclicBehaviour):
             query = query_data.get("query")
             k = query_data.get("k", self.default_k)
             filters = query_data.get("filters")
-            include_scores = query_data.get("include_scores", self.include_scores)
             search_type = query_data.get("search_type", "similarity")
 
-            if not query:
+            # Validate query is not empty or None
+            if not query or (isinstance(query, str) and not query.strip()):
+                logger.error("Query is empty or None")
                 await self._send_error_response(
-                    msg, "No query found in message. Expected 'query' field."
+                    msg, "Query cannot be empty or None. Expected non-empty 'query' field."
                 )
                 return
 
@@ -111,7 +121,7 @@ class RetrievalBehaviour(CyclicBehaviour):
             # Perform retrieval
             start_time = time.time()
             results = await self._perform_retrieval(
-                query, k, filters, include_scores, search_type
+                query, k, filters, search_type
             )
             retrieval_time = time.time() - start_time
 
@@ -124,13 +134,13 @@ class RetrievalBehaviour(CyclicBehaviour):
 
             # Send response
             await self._send_retrieval_response(
-                msg, query, results, retrieval_time, include_scores
+                msg, query, results, retrieval_time
             )
 
         except Exception as e:
             logger.error(f"Error processing retrieval request: {e}", exc_info=True)
             self._stats["failed_retrievals"] += 1
-            await self._send_error_response(msg, str(e))
+            await self._send_error_response(msg, "Error processing retrieval request.")
 
     def _parse_query_message(self, msg: Message) -> Dict[str, Any]:
         """
@@ -162,7 +172,6 @@ class RetrievalBehaviour(CyclicBehaviour):
         query: str,
         k: int,
         filters: Optional[Dict[str, Any]],
-        include_scores: bool,
         search_type: str = "similarity",
     ) -> List[Any]:
         """
@@ -172,19 +181,14 @@ class RetrievalBehaviour(CyclicBehaviour):
             query: The search query
             k: Number of documents to retrieve
             filters: Optional metadata filters
-            include_scores: Whether to include similarity scores
-            search_type: Type of search ("similarity", "similarity_score", "mmr")
+            search_type: Type of search ("similarity", "mmr")
 
         Returns:
-            List of documents or (document, score) tuples
+            List of documents
         """
         kwargs = {}
         if filters:
             kwargs["filters"] = filters
-
-        # Determine search type based on include_scores if not explicitly set
-        if search_type == "similarity" and include_scores:
-            search_type = "similarity_score"
 
         # Use the unified retrieve method with search_type
         results = await self.retriever.retrieve(
@@ -202,7 +206,6 @@ class RetrievalBehaviour(CyclicBehaviour):
         query: str,
         results: List[Any],
         retrieval_time: float,
-        include_scores: bool,
     ):
         """
         Send retrieval results back to the requester.
@@ -214,16 +217,15 @@ class RetrievalBehaviour(CyclicBehaviour):
         Args:
             original_msg: The original query message
             query: The query string (for metadata)
-            results: Retrieved documents or (document, score) tuples
+            results: Retrieved documents
             retrieval_time: Time taken for retrieval (for metadata)
-            include_scores: Whether results include scores
         """
         # Determine recipient
         recipient = self.reply_to or str(original_msg.sender)
 
         # Create reply message (documents)
         reply = Message(to=recipient)
-        reply.body = create_retrieval_response_body(results, include_scores)
+        reply.body = create_retrieval_response_body(results)
         reply.thread = original_msg.thread
         
         # Metadata for observability
@@ -304,7 +306,7 @@ class RetrievalBehaviour(CyclicBehaviour):
         self.default_k = k
         logger.info(f"Default k set to {k}")
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> RetrievalStats:
         """
         Get retrieval statistics.
 

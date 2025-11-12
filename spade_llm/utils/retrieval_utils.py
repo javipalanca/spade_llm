@@ -2,54 +2,32 @@
 
 import json
 from typing import Any, Dict, List
-
 from ..rag.core.document import Document
 
-
-def format_documents_for_response(
-    results: List[Any], include_scores: bool = False
-) -> List[Dict[str, Any]]:
+def format_documents_for_response(results: List[Document]) -> List[Dict[str, Any]]:
     """
     Format retrieved documents for a response message.
 
     Args:
-        results: Retrieved documents or (document, score) tuples
-        include_scores: Whether results include scores
+        results: List of retrieved documents
 
     Returns:
         List of formatted document dictionaries with content and metadata
     """
     formatted = []
+    
+    for doc in results:
+        if not isinstance(doc, Document):
+            raise TypeError(f"Expected Document, got {type(doc).__name__}")
 
-    for item in results:
-        if include_scores and isinstance(item, tuple):
-            doc, score = item
-            formatted.append(
-                {
-                    "content": doc.content,
-                    "metadata": doc.metadata,
-                    "score": round(score, 4),
-                }
-            )
-        else:
-            doc = item if isinstance(item, Document) else item[0]
-            formatted.append({"content": doc.content, "metadata": doc.metadata})
-
+        entry = {"content": doc.content, "metadata": doc.metadata}
+        
+        formatted.append(entry)
+    
     return formatted
 
 
-def create_retrieval_response_body(
-    results: List[Any], include_scores: bool = False
-) -> str:
-    """
-    Create a JSON response body containing only the retrieved documents.
-
-    Args:
-        results: Retrieved documents or (document, score) tuples
-        include_scores: Whether results include scores
-
-    Returns:
-        JSON string with documents array
-    """
-    documents = format_documents_for_response(results, include_scores)
+def create_retrieval_response_body(results: List[Document]) -> str:
+    """Create a JSON response body containing formatted documents."""
+    documents = format_documents_for_response(results)
     return json.dumps({"documents": documents}, indent=2)

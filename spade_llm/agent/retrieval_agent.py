@@ -32,7 +32,6 @@ class RetrievalAgent(Agent):
         retriever: BaseRetriever,
         reply_to: Optional[str] = None,
         default_k: int = 4,
-        include_scores: bool = False,
         on_retrieval_complete: Optional[Callable[[str, List[Any]], None]] = None,
         verify_security: bool = False
     ):
@@ -45,7 +44,6 @@ class RetrievalAgent(Agent):
             retriever: The retriever to use for document search
             reply_to: JID to send responses to. If None, replies to the original sender
             default_k: Default number of documents to retrieve
-            include_scores: Whether to include similarity scores in responses
             on_retrieval_complete: Callback function when retrieval completes 
                                   (receives query and results)
             verify_security: Whether to verify security certificates
@@ -55,14 +53,12 @@ class RetrievalAgent(Agent):
         self.retriever = retriever
         self.reply_to = reply_to
         self.default_k = default_k
-        self.include_scores = include_scores
         self.on_retrieval_complete = on_retrieval_complete
 
         self.retrieval_behaviour = RetrievalBehaviour(
             retriever=self.retriever,
             reply_to=self.reply_to,
             default_k=self.default_k,
-            include_scores=self.include_scores,
             on_retrieval_complete=self.on_retrieval_complete,
         )
 
