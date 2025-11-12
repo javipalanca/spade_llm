@@ -83,20 +83,23 @@ class TestVectorStoreRetriever:
             await retriever.retrieve("test query", search_type="similarity")
 
     @pytest.mark.asyncio
-    async def test_retrieve_with_scores(self, retriever, mock_vector_store):
-        """Test retrieval with similarity scores using search_type='similarity_score'."""
-        expected_results = [
+    async def test_retrieve_similarity_with_threshold(self, retriever, mock_vector_store):
+        """Test retrieve_similarity with score threshold filtering."""
+        docs_with_scores = [
             (Document(content="Result 1", metadata={"id": 1}), 0.95),
-            (Document(content="Result 2", metadata={"id": 2}), 0.85),
+            (Document(content="Result 2", metadata={"id": 2}), 0.75),
+            (Document(content="Result 3", metadata={"id": 3}), 0.65),
         ]
-        mock_vector_store.similarity_search_with_score.return_value = expected_results
+        mock_vector_store.similarity_search_with_score.return_value = docs_with_scores
 
-        results = await retriever.retrieve("test query", k=2, search_type="similarity_score")
+        # Only documents with score >= 0.8 should be returned
+        results = await retriever.retrieve_similarity("test query", k=3, sim_threshold=0.8)
 
-        assert results == expected_results
+        assert len(results) == 1
+        assert results[0].content == "Result 1"
         mock_vector_store.similarity_search_with_score.assert_called_once_with(
             query="test query",
-            k=2
+            k=3
         )
 
     @pytest.mark.asyncio
@@ -151,8 +154,8 @@ class TestVectorStoreRetriever:
         )
 
     @pytest.mark.asyncio
-    async def test_retrieve_mmr_fallback_when_not_supported(self, mock_vector_store):
-        """Test MMR falls back to similarity search when not supported."""
+    async def test_retrieve_mmr_not_supported_raises_error(self, mock_vector_store):
+        """Test MMR raises NotImplementedError when not supported by vector store."""
         # Create a mock that doesn't have the max_marginal_relevance_search attribute
         class LimitedVectorStore:
             async def similarity_search(self, query, k, **kwargs):
@@ -161,11 +164,8 @@ class TestVectorStoreRetriever:
         limited_store = LimitedVectorStore()
         retriever = VectorStoreRetriever(vector_store=limited_store)  # type: ignore
         
-        results = await retriever.retrieve("test query", k=2, search_type="mmr")
-
-        assert len(results) == 1
-        assert isinstance(results[0], Document)
-        assert results[0].content == "Result 1"  # type: ignore
+        with pytest.raises(NotImplementedError, match="MMR search is not supported"):
+            await retriever.retrieve("test query", k=2, search_type="mmr")
 
     @pytest.mark.asyncio
     async def test_retrieve_invalid_search_type(self, retriever, mock_vector_store):
@@ -174,23 +174,62 @@ class TestVectorStoreRetriever:
             await retriever.retrieve("test query", search_type="invalid_type")
 
     @pytest.mark.asyncio
-    async def test_retrieve_with_scores_and_filters(self, retriever, mock_vector_store):
-        """Test similarity_score search with metadata filters."""
+    async def test_retrieve_similarity_with_filters(self, retriever, mock_vector_store):
+        """Test retrieve_similarity with metadata filters."""
         expected_results = [
-            (Document(content="Result 1", metadata={"category": "science"}), 0.95),
+            Document(content="Result 1", metadata={"category": "science"}),
         ]
-        mock_vector_store.similarity_search_with_score.return_value = expected_results
+        mock_vector_store.similarity_search.return_value = expected_results
 
-        results = await retriever.retrieve(
+        results = await retriever.retrieve_similarity(
             "test query",
             k=1,
-            search_type="similarity_score",
             filters={"category": "science"}
         )
 
         assert results == expected_results
-        mock_vector_store.similarity_search_with_score.assert_called_once_with(
+        mock_vector_store.similarity_search.assert_called_once_with(
             query="test query",
             k=1,
             filters={"category": "science"}
         )
+
+    @pytest.mark.asyncio
+    async def test_retrieve_mmr_with_custom_params(self, retriever, mock_vector_store):
+        """Test retrieve_mmr with custom fetch_k and lambda_mult parameters."""
+        expected_docs = [
+            Document(content="Result 1", metadata={"id": 1}),
+        ]
+        mock_vector_store.max_marginal_relevance_search = AsyncMock(return_value=expected_docs)
+
+        results = await retriever.retrieve_mmr(
+            "test query",
+            k=1,
+            fetch_k=15,
+            lambda_mult=0.8,
+            filters={"type": "article"}
+        )
+
+        assert results == expected_docs
+        mock_vector_store.max_marginal_relevance_search.assert_called_once_with(
+            query="test query",
+            k=1,
+            fetch_k=15,
+            lambda_mult=0.8,
+            filters={"type": "article"}
+        )
+
+    @pytest.mark.asyncio
+    async def test_retrieve_similarity_without_filters(self, retriever, mock_vector_store):
+        """Test retrieve_similarity without filters uses kwargs correctly."""
+        expected_results = [Document(content="Result 1", metadata={})]
+        mock_vector_store.similarity_search.return_value = expected_results
+
+        results = await retriever.retrieve_similarity("test query", k=2)
+
+        assert results == expected_results
+        mock_vector_store.similarity_search.assert_called_once_with(
+            query="test query",
+            k=2
+        )
+
