@@ -566,6 +566,10 @@ p .md-button.md-button--primary {
 [data-md-color-scheme="default"] .md-search__label {
   color: var(--spade-purple-700) !important;
 }
+[data-md-color-scheme="default"] .md-search__form, 
+[data-md-toggle=search]:checked~.md-header .md-search__form {
+  background-color: var(--md-default-bg-color) !important;
+}
 
 /* Top navigation tabs - Light Mode */
 [data-md-color-scheme="default"] .md-tabs {
