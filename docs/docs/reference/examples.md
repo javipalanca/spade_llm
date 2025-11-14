@@ -162,7 +162,7 @@ if __name__ == "__main__":
 4. **Run example**: Execute the Python script
 5. **Test consultation**: Ask questions that require human input
 
-See the working example in `examples/human_in_the_loop_example.py` for complete setup instructions.
+Refer to the complete code example above or the [Human-in-the-Loop guide](../guides/human-in-the-loop.md) for detailed setup instructions.
 
 ## Basic Examples
 

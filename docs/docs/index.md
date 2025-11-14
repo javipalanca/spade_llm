@@ -86,7 +86,7 @@ keywords: SPADE-LLM, multi-agent systems, large language models, OpenAI, GPT, Ol
   <div class="feature-card">
     <div class="feature-icon">🧠</div>
     <h3>Multi-Provider Support</h3>
-    <p>OpenAI GPT, Ollama, LM Studio, vLLM, Anthropic Claude and more. Switch providers seamlessly.</p>
+    <p>OpenAI Ollama and LM Studio. Switch providers seamlessly.</p>
   </div>
   
   <div class="feature-card">
