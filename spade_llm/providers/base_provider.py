@@ -10,7 +10,7 @@ from ..tools import LLMTool
 logger = logging.getLogger("spade_llm.providers")
 
 
-class LLMProvider(ABC):
+class BaseLLMProvider(ABC):
     """
     Abstract base class for LLM providers.
 
