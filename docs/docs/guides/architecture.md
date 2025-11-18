@@ -102,6 +102,61 @@ Each stage ensures conversations can handle complex, multi-turn interactions whi
 
 
 
+## **🧩 RAG System Architecture**
+
+SPADE-LLM extends the multi-agent framework with **Retrieval-Augmented Generation (RAG)** capabilities, allowing agents to query external knowledge bases:
+
+```mermaid
+graph LR
+    A[LLM Agent] --> B{Needs Info?}
+    B -->|Yes| C[RetrievalTool]
+    C --> D[RetrievalAgent]
+    D --> E[Vector Store]
+    E --> D
+    D --> C
+    C --> A
+    B -->|No| F[Direct Response]
+    A --> F
+    
+    style A fill:#FF9800
+    style D fill:#2196F3
+    style E fill:#4CAF50
+```
+
+### **How It Works**
+
+RAG in SPADE-LLM operates through **agent collaboration**:
+
+1. **RetrievalAgent** manages a knowledge base (documents stored as vectors in ChromaDB)
+2. **LLM agents** query it via **RetrievalTool** using standard XMPP messaging
+3. Retrieved documents are automatically added to the LLM's context
+4. Responses are grounded in actual source material, not just model memory
+
+### **Key Advantages**
+
+- **Multi-agent RAG**: Deploy multiple retrieval agents for different domains (HR docs, technical docs, etc.)
+- **Distributed knowledge**: Each department can run its own retrieval service
+- **Universal compatibility**: Works with any SPADE agent, not just LLM-based ones
+- **Autonomous decision-making**: LLMs decide when to retrieve information vs. using existing knowledge
+
+### **Example**
+
+```python
+tech_docs_agent = RetrievalAgent("tech_docs@localhost", retriever=tech_retriever)
+hr_docs_agent = RetrievalAgent("hr_docs@localhost", retriever=hr_retriever)
+
+assistant = LLMAgent(
+    "assistant@localhost",
+    provider=llm_provider,
+    tools=[
+        RetrievalTool("tech_docs", "Technical documentation", "tech_docs@localhost"),
+        RetrievalTool("hr_docs", "HR policies", "hr_docs@localhost")
+    ]
+)
+```
+
+For detailed implementation guidance, see the **[RAG System Guide](rag-system.md)**.
+
 ## **🔧 Integration Points**
 
 The architecture provides multiple **integration points** for customization:
@@ -111,6 +166,8 @@ The architecture provides multiple **integration points** for customization:
 - **Routing Logic**: Implement custom message routing
 - **Context Management**: Customize conversation handling
 - **MCP Integration**: Connect to external servers
+- **RAG Components**: Custom document loaders, splitters, and retrievers
+- **Embedding Models**: Use different embedding providers
 
 This **flexible design** ensures SPADE_LLM can adapt to various use cases while maintaining its core multi-agent capabilities.
 
@@ -118,5 +175,6 @@ This **flexible design** ensures SPADE_LLM can adapt to various use cases while 
 
 - **[Providers](providers.md)** - Configure LLM providers
 - **[Tools System](tools-system.md)** - Add tool capabilities
+- **[RAG System](rag-system.md)** - Implement retrieval-augmented generation
 - **[Routing](routing.md)** - Implement message routing
 - **[MCP](mcp.md)** - Connect to external services

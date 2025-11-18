@@ -507,6 +507,6 @@ Now that you understand custom tools, explore:
 
 1. **[Advanced Agent Tutorial](advanced-agent.md)** - Multi-agent workflows with tools
 2. **[MCP Integration Guide](../guides/mcp.md)** - External service integration
-3. **[API Reference](../../reference/api/tools)** - Complete tools documentation
+3. **[API Reference](../reference/api/tools.md)** - Complete tools documentation
 
 Custom tools are powerful building blocks that extend your agents' capabilities beyond text generation, enabling them to interact with the world and perform real tasks.

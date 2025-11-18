@@ -491,6 +491,6 @@ Now that you understand guardrails, explore:
 
 1. **[Custom Tools Tutorial](tools-tutorial.md)** - Add function calling with safety
 2. **[Advanced Agent Tutorial](advanced-agent.md)** - Complex workflows with protection
-3. **[API Reference](../../reference/api/guardrails)** - Complete guardrails documentation
+3. **[API Reference](../reference/api/guardrails.md)** - Complete guardrails documentation
 
 The guardrails system provides essential protection for your AI agents, ensuring they operate safely and responsibly in production environments.

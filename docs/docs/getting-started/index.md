@@ -15,9 +15,9 @@ Learn how to install and use SPADE_LLM to create LLM-powered agents.
 
 ## Learning Path
 
-1. **[Installation](installation/)** - Install SPADE_LLM and dependencies
-2. **[Quick Start](quickstart/)** - Create your first agent
-3. **[First Agent](first-agent/)** - Complete tutorial
+1. **[Installation](installation.md)** - Install SPADE_LLM and dependencies
+2. **[Quick Start](quickstart.md)** - Create your first agent
+3. **[First Agent](first-agent.md)** - Complete tutorial
 
 ## Need Help?
 

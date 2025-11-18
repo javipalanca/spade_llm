@@ -136,9 +136,9 @@ With your SPADE server running and LLM provider configured, pick a tutorial abov
 ## 🔗 Additional Resources
 
 - **[Installation Guide](installation.md)** - Detailed setup instructions
-- **[API Reference](../reference/)** - Complete documentation
+- **[API Reference](../reference/index.md)** - Complete documentation
 - **[Examples](../reference/examples.md)** - Working code examples
-- **[Guides](../guides/)** - In-depth feature explanations
+- **[Guides](../guides/index.md)** - In-depth feature explanations
 
 ---
 

@@ -216,7 +216,7 @@ if __name__ == "__main__":
 
 
 ### Reference
-- **[API Reference](reference/)** - Complete API documentation
+- **[API Reference](reference/index.md)** - Complete API documentation
 - **[Examples](reference/examples.md)** - Working code examples
 
 ## Examples
