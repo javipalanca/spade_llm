@@ -111,6 +111,7 @@ nav:
     - Architecture: guides/architecture.md
     - Providers: guides/providers.md
     - Tools System: guides/tools-system.md
+    - RAG System: guides/rag-system.md
     - Context Management: guides/context-management.md
     - Memory System: guides/memory.md
     - Memory Architecture: guides/memory-architecture.md
