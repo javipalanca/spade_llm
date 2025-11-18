@@ -215,12 +215,26 @@ except Exception as e:
     await behaviour._end_conversation(conv_id, ConversationState.ERROR)
 ```
 
-## Performance Considerations
+## RetrievalBehaviour
 
-- **Tool Iteration Limit**: Prevents infinite tool loops
-- **Conversation Cleanup**: Removes completed conversations
-- **Message Deduplication**: Prevents duplicate processing
-- **Context Management**: Efficient memory usage
+Behaviour for handling document retrieval queries in [RetrievalAgent](agent.md#retrievalagent). This specialized behaviour extends `CyclicBehaviour` to continuously process incoming retrieval requests.
+
+### Constructor
+
+```python
+RetrievalBehaviour(
+    retriever: BaseRetriever,
+    reply_to: Optional[str] = None,
+    default_k: int = 4,
+    on_retrieval_complete: Optional[Callable[[str, List[Any]], None]] = None
+)
+```
+
+**Parameters:**
+- `retriever` - Retriever instance for document retrieval
+- `reply_to` - JID to send responses to. If None, replies to the original sender
+- `default_k` - Default number of documents to retrieve (default: 4)
+- `on_retrieval_complete` - Callback function when retrieval completes (receives query and results)
 
 ## Best Practices
 
@@ -229,3 +243,4 @@ except Exception as e:
 - Set reasonable interaction limits
 - Handle conversation end events
 - Monitor conversation states
+- Use appropriate k values based on use case

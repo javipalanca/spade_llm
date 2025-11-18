@@ -126,6 +126,7 @@ nav:
     - Behaviour: reference/api/behaviour.md
     - Providers: reference/api/providers.md
     - Tools: reference/api/tools.md
+    - RAG: reference/api/rag.md
     - Context: reference/api/context.md
     - Memory: reference/api/memory.md
     - Human Interface: reference/api/human-interface.md
