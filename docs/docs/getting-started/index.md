@@ -15,12 +15,12 @@ Learn how to install and use SPADE_LLM to create LLM-powered agents.
 
 ## Learning Path
 
-1. **[Installation](installation/)** - Install SPADE_LLM and dependencies
-2. **[Quick Start](quickstart/)** - Create your first agent
-3. **[First Agent](first-agent/)** - Complete tutorial
+1. **[Installation](installation.md)** - Install SPADE_LLM and dependencies
+2. **[Quick Start](quickstart.md)** - Create your first agent
+3. **[First Agent](first-agent.md)** - Complete tutorial
 
 ## Need Help?
 
-- Check the [API Reference](../reference/) for detailed documentation
-- Browse [Examples](../reference/examples/) for working code
+- Check the [API Reference](../reference/index.md) for detailed documentation
+- Browse [Examples](../reference/examples.md) for working code
 - Open an issue on [GitHub](https://github.com/sosanzma/spade_llm/issues)

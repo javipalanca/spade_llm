@@ -130,6 +130,12 @@ keywords: SPADE-LLM, multi-agent systems, large language models, OpenAI, GPT, Ol
     <h3>Coordinator Agents</h3>
     <p>LLM-driven coordinators orchestrate SPADE subagents with shared context, sequential planning, and inter-organization routing.</p>
   </div>
+  
+  <div class="feature-card">
+    <div class="feature-icon">📚</div>
+    <h3>RAG System</h3>
+    <p>Ground agent responses in your own documents. Load, chunk, and retrieve relevant context for more accurate answers.</p>
+  </div>
 </div>
 
 ## Architecture Overview
@@ -148,10 +154,11 @@ graph LR
     E --> I[Human-in-the-Loop]
     E --> J[MCP]
     E --> P[CustomTool/LangchainTool]
+    E --> Q["RetrievalTool (for RAG)"]
     J --> K[STDIO]
     J --> L[HTTP Streaming]
-    M --> N[Agent-based]
-    M --> O[Agent-thread]
+    M --> N[Agent Memory]
+    M --> O[Thread Memory]
 ```
 
 </div>
@@ -212,11 +219,12 @@ if __name__ == "__main__":
 - **[Conversations](guides/conversations.md)** - Conversation lifecycle and management
 - **[Guardrails](guides/guardrails.md)** - Content filtering and safety controls
 - **[Message Routing](guides/routing.md)** - Conditional message routing
+- **[RAG System](guides/rag-system.md)** - Retrieval-Augmented Generation for enhanced knowledge retrieval
 
 
 
 ### Reference
-- **[API Reference](reference/)** - Complete API documentation
+- **[API Reference](reference/index.md)** - Complete API documentation
 - **[Examples](reference/examples.md)** - Working code examples
 
 ## Examples
@@ -227,6 +235,8 @@ Explore the [examples directory](https://github.com/sosanzma/spade_llm/tree/main
 - **`ollama_with_tools_example.py`** - Local models with tool calling
 - **`guardrails_example.py`** - Content filtering and safety controls
 - **`langchain_tools_example.py`** - LangChain tool integration
+- **`rag_system_ollama_chroma_example.py`** - Complete RAG system demonstration
+- **`rag_vs_no_rag_demo.py`** - Comparison of responses with and without RAG
 - **`valencia_multiagent_trip_planner.py`** - Multi-agent workflow
 
 

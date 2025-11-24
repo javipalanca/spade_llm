@@ -343,3 +343,21 @@ async def timed_call(provider, context):
         print(f"Provider failed after {duration:.2f}s: {e}")
         raise
 ```
+
+## Embeddings
+
+### get_embeddings()
+
+Generate embeddings for RAG systems.
+
+```python
+async def get_embeddings(texts: List[str]) -> List[List[float]]
+```
+
+**Parameters:**
+
+- `texts` - List of text strings to embed
+
+**Returns:**
+
+- List of embedding vectors (each vector is a list of floats)

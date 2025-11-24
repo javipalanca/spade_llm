@@ -79,6 +79,36 @@ ollama serve
 2. Download a model through the GUI
 3. Start the local server
 
+## RAG Dependencies (Optional)
+
+For RAG (Retrieval-Augmented Generation) support, install with ChromaDB:
+
+```bash
+# Install with ChromaDB support
+pip install spade_llm[chroma]
+```
+
+### Prerequisites for RAG
+
+**Embedding Model** - Choose one:
+
+**Ollama** (recommended for local/private use):
+```bash
+# Pull embedding model
+ollama pull nomic-embed-text
+
+# Verify
+curl http://localhost:11434/api/tags
+```
+
+**OpenAI**:
+```bash
+# Use with your OpenAI API key
+export OPENAI_API_KEY="your-api-key"
+
+# Models: text-embedding-3-small, text-embedding-3-large
+```
+
 ## Development Install
 
 ```bash

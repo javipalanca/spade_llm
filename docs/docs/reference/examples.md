@@ -6,13 +6,24 @@ Complete working examples for SPADE_LLM applications.
 
 The [examples](https://github.com/sosanzma/spade_llm/tree/main/examples) directory contains complete working examples:
 
-- `multi_provider_chat_example.py` - Chat with different LLM providers
-- `ollama_with_tools_example.py` - Local models with tool calling
+**Tool Examples**:
+- `ollama_with_tools_example.py` - Local models with tools
 - `langchain_tools_example.py` - LangChain tool integration
-- `valencia_multiagent_trip_planner.py` - Multi-agent workflow
+
+**Multi-Agent Examples**:
+- `multi_provider_chat_example.py` - Chat with different providers
+- `simple_coordinator_example.py` - Coordinator agent pattern
+- `valencia_smartCity_mcp_example.py` - Smart city multi-agent system
+
+**RAG Examples**:
+- `rag_system_ollama_chroma_example.py` - Complete RAG demonstration
+- `rag_vs_no_rag_demo.py` - Results comparison with and without RAG
+
+**Specialized Examples**:
 - `spanish_to_english_translator.py` - Translation agent
-- `human_in_the_loop_example.py` - LLM agent with human expert consultation
-- `simple_coordinator_example.py` - CoordinatorAgent directing multiple SPADE subagents
+- `trip_planner_example.py` - Trip planning workflow
+- `github_issues_monitor_complex_example.py` - GitHub monitoring
+- `guardrails_example.py` - Content filtering
 
 ## Human-in-the-Loop Example
 
@@ -450,11 +461,124 @@ agent = LLMAgent(
 )
 ```
 
+## RAG System Examples
+
+### Basic RAG Pipeline
+
+Complete example demonstrating RAG components with Ollama and ChromaDB:
+
+```python
+"""
+RAG System Example with Ollama and ChromaDB
+
+Demonstrates document loading, splitting, embedding, and retrieval.
+
+Prerequisites:
+1. pip install spade_llm[chroma]
+2. ollama pull nomic-embed-text
+3. ollama serve
+"""
+
+import asyncio
+from spade_llm.rag import (
+    Document,
+    Chroma,
+    RecursiveCharacterTextSplitter,
+    VectorStoreRetriever,
+)
+from spade_llm.providers import LLMProvider
+from rich.console import Console
+
+console = Console()
+
+async def main():
+    # 1. Create sample documents
+    documents = [
+        Document(
+            content="Ollama enables running LLMs locally with privacy and control.",
+            metadata={"topic": "ollama", "id": "1"}
+        ),
+        Document(
+            content="Text embeddings are vector representations of semantic meaning.",
+            metadata={"topic": "embeddings", "id": "2"}
+        ),
+        Document(
+            content="SPADE is a multi-agent system platform based on XMPP.",
+            metadata={"topic": "spade", "id": "3"}
+        )
+    ]
+    
+    # 2. Split into chunks
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=500,
+        chunk_overlap=100
+    )
+    chunks = splitter.split_documents(documents)
+    console.print(f"[blue]Created {len(chunks)} chunks[/blue]")
+    
+    # 3. Setup embedding provider
+    provider = LLMProvider.create_ollama(
+        model="nomic-embed-text",
+        base_url="http://localhost:11434/v1"
+    )
+    
+    # 4. Initialize vector store
+    vector_store = Chroma(
+        collection_name="rag_example",
+        embedding_fn=provider.get_embeddings
+    )
+    await vector_store.initialize()
+    
+    # 5. Index documents
+    await vector_store.add_documents(chunks)
+    count = await vector_store.get_document_count()
+    console.print(f"[green]Indexed {count} documents[/green]")
+    
+    # 6. Create retriever and search
+    retriever = VectorStoreRetriever(vector_store=vector_store)
+    
+    queries = [
+        "How do embeddings work?",
+        "What is SPADE?",
+        "Running models locally"
+    ]
+    
+    for query in queries:
+        console.print(f"\n[yellow]Query:[/yellow] {query}")
+        results = await retriever.retrieve(query, k=2)
+        
+        for i, doc in enumerate(results, 1):
+            console.print(f"  {i}. {doc.content[:100]}...")
+    
+    # Cleanup
+    await vector_store.cleanup()
+    console.print("\n[green]Done![/green]")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+### RAG vs No RAG Comparison
+
+See `examples/rag_vs_no_rag_demo.py` for a complete comparison demonstrating:
+
+- Loading classic literature from Project Gutenberg
+- Indexing documents with ChromaDB
+- Comparing LLM responses with and without RAG
+- Measuring accuracy improvements
+
+**Key features demonstrated**:
+- Document loading and preprocessing
+- Vector store operations
+- Semantic retrieval
+- Results comparison
+
 ## Running Examples
 
 1. **Install dependencies**: `pip install spade_llm`
-2. **Set environment variables**: `export OPENAI_API_KEY="your-key"`
-3. **Run example**: `python example.py`
+2. **For RAG examples**: `pip install spade_llm[chroma]`, `ollama pull nomic-embed-text` 
+3. **Set environment variables**: `export OPENAI_API_KEY="your-key"`
+4. **Run example**: `python example.py`
 
 ## Common Patterns
 
@@ -471,6 +595,3 @@ load_env_vars()
 api_key = os.getenv("OPENAI_API_KEY")
 model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 ```
-
-
-For more examples, check the [examples](https://github.com/sosanzma/spade_llm/tree/main/examples) directory in the SPADE_LLM repository.

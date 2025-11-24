@@ -4,15 +4,15 @@ Complete API documentation for SPADE_LLM components.
 
 ## Core Components
 
-- **[Agent](api/agent/)** - LLMAgent and ChatAgent classes
-- **[Behaviour](api/behaviour/)** - LLMBehaviour implementation  
-- **[Providers](api/providers/)** - LLM provider interfaces
-- **[Tools](api/tools/)** - Tool system and LLMTool class
-- **[Memory](api/memory/)** - Memory system API for agent learning and persistence
-- **[Human Interface](api/human-interface/)** - Human-in-the-loop API and integration
-- **[Guardrails](api/guardrails/)** - Content filtering and safety controls
-- **[Context](api/context/)** - Context and conversation management
-- **[Routing](api/routing/)** - Message routing system
+- **[Agent](api/agent.md)** - LLMAgent and ChatAgent classes
+- **[Behaviour](api/behaviour.md)** - LLMBehaviour implementation  
+- **[Providers](api/providers.md)** - LLM provider interfaces
+- **[Tools](api/tools.md)** - Tool system and LLMTool class
+- **[Memory](api/memory.md)** - Memory system API for agent learning and persistence
+- **[Human Interface](api/human-interface.md)** - Human-in-the-loop API and integration
+- **[Guardrails](api/guardrails.md)** - Content filtering and safety controls
+- **[Context](api/context.md)** - Context and conversation management
+- **[Routing](api/routing.md)** - Message routing system
 
 ## Quick Reference
 
@@ -54,7 +54,7 @@ agent = LLMAgent(..., routing_function=router)
 
 ## Examples
 
-See **[Examples](examples/)** for complete working code examples.
+See **[Examples](examples.md)** for complete working code examples.
 
 ## Type Definitions
 
