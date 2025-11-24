@@ -230,6 +230,149 @@ Agent: "According to our HR expert, our policy allows up to 3 days
     Human-in-the-loop requires XMPP server with WebSocket support and web interface.
     See the working example in `examples/human_in_the_loop_example.py` for complete setup instructions.
 
+## **📚 RAG Integration - RetrievalTool**
+
+Enable LLM agents to **query knowledge bases** using RetrievalTool.
+
+### What is RetrievalTool?
+
+RetrievalTool allows LLM agents to search document collections via a dedicated RetrievalAgent, enabling **Retrieval-Augmented Generation (RAG)**.
+
+### Setup
+
+```python
+from spade_llm import LLMAgent, RetrievalAgent
+from spade_llm.tools import RetrievalTool
+from spade_llm.providers import LLMProvider
+from spade_llm.rag import Chroma, VectorStoreRetriever
+
+# 1. Create vector store and retriever
+embedding_provider = LLMProvider.create_ollama(model="nomic-embed-text")
+
+vector_store = Chroma(
+    collection_name="documentation",
+    embedding_fn=embedding_provider.get_embeddings
+)
+await vector_store.initialize()
+# ... add documents to vector store ...
+
+retriever = VectorStoreRetriever(vector_store=vector_store)
+
+# 2. Create retrieval agent
+retrieval_agent = RetrievalAgent(
+    jid="retrieval@localhost",
+    password="retrieval_pass",
+    retriever=retriever
+)
+await retrieval_agent.start()
+
+# 3. Create retrieval tool
+retrieval_tool = RetrievalTool(
+    retrieval_agent_jid="retrieval@localhost",
+    default_k=5,  # Retrieve top 5 documents by default
+    name="knowledge_base",
+    description="Search documentation for information about SPADE-LLM, agents, tools, and configuration"
+)
+
+# 4. Add to LLM agent
+llm_provider = LLMProvider.create_openai(api_key="your-key")
+
+llm_agent = LLMAgent(
+    jid="assistant@localhost",
+    password="assistant_pass",
+    llm_provider=llm_provider,
+    tools=[retrieval_tool]
+)
+await llm_agent.start()
+```
+
+### How It Works
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant L as LLM Agent
+    participant R as RetrievalTool
+    participant RA as RetrievalAgent
+    participant VS as Vector Store
+
+    U->>L: "How do I create a tool?"
+    L->>L: Decides to use knowledge_base
+    L->>R: Execute tool with query
+    R->>RA: XMPP message
+    RA->>VS: Semantic search
+    VS->>RA: Relevant documents
+    RA->>R: Results
+    R->>L: Documents as context
+    L->>U: Answer with context
+```
+
+### Multi-Agent RAG Pattern
+
+Multiple LLM agents can share a single RetrievalAgent:
+
+```python
+# One retrieval agent
+retrieval_agent = RetrievalAgent(
+    jid="retrieval@localhost",
+    password="retrieval_pass",
+    retriever=retriever
+)
+
+# Multiple LLM agents with the same tool
+assistant_1 = LLMAgent(
+    jid="assistant1@localhost",
+    password="pass1",
+    llm_provider=provider1,
+    tools=[RetrievalTool(
+        retrieval_agent_jid="retrieval@localhost",
+        name="kb",
+        description="Search docs"
+    )]
+)
+
+assistant_2 = LLMAgent(
+    jid="assistant2@localhost",
+    password="pass2",
+    llm_provider=provider2,
+    tools=[RetrievalTool(
+        retrieval_agent_jid="retrieval@localhost",
+        name="kb",
+        description="Search docs"
+    )]
+)
+```
+
+### Configuration Tips
+
+**Name and Description**: Be specific to help LLM understand when to use the tool:
+
+```python
+# Good
+RetrievalTool(
+    retrieval_agent_jid="retrieval@localhost",
+    name="technical_docs",
+    description="Search technical documentation for code examples, API references, and implementation guides"
+)
+
+# Less helpful
+RetrievalTool(
+    retrieval_agent_jid="retrieval@localhost",
+    name="search",
+    description="Search"
+)
+```
+
+### Benefits
+
+- **Up-to-date information**: Access current data without retraining
+- **Domain expertise**: Query specialized knowledge bases
+- **Verifiable**: Trace answers to source documents
+- **Reduced hallucinations**: Ground responses in actual documents
+- **Scalable**: Separate retrieval concerns from LLM logic
+
+See **[RAG System Guide](rag-system.md)** for complete RAG documentation.
+
 ## **LangChain Integration**
 
 _Seamlessly use existing LangChain tools_ with SPADE_LLM:
@@ -262,10 +405,12 @@ agent = LLMAgent(
 - **_Input Validation_**: Always **validate and sanitize** inputs for security
 - **_Meaningful Errors_**: Return **clear error messages** for troubleshooting
 - **_Async Functions_**: Use **async/await** for non-blocking execution
+- **_RAG for Knowledge_**: Use RetrievalTool for document-based information
 
 
 ## Next Steps
 
+- **[RAG System](rag-system.md)** - Complete RAG implementation guide
 - **[MCP Integration](mcp.md)** - Connect to external MCP servers
 - **[Architecture](architecture.md)** - Understanding system design
 - **[Providers](providers.md)** - LLM provider configuration

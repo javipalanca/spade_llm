@@ -2,7 +2,7 @@ name: Python application
 
 on:
   push:
-    branches: [ "main"]  # Temporalmente añadido dev para testing
+    branches: [ "main", "dev" ]
     tags:
       - "*"
     paths-ignore:

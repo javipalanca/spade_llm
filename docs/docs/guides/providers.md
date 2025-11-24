@@ -200,6 +200,75 @@ This pattern ensures **service continuity** even when individual providers exper
 **Limited tool support**: Ollama (specific models only)
 **Experimental**: LM Studio and vLLM (model dependent)
 
+## Embeddings
+
+LLMProvider supports **generating embeddings** for RAG (Retrieval-Augmented Generation) systems.
+
+### What are Embeddings?
+
+**Embeddings** are dense vector representations of text that capture semantic meaning in high-dimensional space. Similar texts have similar embeddings, enabling:
+
+- **Semantic search**: Find documents by meaning, not just keywords
+- **Clustering**: Group similar content together
+- **Recommendations**: Suggest related documents
+- **RAG systems**: Retrieve relevant context for LLM queries
+
+### OpenAI Embeddings
+
+```python
+from spade_llm.providers import LLMProvider
+
+provider = LLMProvider.create_openai(
+    api_key="your-api-key",
+    model="text-embedding-3-small"
+)
+
+# Generate embeddings
+embeddings = await provider.get_embeddings([
+    "First document text",
+    "Second document text"
+])
+
+# Each embedding is a list of floats
+print(f"Dimensions: {len(embeddings[0])}")  # e.g., 1536
+```
+
+### Ollama Embeddings
+
+```python
+provider = LLMProvider.create_ollama(
+    model="nomic-embed-text",
+    base_url="http://localhost:11434/v1"
+)
+
+embeddings = await provider.get_embeddings([
+    "Document content here",
+    "Another document"
+])
+```
+
+### Usage in RAG Systems
+
+```python
+from spade_llm.rag import Chroma, VectorStoreRetriever
+from spade_llm.providers import LLMProvider
+
+# Setup embedding provider
+embedding_provider = LLMProvider.create_ollama(
+    model="nomic-embed-text"
+)
+
+# Use in vector store
+vector_store = Chroma(
+    collection_name="knowledge_base",
+    embedding_fn=embedding_provider.get_embeddings
+)
+
+await vector_store.initialize()
+```
+
+**Important**: Use the **same embedding model** for both indexing documents and querying.
+
 ## Best Practices
 
 - **Test multiple providers** during development to find the best fit
@@ -211,5 +280,6 @@ This pattern ensures **service continuity** even when individual providers exper
 ## Next Steps
 
 - **[Tools System](tools-system.md)** - Add tool capabilities to your providers
+- **[RAG System](rag-system.md)** - Use embeddings for retrieval-augmented generation
 - **[Architecture](architecture.md)** - Understanding the provider layer
 - **[Routing](routing.md)** - Route responses based on provider capabilities

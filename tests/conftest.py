@@ -321,6 +321,46 @@ def mock_coordinator_provider():
     )
 
 
+# ============================================================================
+# RAG-specific fixtures
+# ============================================================================
+
+@pytest.fixture
+def sample_document():
+    """Create a sample Document for testing."""
+    from spade_llm.rag.core.document import Document
+    return Document(
+        content="Sample document content for testing",
+        metadata={"source": "test", "type": "sample"}
+    )
+
+
+@pytest.fixture
+def sample_documents():
+    """Create a list of sample Documents for testing."""
+    from spade_llm.rag.core.document import Document
+    return [
+        Document(content=f"Document {i} content", metadata={"index": i, "source": "test"})
+        for i in range(5)
+    ]
+
+
+@pytest.fixture
+async def mock_embedding_fn():
+    """Create a mock embedding function for RAG tests."""
+    async def embedding_fn(texts):
+        """Simple mock embeddings based on text length and hash."""
+        import hashlib
+        embeddings = []
+        for text in texts:
+            # Create deterministic but varied embeddings
+            hash_val = int(hashlib.md5(text.encode()).hexdigest(), 16)
+            base = [float((hash_val >> i) % 100) / 100 for i in range(384)]
+            embeddings.append(base)
+        return embeddings
+    return embedding_fn
+
+
 # Cleanup fixture to ensure tests don't interfere with each other
 @pytest.fixture(autouse=True)
 def cleanup_after_test():
