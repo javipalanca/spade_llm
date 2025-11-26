@@ -92,7 +92,7 @@ async def web_search(query: str) -> str:
             data = await response.json()
             return str(data)
 
-search_tool = LLLTool(
+search_tool = LLMTool(
     name="web_search",
     description="Search the web for current information",
     parameters={
@@ -228,7 +228,7 @@ Agent: "According to our HR expert, our policy allows up to 3 days
 
 !!! tip "Setup Required"
     Human-in-the-loop requires XMPP server with WebSocket support and web interface.
-    See the working example in `examples/human_in_the_loop_example.py` for complete setup instructions.
+    See the [Human-in-the-Loop guide](../guides/human-in-the-loop.md) and [Examples documentation](../reference/examples.md) for complete setup instructions.
 
 ## **📚 RAG Integration - RetrievalTool**
 
