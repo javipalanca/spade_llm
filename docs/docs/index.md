@@ -16,7 +16,7 @@ keywords: SPADE-LLM, multi-agent systems, large language models, OpenAI, GPT, Ol
     <a href="getting-started/installation/" class="hero-button">
       📦 Installation
     </a>
-    <a href="https://github.com/sosanzma/spade_llm" class="hero-button" target="_blank">
+    <a href="https://github.com/javipalanca/spade_llm" class="hero-button" target="_blank">
       📂 GitHub
     </a>
   </div>
@@ -28,16 +28,16 @@ keywords: SPADE-LLM, multi-agent systems, large language models, OpenAI, GPT, Ol
   "@type": "SoftwareApplication",
   "name": "SPADE-LLM",
   "description": "Python framework for Large Language Model integration in multi-agent systems",
-  "url": "https://sosanzma.github.io/spade_llm/",
+  "url": "https://spadeagents.eu/docs/spade_llm/",
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "Cross-platform",
   "programmingLanguage": "Python",
   "license": "https://opensource.org/licenses/MIT",
   "downloadUrl": "https://pypi.org/project/spade-llm/",
-  "codeRepository": "https://github.com/sosanzma/spade_llm",
+  "codeRepository": "https://github.com/javipalanca/spade_llm",
   "author": {
     "@type": "Person",
-    "name": "Manel Soler Sanz"
+    "name": "Javier Palanca Cámara"
   },
   "keywords": ["SPADE", "LLM", "multi-agent", "OpenAI", "GPT", "Ollama", "AI", "chatbot", "Python"],
   "softwareVersion": "latest",
@@ -221,7 +221,7 @@ if __name__ == "__main__":
 
 ## Examples
 
-Explore the [examples directory](https://github.com/sosanzma/spade_llm/tree/main/examples) for complete working examples:
+Explore the [examples directory](https://github.com/javipalanca/spade_llm/tree/main/examples) for complete working examples:
 
 - **`multi_provider_chat_example.py`** - Chat with different LLM providers
 - **`ollama_with_tools_example.py`** - Local models with tool calling
