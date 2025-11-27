@@ -5,8 +5,16 @@ on:
     branches: [ "main"]  # Temporalmente añadido dev para testing
     tags:
       - "*"
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.github/workflows/docs.yml'
   pull_request:
-    branches: [ "main"]  # Temporalmente añadido dev para testing
+    branches: [ "main", "dev" ]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.github/workflows/docs.yml'
 
 permissions:
   contents: read
