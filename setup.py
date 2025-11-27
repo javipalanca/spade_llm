@@ -20,9 +20,9 @@ setup(
     description="Extension for SPADE to integrate Large Language Models in agents",
     long_description=README,
     long_description_content_type="text/markdown",
-    author="Manel Soler Sanz",
-    author_email="masosan9@upvnet.upv.es",
-    url="https://github.com/sosanzma/spade_llm",
+    author="Javier Palanca Cámara",
+    author_email="jpalanca@dsic.upv.es",
+    url="https://github.com/javipalanca/spade_llm",
     packages=find_packages(exclude=["tests*", "examples*"]),
     include_package_data=True,
     install_requires=[
@@ -75,9 +75,9 @@ setup(
     python_requires=">=3.10",
     keywords="spade llm ai agents multi-agent-systems openai ollama",
     project_urls={
-        "Bug Reports": "https://github.com/sosanzma/spade_llm/issues",
-        "Source": "https://github.com/sosanzma/spade_llm",
-        "Documentation": "https://sosanzma.github.io/spade_llm",
+        "Bug Reports": "https://github.com/javipalanca/spade_llm/issues",
+        "Source": "https://github.com/javipalanca/spade_llm",
+        "Documentation": "https://spadeagents.eu/docs/spade_llm",
     },
     entry_points={
         "console_scripts": [

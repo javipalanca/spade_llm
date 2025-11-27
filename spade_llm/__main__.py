@@ -29,7 +29,7 @@ def main():
     if args.command == "info":
         print(f"SPADE_LLM version {__version__}")
         print("Extension for SPADE to integrate Large Language Models in agents")
-        print("Visit https://github.com/sosanzma/spade_llm for more information")
+        print("Visit https://github.com/javipalanca/spade_llm for more information")
     elif args.command == "examples":
         print("Available examples:")
         print("- spanish_to_english_translator.py")
