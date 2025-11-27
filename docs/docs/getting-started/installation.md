@@ -112,7 +112,7 @@ export OPENAI_API_KEY="your-api-key"
 ## Development Install
 
 ```bash
-git clone https://github.com/sosanzma/spade_llm.git
+git clone https://github.com/javipalanca/spade_llm.git
 cd spade_llm
 pip install -e ".[dev]"
 ```

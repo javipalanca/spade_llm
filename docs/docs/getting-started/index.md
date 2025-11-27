@@ -23,4 +23,4 @@ Learn how to install and use SPADE_LLM to create LLM-powered agents.
 
 - Check the [API Reference](../reference/index.md) for detailed documentation
 - Browse [Examples](../reference/examples.md) for working code
-- Open an issue on [GitHub](https://github.com/sosanzma/spade_llm/issues)
+- Open an issue on [GitHub](https://github.com/javipalanca/spade_llm/issues)
