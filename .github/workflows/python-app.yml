@@ -5,8 +5,16 @@ on:
     branches: [ "main", "dev" ]
     tags:
       - "*"
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.github/workflows/docs.yml'
   pull_request:
     branches: [ "main", "dev" ]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.github/workflows/docs.yml'
 
 permissions:
   contents: read
