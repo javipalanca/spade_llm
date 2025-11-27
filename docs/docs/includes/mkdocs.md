@@ -17,9 +17,9 @@
 [openai]: https://platform.openai.com/
 [ollama]: https://ollama.ai/
 [langchain]: https://python.langchain.com/
-[github-repo]: https://github.com/sosanzma/spade_llm
-[github-issues]: https://github.com/sosanzma/spade_llm/issues
-[github-discussions]: https://github.com/sosanzma/spade_llm/discussions
+[github-repo]: https://github.com/javipalanca/spade_llm
+[github-issues]: https://github.com/javipalanca/spade_llm/issues
+[github-discussions]: https://github.com/javipalanca/spade_llm/discussions
 
 <!-- Common admonitions -->
 <!-- Usage: --8<-- "includes/warning-production.md" -->

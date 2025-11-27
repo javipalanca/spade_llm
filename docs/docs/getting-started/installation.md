@@ -82,7 +82,7 @@ ollama serve
 ## Development Install
 
 ```bash
-git clone https://github.com/sosanzma/spade_llm.git
+git clone https://github.com/javipalanca/spade_llm.git
 cd spade_llm
 pip install -e ".[dev]"
 ```
