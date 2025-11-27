@@ -4,7 +4,7 @@ Complete working examples for SPADE_LLM applications.
 
 ## Repository Examples
 
-The [examples](https://github.com/sosanzma/spade_llm/tree/main/examples) directory contains complete working examples:
+The [examples](https://github.com/javipalanca/spade_llm/tree/main/examples) directory contains complete working examples:
 
 - `multi_provider_chat_example.py` - Chat with different LLM providers
 - `ollama_with_tools_example.py` - Local models with tool calling

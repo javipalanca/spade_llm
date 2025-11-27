@@ -8,7 +8,7 @@ Detailed guide for SPADE_LLM development and testing.
 
 ```bash
 # Clone repository
-git clone https://github.com/sosanzma/spade_llm.git
+git clone https://github.com/javipalanca/spade_llm.git
 cd spade_llm
 
 # Create virtual environment
