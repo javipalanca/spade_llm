@@ -10,6 +10,7 @@ from openai import OpenAI, OpenAIError
 
 from ..context import ContextManager
 from ..tools import LLMTool
+from .base_provider import BaseLLMProvider
 
 logger = logging.getLogger("spade_llm.providers")
 
@@ -22,7 +23,7 @@ class ModelFormat(Enum):
     CUSTOM = "custom"  # Custom format (e.g., "custom/model-name")
 
 
-class LLMProvider:
+class LLMProvider(BaseLLMProvider):
     """
     Unified provider for different LLM services with a consistent interface.
 
@@ -57,6 +58,7 @@ class LLMProvider:
             model_format: Format convention for model names.
             provider_name: Name of the provider for logging purposes.
         """
+        super().__init__()
         self.api_key = api_key
         self.model = model
         self.temperature = temperature
