@@ -191,6 +191,8 @@ class TestCreateMCPSession:
         
         @asynccontextmanager
         async def mock_stdio_client_error(params):
+            if False:
+                yield  # Makes this a generator, but never reached
             raise ConnectionError("Failed to connect")
         
         with patch('spade_llm.mcp.session.stdio_client', mock_stdio_client_error):
@@ -213,6 +215,8 @@ class TestCreateMCPSession:
         
         @asynccontextmanager
         async def mock_client_session_error(read_stream, write_stream, read_timeout_seconds):
+            if False:
+                yield  # Makes this a generator, but never reached
             raise RuntimeError("Session creation failed")
         
         with patch('spade_llm.mcp.session.stdio_client', mock_stdio_client):
@@ -354,6 +358,8 @@ class TestMCPSession:
         with patch('spade_llm.mcp.session.create_mcp_session') as mock_create_session:
             @asynccontextmanager
             async def mock_session_context_error(config):
+                if False:
+                    yield  # Makes this a generator, but never reached
                 raise ConnectionError("Connection failed")
             
             mock_create_session.return_value = mock_session_context_error(config)
@@ -473,6 +479,8 @@ class TestMCPSession:
         with patch('spade_llm.mcp.session.create_mcp_session') as mock_create_session:
             @asynccontextmanager
             async def mock_session_context_error(config):
+                if False:
+                    yield  # Makes this a generator, but never reached
                 raise Exception("Tool call failed")
             
             mock_create_session.return_value = mock_session_context_error(config)
