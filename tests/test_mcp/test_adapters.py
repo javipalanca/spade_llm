@@ -411,7 +411,7 @@ class TestStdioMCPToolAdapter:
             adapter = StdioMCPToolAdapter(config, mock_tool)
             
             assert isinstance(adapter, MCPToolAdapter)
-            assert adapter.name == "stdio_stdio_server_stdio_tool"
+            assert adapter.name == "stdio_server_stdio_tool"
             assert adapter.server_config is config
             assert adapter.tool is mock_tool
     
@@ -459,7 +459,7 @@ class TestStdioMCPToolAdapter:
         with patch('spade_llm.mcp.adapters.base.MCPSession'):
             adapter = StdioMCPToolAdapter(config, mock_tool)
             
-            assert adapter.name == "stdio_complex_server_complex_tool"
+            assert adapter.name == "complex_server_complex_tool"
             assert adapter.description == "Complex STDIO tool"
             
             # Should preserve complex schema
@@ -532,7 +532,7 @@ class TestSseMCPToolAdapter:
             adapter = SseMCPToolAdapter(config, mock_tool)
             
             assert isinstance(adapter, MCPToolAdapter)
-            assert adapter.name == "sse_sse_server_sse_tool"
+            assert adapter.name == "sse_server_sse_tool"
             assert adapter.server_config is config
             assert adapter.tool is mock_tool
     
@@ -580,7 +580,7 @@ class TestSseMCPToolAdapter:
         with patch('spade_llm.mcp.adapters.base.MCPSession'):
             adapter = SseMCPToolAdapter(config, mock_tool)
             
-            assert adapter.name == "sse_complex_sse_server_complex_sse_tool"
+            assert adapter.name == "complex_sse_server_complex_sse_tool"
             assert adapter.description == "Complex SSE tool"
             
             # Should preserve complex schema
@@ -662,7 +662,7 @@ class TestMCPAdaptersEdgeCases:
         with patch('spade_llm.mcp.adapters.base.MCPSession'):
             adapter = StdioMCPToolAdapter(config, mock_tool)
             
-            expected_name = f"stdio_{long_server_name}_{long_tool_name}"
+            expected_name = f"{long_server_name}_{long_tool_name}"
             assert adapter.name == expected_name
             assert len(adapter.name) == len(expected_name)
     
@@ -684,7 +684,7 @@ class TestMCPAdaptersEdgeCases:
         with patch('spade_llm.mcp.adapters.base.MCPSession'):
             adapter = SseMCPToolAdapter(config, mock_tool)
             
-            expected_name = f"sse_{special_server_name}_{special_tool_name}"
+            expected_name = f"{special_server_name}_{special_tool_name}"
             assert adapter.name == expected_name
     
     def test_adapter_with_empty_description(self):

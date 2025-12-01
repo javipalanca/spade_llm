@@ -30,4 +30,4 @@ class StdioMCPToolAdapter(MCPToolAdapter):
         super().__init__(server_config=server_config, tool=tool)
 
         # Override the name with a more descriptive one
-        self.name = f"stdio_{self.server_config.name}_{self.tool.name}"
+        self.name = f"{self.server_config.name}_{self.tool.name}"
