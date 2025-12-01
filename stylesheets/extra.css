@@ -1,0 +1,67 @@
+/* Custom styles for SPADE_LLM documentation */
+
+/* Code highlighting improvements */
+.highlight .hll { background-color: #ffffcc }
+.highlight .c { color: #408080; font-style: italic }
+
+/* Admonition styling with purple theme */
+.md-typeset .admonition.info,
+.md-typeset details.info {
+  border-color: #9b59b6;
+}
+
+.md-typeset .admonition.info > .admonition-title,
+.md-typeset details.info > .admonition-title {
+  background-color: rgba(142, 68, 173, 0.1);
+  border-color: #9b59b6;
+}
+
+/* Custom styling for API documentation */
+.md-typeset .doc-heading {
+  margin-top: 2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--md-default-fg-color--lighter);
+}
+
+/* Improve code block appearance */
+.md-typeset pre > code {
+  box-shadow: none;
+}
+
+/* Custom class for architecture diagrams */
+.architecture-diagram {
+  text-align: center;
+  margin: 2rem 0;
+}
+
+/* Styling for feature grid */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.feature-card {
+  padding: 1rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.25rem;
+  background: var(--md-code-bg-color);
+}
+
+.feature-card h3 {
+  margin-top: 0;
+  color: #8e44ad;
+}
+
+/* Dark mode styling for feature cards */
+[data-md-color-scheme="slate"] .feature-card h3 {
+  color: #bb8fce;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+}
