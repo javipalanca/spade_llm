@@ -34,6 +34,7 @@ setup(
         "mcp>=1.8.0",
         "aiosqlite>=0.17.0",
         "aiofiles>=23.0.0",
+        "litellm<=1.78.5",
     ],
     extras_require={
         "langchain": [
