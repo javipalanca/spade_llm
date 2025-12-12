@@ -11,6 +11,7 @@ from ..context import (
     ContextManager,
     create_assistant_tool_call_message,
 )
+from ..utils import generate_conversation_id
 from ..guardrails import (
     GuardrailResult,
     InputGuardrail,
@@ -140,8 +141,7 @@ class LLMBehaviour(CyclicBehaviour):
         self._processed_messages.add(msg.id)
         logger.debug(f"LLMBehaviour received message: {msg}")
 
-        # Determine conversation ID (use thread if available, otherwise create from message properties)
-        conversation_id = msg.thread or f"{msg.sender}_{msg.to}"
+        conversation_id = generate_conversation_id(msg)
 
         # Initialize or retrieve conversation state
         if conversation_id not in self._active_conversations:
