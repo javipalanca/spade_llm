@@ -55,6 +55,9 @@ setup(
             "tox>=4.0.0",
             "pre-commit>=3.0.0",
             "chromadb>=0.4.0",
+            "opentelemetry-api",
+            "opentelemetry-sdk",
+            "opentelemetry-exporter-otlp"
         ],
         "docs": [
             "sphinx>=6.0.0",

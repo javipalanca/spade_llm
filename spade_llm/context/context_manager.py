@@ -49,6 +49,8 @@ class ContextManager:
 
         # Store messages by conversation ID
         self._conversations: Dict[str, List[ContextMessage]] = {}
+        # Store conversation metadata (sender_id, receiver_id) by conversation ID
+        self._conversation_metadata: Dict[str, Dict[str, Optional[str]]] = {}
         # Set to track which conversation IDs are currently active
         self._active_conversations: Set[str] = set()
         # Current conversation ID (used when not explicitly specified)
@@ -93,6 +95,11 @@ class ContextManager:
         # Initialize conversation if needed
         if conversation_id not in self._conversations:
             self._conversations[conversation_id] = []
+            # Initialize metadata for this conversation
+            self._conversation_metadata[conversation_id] = {
+                "sender_id": str(message.sender),
+                "receiver_id": str(message.to)
+            }
 
         # Convert SPADE message to a format suitable for LLM context using our helper function
         user_message = spade_message_to_user_message(message)
@@ -341,3 +348,23 @@ class ContextManager:
             new_context_management: New context management strategy to use
         """
         self.context_management = new_context_management
+
+    def get_tracing_metadata(self, conversation_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Get metadata for tracing/logging purposes.
+
+        Args:
+            conversation_id: Optional ID of the conversation. If not provided,
+                          uses the current conversation.
+
+        Returns:
+            Dictionary with conversation metadata (conversation_id, sender_id, receiver_id)
+        """
+        conv_id = conversation_id or self._current_conversation_id
+        
+        metadata = {"conversation_id": conv_id}
+        
+        if conv_id and conv_id in self._conversation_metadata:
+            metadata.update(self._conversation_metadata[conv_id])
+        
+        return metadata

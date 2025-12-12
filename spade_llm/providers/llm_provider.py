@@ -55,7 +55,8 @@ class LLMProvider(BaseLLMProvider):
             logger.info(f"Using custom base URL: {self.base_url}")
 
     def _build_completion_kwargs(
-        self, 
+        self,
+        context: ContextManager,
         messages: Sequence[Any], 
         tools: Optional[List[Dict[str, Any]]] = None
     ) -> Dict[str, Any]:
@@ -81,7 +82,12 @@ class LLMProvider(BaseLLMProvider):
         if tools:
             kwargs["tools"] = tools
             kwargs["tool_choice"] = "auto"
-
+        
+        metadata = context.get_tracing_metadata()
+        kwargs["metadata"] = {
+            "session_id": metadata.get("conversation_id"),
+            "tags": [x for x in [metadata.get("sender_id"), metadata.get("receiver_id")] if x]
+        }
         return kwargs
 
     async def get_llm_response(
@@ -114,7 +120,7 @@ class LLMProvider(BaseLLMProvider):
             )
 
         try:
-            completion_kwargs = self._build_completion_kwargs(prompt, formatted_tools)
+            completion_kwargs = self._build_completion_kwargs(context, prompt, formatted_tools)
 
             # Call LiteLLM async completion
             response = await litellm.acompletion(**completion_kwargs)
