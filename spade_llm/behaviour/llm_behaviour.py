@@ -18,7 +18,7 @@ from ..guardrails import (
     apply_input_guardrails,
     apply_output_guardrails,
 )
-from ..providers.base_provider import LLMProvider
+from ..providers.base_provider import BaseLLMProvider
 from ..routing import RoutingFunction, RoutingResponse
 from ..tools import LLMTool
 
@@ -53,7 +53,7 @@ class LLMBehaviour(CyclicBehaviour):
 
     def __init__(
         self,
-        llm_provider: LLMProvider,
+        llm_provider: BaseLLMProvider,
         reply_to: Optional[str] = None,
         routing_function: Optional[RoutingFunction] = None,
         context_manager: Optional[ContextManager] = None,
