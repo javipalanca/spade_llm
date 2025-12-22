@@ -12,7 +12,7 @@ from ..context.management import ContextManagement
 from ..guardrails import GuardrailResult, InputGuardrail, OutputGuardrail
 from ..mcp import MCPServerConfig, get_all_mcp_tools
 from ..memory import AgentInteractionMemory, AgentMemoryTool
-from ..providers.base_provider import LLMProvider
+from ..providers.base_provider import BaseLLMProvider
 from ..routing import RoutingFunction
 from ..tools import LLMTool
 
@@ -36,7 +36,7 @@ class LLMAgent(Agent):
         self,
         jid: str,
         password: str,
-        provider: LLMProvider,
+        provider: BaseLLMProvider,
         reply_to: Optional[str] = None,
         routing_function: Optional[RoutingFunction] = None,
         system_prompt: Optional[str] = None,

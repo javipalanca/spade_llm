@@ -12,7 +12,6 @@ Architecture:
 """
 
 from typing import List, Optional, Dict, Set, Union, Any
-import time
 import asyncio
 import logging
 from spade.message import Message
@@ -21,6 +20,7 @@ from spade_llm.context.context_manager import ContextManager
 from spade_llm.routing.types import RoutingFunction, RoutingResponse
 from spade_llm.tools.llm_tool import LLMTool
 from spade_llm.context._types import _sanitize_jid_for_name
+from spade_llm.utils import generate_conversation_id, generate_unique_id
 
 logger = logging.getLogger("spade_llm.agent.coordinator")
 
@@ -61,7 +61,7 @@ class CoordinationContextManager(ContextManager):
             return self.coordination_session
 
         # External conversation
-        return msg.thread or f"{msg.sender}_{msg.to}"
+        return generate_conversation_id(msg)
 
     def add_message(self, message: Message, conversation_id: Optional[str] = None) -> None:
         """Override to use coordination conversation ID logic"""
@@ -105,7 +105,7 @@ class CoordinatorAgent(LLMAgent):
         jid: str,
         password: str,
         subagent_ids: List[str],
-        coordination_session: str = "main_coordination",
+        coordination_session: Optional[str] = None,
         routing_function: Optional[RoutingFunction] = None,
         **kwargs
     ):
@@ -114,7 +114,8 @@ class CoordinatorAgent(LLMAgent):
             raise ValueError("subagent_ids cannot be empty")
 
         self.subagent_ids = set(subagent_ids)
-        self.coordination_session = coordination_session
+        # Generate unique session ID if not provided
+        self.coordination_session = coordination_session or generate_unique_id("coordination")
 
         if routing_function is None:
             routing_function = self._create_coordination_routing()
@@ -123,7 +124,7 @@ class CoordinatorAgent(LLMAgent):
             kwargs['system_prompt'] = self._default_coordination_prompt()
 
         coordination_context = CoordinationContextManager(
-            coordination_session=coordination_session,
+            coordination_session=self.coordination_session,
             subagent_ids=self.subagent_ids,
             system_prompt=kwargs.get('system_prompt'),
             context_management=kwargs.get('context_management', None)

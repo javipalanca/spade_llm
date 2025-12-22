@@ -29,6 +29,7 @@ QUICK START:
 This example uses SPADE's default built-in server (localhost:5222) - no account registration needed!
 """
 
+import os
 import spade
 
 from spade_llm.agent import LLMAgent, ChatAgent
@@ -40,8 +41,9 @@ from rich.panel import Panel
 from rich.markdown import Markdown
 from rich import box
 
-OLLAMA_BASE_URL = "http://localhost:11434/v1"
-LLM_MODEL = "gpt-oss:20b"
+os.environ["OPENAI_API_KEY"] = ""
+os.environ["OPENAI_BASE_URL"] = "http://localhost:11434/v1"
+LLM_MODEL = "openai/gpt-oss:20b"
 
 # Change this path if you've cloned the repo from https://github.com/olafmeneses/SmartCityMCP)
 LOCAL_MCP_PATH = None  # example -> "../SmartCityMCP/valencia_smart_city_mcp.py"
@@ -97,10 +99,7 @@ async def main():
 
     # Create provider
     console.print("\n[cyan]Initializing LLM Provider...[/cyan]")
-    provider = LLMProvider.create_ollama(
-        model=LLM_MODEL,
-        base_url=OLLAMA_BASE_URL,
-    )
+    provider = LLMProvider(model=LLM_MODEL)
     console.print(f"   [green]✓[/green] Provider ready: {LLM_MODEL}")
 
     # Create LLM agent with MCP
