@@ -60,7 +60,7 @@ from spade_llm.providers import LLMProvider
 agent = LLMAgent(
     jid="agent@localhost", 
     password="password",
-    provider=LLMProvider.create_openai(api_key="sk-..."),
+    provider=LLMProvider(model="gpt-4o-mini"),
     tools=[human_tool],
     system_prompt="""You are an AI assistant with access to a human expert.
     When you need current information, human judgment, or clarification,

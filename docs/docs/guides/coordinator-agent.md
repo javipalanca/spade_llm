@@ -112,9 +112,9 @@ coordinator = CoordinatorAgent(
     jid="city-coordinator@xmpp.local",
     password="secret",
     subagent_ids=subagents,
-    provider=LLMProvider.create_openai(
-        api_key="sk-...",
+    provider=LLMProvider(
         model="gpt-4o-mini",
+        api_key="sk-...",
     ),
     coordination_session="valencia_city_ops"
 )

@@ -64,10 +64,10 @@ async def main():
     USER_JID = f"user@{XMPP_SERVER}"
     
     # Create OpenAI provider
-    provider = LLMProvider.create_openai(
-        api_key=env_vars["OPENAI_API_KEY"],
+    provider = LLMProvider(
         model="gpt-4o-mini",
-        temperature=0.7
+        api_key=env_vars["OPENAI_API_KEY"],
+        temperature=0.7,
     )
     
     # System prompt encouraging human consultation
@@ -174,9 +174,9 @@ from spade_llm import LLMAgent, ChatAgent, LLMProvider
 
 async def main():
     # Create LLM provider
-    provider = LLMProvider.create_openai(
+    provider = LLMProvider(
+        model="gpt-4o-mini",
         api_key="your-api-key",
-        model="gpt-4o-mini"
     )
     
     # Create LLM agent
@@ -255,9 +255,9 @@ async def main():
     )
     
     # Create provider
-    provider = LLMProvider.create_openai(
+    provider = LLMProvider(
+        model="gpt-4o-mini",
         api_key="your-api-key",
-        model="gpt-4o-mini"
     )
     
     # Create agent with tools
@@ -304,9 +304,9 @@ def reviewer_router(msg, response, context):
     return str(msg.sender)
 
 async def main():
-    provider = LLMProvider.create_openai(
+    provider = LLMProvider(
+        model="gpt-4o-mini",
         api_key="your-api-key",
-        model="gpt-4o-mini"
     )
     
     # Analyzer agent
@@ -364,11 +364,10 @@ from spade_llm import LLMAgent, LLMProvider
 
 async def main():
     # Create Ollama provider
-    provider = LLMProvider.create_ollama(
-        model="llama3.1:8b",
-        base_url="http://localhost:11434/v1",
+    provider = LLMProvider(
+        model="ollama/llama3.1:8b",
         temperature=0.7,
-        timeout=120.0
+        timeout=120.0,
     )
     
     # Create agent
@@ -404,9 +403,9 @@ def conversation_ended(conversation_id: str, reason: str):
     # Save conversation, send notifications, etc.
 
 async def main():
-    provider = LLMProvider.create_openai(
+    provider = LLMProvider(
+        model="gpt-4o-mini",
         api_key="your-api-key",
-        model="gpt-4o-mini"
     )
     
     agent = LLMAgent(
@@ -517,9 +516,8 @@ async def main():
     console.print(f"[blue]Created {len(chunks)} chunks[/blue]")
     
     # 3. Setup embedding provider
-    provider = LLMProvider.create_ollama(
-        model="nomic-embed-text",
-        base_url="http://localhost:11434/v1"
+    provider = LLMProvider(
+        model="ollama/nomic-embed-text",
     )
     
     # 4. Initialize vector store

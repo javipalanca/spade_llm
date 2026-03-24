@@ -606,10 +606,10 @@ async def main():
         passwords[role] = getpass.getpass(f"{label} password: ")
     
     # Create LLM provider
-    provider = LLMProvider.create_openai(
-        api_key=openai_key,
+    provider = LLMProvider(
         model="gpt-4o-mini",
-        temperature=0.7
+        api_key=openai_key,
+        temperature=0.7,
     )
     
     # Create MCP servers

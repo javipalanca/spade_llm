@@ -26,24 +26,30 @@
 
 ## Table of Contents
 
-- [Key Features](#key-features)
-- [Built-in XMPP Server](#built-in-xmpp-server)
-- [Quick Start](#quick-start)
-- [Installation](#installation)
-- [Architecture](#architecture)
-- [Documentation](#documentation)
-- [Examples](#examples)
-  - [Multi-Provider Support](#multi-provider-support)
-  - [Tools and Function Calling](#tools-and-function-calling)
-  - [Content Safety with Guardrails](#content-safety-with-guardrails)
-  - [Message Routing](#message-routing)
-  - [Interactive Chat](#interactive-chat)
-  - [Memory Extensions](#memory-extensions)
-  - [Context Management](#context-management)
-  - [Human-in-the-Loop](#human-in-the-loop)
-- [Requirements](#requirements)
-- [Contributing](#contributing)
-- [License](#license)
+- [SPADE-LLM: Large Language Model Integration for Multi-Agent Systems](#spade-llm-large-language-model-integration-for-multi-agent-systems)
+  - [Table of Contents](#table-of-contents)
+  - [Key Features](#key-features)
+  - [Built-in XMPP Server](#built-in-xmpp-server)
+    - [Start the Server](#start-the-server)
+  - [Quick Start](#quick-start)
+    - [Step 1: Start the Built-in XMPP Server](#step-1-start-the-built-in-xmpp-server)
+    - [Step 2: Create and Run Your LLM Agent](#step-2-create-and-run-your-llm-agent)
+  - [Installation](#installation)
+  - [Examples](#examples)
+    - [Multi-Provider Support](#multi-provider-support)
+    - [Tools and Function Calling](#tools-and-function-calling)
+    - [Content Safety with Guardrails](#content-safety-with-guardrails)
+    - [Message Routing](#message-routing)
+    - [Interactive Chat](#interactive-chat)
+    - [Memory Extensions](#memory-extensions)
+    - [Context Management](#context-management)
+    - [Human-in-the-Loop](#human-in-the-loop)
+  - [Architecture](#architecture)
+  - [Documentation](#documentation)
+  - [Examples Directory](#examples-directory)
+  - [Requirements](#requirements)
+  - [Contributing](#contributing)
+  - [License](#license)
 
 ## Key Features
 
@@ -96,9 +102,9 @@ import spade
 from spade_llm import LLMAgent, LLMProvider
 
 async def main():
-    provider = LLMProvider.create_openai(
+    provider = LLMProvider(
+        model="gpt-4o-mini",
         api_key="your-api-key",
-        model="gpt-4o-mini"
     )
     
     agent = LLMAgent(
@@ -131,13 +137,13 @@ pip install spade_llm
 
 ```python
 # OpenAI
-provider = LLMProvider.create_openai(api_key="key", model="gpt-4o-mini")
+provider = LLMProvider(model="gpt-4o-mini", api_key="key")
 
 # Ollama (local)
-provider = LLMProvider.create_ollama(model="llama3.1:8b")
+provider = LLMProvider(model="ollama/llama3.1:8b")
 
-# LM Studio (local)
-provider = LLMProvider.create_lm_studio(model="local-model")
+# Any OpenAI-compatible API (LM Studio, vLLM, etc.)
+provider = LLMProvider(model="openai/local-model", base_url="http://localhost:1234/v1")
 ```
 
 ### Tools and Function Calling

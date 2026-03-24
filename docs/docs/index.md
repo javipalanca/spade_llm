@@ -178,9 +178,9 @@ async def main():
     # First, start SPADE's built-in server:
     # spade run
     
-    provider = LLMProvider.create_openai(
+    provider = LLMProvider(
+        model="gpt-4o-mini",
         api_key="your-api-key",
-        model="gpt-4o-mini"
     )
     
     agent = LLMAgent(

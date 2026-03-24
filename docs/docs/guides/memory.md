@@ -270,9 +270,9 @@ from spade_llm.agent import LLMAgent
 from spade_llm.providers import LLMProvider
 
 async def basic_memory_example():
-    provider = LLMProvider.create_openai(
+    provider = LLMProvider(
+        model="gpt-4o-mini",
         api_key="your-api-key",
-        model="gpt-4"
     )
     
     agent = LLMAgent(
@@ -305,9 +305,9 @@ if __name__ == "__main__":
 
 ```python
 async def dual_memory_example():
-    provider = LLMProvider.create_openai(
+    provider = LLMProvider(
+        model="gpt-4o-mini",
         api_key="your-api-key",
-        model="gpt-4"
     )
     
     agent = LLMAgent(
@@ -336,9 +336,9 @@ async def dual_memory_example():
 
 ```python
 async def multi_agent_memory_example():
-    provider = LLMProvider.create_openai(
+    provider = LLMProvider(
+        model="gpt-4o-mini",
         api_key="your-api-key",
-        model="gpt-4"
     )
     
     # Database specialist with memory

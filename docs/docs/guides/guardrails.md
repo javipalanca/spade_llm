@@ -124,10 +124,10 @@ from spade_llm.guardrails import LLMGuardrail
 from spade_llm.providers import LLMProvider
 
 # Create safety validation model
-safety_provider = LLMProvider.create_openai(
-    api_key="your-key",
+safety_provider = LLMProvider(
     model="gpt-3.5-turbo",
-    temperature=0.1
+    api_key="your-key",
+    temperature=0.1,
 )
 
 safety_checker = LLMGuardrail(

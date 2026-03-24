@@ -6,108 +6,53 @@ API reference for LLM provider classes.
 
 Unified interface for different LLM services.
 
-### Class Methods
-
-#### create_openai()
+### Constructor
 
 ```python
-LLMProvider.create_openai(
-    api_key: str,
-    model: str = "gpt-4o-mini",
-    temperature: float = 0.7,
-    timeout: Optional[float] = None,
-    max_tokens: Optional[int] = None
+LLMProvider(
+    model: str,
+    api_key: Optional[str] = None,
+    base_url: Optional[str] = None,
+    temperature: float = 1.0,
+    timeout: float = 600.0,
+    max_tokens: Optional[int] = None,
+    num_retries: int = 0,
+    **kwargs
 ) -> LLMProvider
 ```
 
-Create OpenAI provider.
+Create a provider instance. Uses [LiteLLM model format](https://docs.litellm.ai/docs/providers) for the `model` parameter.
 
 **Parameters:**
 
-- `api_key` - OpenAI API key
-- `model` - Model name (e.g., "gpt-4o", "gpt-4o-mini")
-- `temperature` - Sampling temperature (0.0-1.0)
+- `model` - Model name in LiteLLM format (e.g., `"gpt-4o-mini"`, `"ollama/llama3.1:8b"`, `"openai/local-model"`)
+- `api_key` - API key (optional, can be set via environment variables)
+- `base_url` - Custom API base URL (for OpenAI-compatible servers)
+- `temperature` - Sampling temperature (0.0-2.0)
 - `timeout` - Request timeout in seconds
 - `max_tokens` - Maximum tokens to generate
+- `num_retries` - Number of retries on failure
 
-**Example:**
+**Examples:**
 
 ```python
-provider = LLMProvider.create_openai(
-    api_key="sk-...",
+# OpenAI
+provider = LLMProvider(
     model="gpt-4o-mini",
-    temperature=0.7
+    api_key="sk-...",
+    temperature=0.7,
 )
-```
 
-#### create_ollama()
-
-```python
-LLMProvider.create_ollama(
-    model: str = "llama3.1:8b",
-    base_url: str = "http://localhost:11434/v1",
-    temperature: float = 0.7,
-    timeout: float = 120.0
-) -> LLMProvider
-```
-
-Create Ollama provider.
-
-**Parameters:**
-
-- `model` - Model name (e.g., "llama3.1:8b", "mistral:7b")
-- `base_url` - Ollama server URL
-- `temperature` - Sampling temperature
-- `timeout` - Request timeout (longer for local models)
-
-**Example:**
-
-```python
-provider = LLMProvider.create_ollama(
-    model="llama3.1:8b",
-    temperature=0.8,
-    timeout=180.0
+# Ollama (local)
+provider = LLMProvider(
+    model="ollama/llama3.1:8b",
+    timeout=120.0,
 )
-```
 
-#### create_lm_studio()
-
-```python
-LLMProvider.create_lm_studio(
-    model: str = "local-model",
-    base_url: str = "http://localhost:1234/v1",
-    temperature: float = 0.7
-) -> LLMProvider
-```
-
-Create LM Studio provider.
-
-**Example:**
-
-```python
-provider = LLMProvider.create_lm_studio(
-    model="Meta-Llama-3.1-8B-Instruct",
-    base_url="http://localhost:1234/v1"
-)
-```
-
-#### create_vllm()
-
-```python
-LLMProvider.create_vllm(
-    model: str,
-    base_url: str = "http://localhost:8000/v1"
-) -> LLMProvider
-```
-
-Create vLLM provider.
-
-**Example:**
-
-```python
-provider = LLMProvider.create_vllm(
-    model="meta-llama/Llama-2-7b-chat-hf",
-    base_url="http://localhost:8000/v1"
+# OpenAI-compatible API (LM Studio, vLLM, etc.)
+provider = LLMProvider(
+    model="openai/local-model",
+    base_url="http://localhost:1234/v1",
 )
 ```
 
@@ -197,152 +142,22 @@ class CustomProvider(BaseProvider):
 
 ## Provider Configuration
 
-### Model Formats
+### Model Format
 
-```python
-class ModelFormat(Enum):
-    OPENAI = "openai"    # gpt-4, gpt-3.5-turbo
-    OLLAMA = "ollama"    # llama3.1:8b, mistral:7b  
-    CUSTOM = "custom"    # custom/model-name
+SPADE-LLM uses [LiteLLM's model naming convention](https://docs.litellm.ai/docs/providers):
+
+```
+provider_prefix/model_name
 ```
 
-### Environment Variables
+| Provider | Format | Example |
+|----------|--------|---------|
+| OpenAI | `model_name` (no prefix) | `gpt-4o-mini` |
+| Ollama | `ollama/model_name` | `ollama/llama3.1:8b` |
+| Anthropic | `anthropic/model_name` | `anthropic/claude-3-5-sonnet` |
+| OpenAI-compat | `openai/model_name` + `base_url` | `openai/local-model` |
 
-```python
-# OpenAI
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4o-mini
 
-# Ollama  
-OLLAMA_BASE_URL=http://localhost:11434/v1
-OLLAMA_MODEL=llama3.1:8b
-
-# LM Studio
-LM_STUDIO_BASE_URL=http://localhost:1234/v1
-LM_STUDIO_MODEL=local-model
-```
-
-### Dynamic Configuration
-
-```python
-import os
-
-def create_provider_from_env():
-    provider_type = os.getenv('LLM_PROVIDER', 'openai')
-    
-    if provider_type == 'openai':
-        return LLMProvider.create_openai(
-            api_key=os.getenv('OPENAI_API_KEY'),
-            model=os.getenv('OPENAI_MODEL', 'gpt-4o-mini')
-        )
-    elif provider_type == 'ollama':
-        return LLMProvider.create_ollama(
-            model=os.getenv('OLLAMA_MODEL', 'llama3.1:8b')
-        )
-
-provider = create_provider_from_env()
-```
-
-## Tool Support
-
-### OpenAI Tools
-
-Native tool calling support:
-
-```python
-# Tools automatically formatted for OpenAI
-response = await provider.get_llm_response(context, tools)
-```
-
-### Ollama Tools  
-
-Limited to compatible models:
-
-```python
-# Check model compatibility
-tool_compatible_models = [
-    "llama3.1:8b", "llama3.1:70b", "mistral:7b"
-]
-
-if model in tool_compatible_models:
-    # Use tools
-    response = await provider.get_llm_response(context, tools)
-```
-
-## Error Handling
-
-```python
-from openai import OpenAIError
-
-try:
-    response = await provider.get_llm_response(context)
-except OpenAIError as e:
-    print(f"OpenAI API error: {e}")
-except ConnectionError as e:
-    print(f"Connection error: {e}")
-except TimeoutError as e:
-    print(f"Request timeout: {e}")
-```
-
-## Provider Comparison
-
-| Feature | OpenAI | Ollama | LM Studio | vLLM |
-|---------|--------|--------|-----------|------|
-| **Setup** | Easy | Medium | Easy | Hard |
-| **Quality** | Excellent | Good | Good | Good |
-| **Speed** | Fast | Slow | Slow | Fast |
-| **Cost** | Paid | Free | Free | Free |
-| **Privacy** | Low | High | High | High |
-| **Tools** | Full | Limited | Limited | Limited |
-
-## Best Practices
-
-### Provider Selection
-
-```python
-def choose_provider(use_case: str):
-    """Choose provider based on use case."""
-    if use_case == "development":
-        return LLMProvider.create_ollama(model="llama3.1:1b")  # Fast
-    elif use_case == "production":
-        return LLMProvider.create_openai(model="gpt-4o-mini")   # Reliable
-    elif use_case == "privacy":
-        return LLMProvider.create_ollama(model="llama3.1:8b")  # Local
-```
-
-### Error Recovery
-
-```python
-async def robust_llm_call(providers: List[LLMProvider], context):
-    """Try multiple providers with fallback."""
-    for provider in providers:
-        try:
-            return await provider.get_llm_response(context)
-        except Exception as e:
-            print(f"Provider failed: {e}")
-            continue
-    
-    raise Exception("All providers failed")
-```
-
-### Performance Monitoring
-
-```python
-import time
-
-async def timed_call(provider, context):
-    """Monitor provider performance."""
-    start = time.time()
-    try:
-        response = await provider.get_llm_response(context)
-        duration = time.time() - start
-        print(f"Provider response time: {duration:.2f}s")
-        return response
-    except Exception as e:
-        duration = time.time() - start
-        print(f"Provider failed after {duration:.2f}s: {e}")
-        raise
-```
 
 ## Embeddings
 

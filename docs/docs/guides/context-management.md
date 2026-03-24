@@ -272,9 +272,9 @@ async def main():
     )
     
     # Create LLM provider
-    provider = LLMProvider.create_openai(
+    provider = LLMProvider(
+        model="gpt-4o-mini",
         api_key="your-api-key",
-        model="gpt-4"
     )
     
     # Create agent with context management

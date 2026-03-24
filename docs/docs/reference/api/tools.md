@@ -222,7 +222,7 @@ retrieval_tool = RetrievalTool(
     description="Search the documentation for information about SPADE-LLM"
 )
 
-provider = LLMProvider.create_openai(api_key="your-key")
+provider = LLMProvider(model="gpt-4o-mini")
 llm_agent = LLMAgent(
     jid="assistant@localhost",
     password="password",

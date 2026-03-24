@@ -82,7 +82,7 @@ if state:
 ```python
 from spade_llm import LLMAgent, LLMProvider
 
-provider = LLMProvider.create_openai(api_key="key", model="gpt-4o-mini")
+provider = LLMProvider(model="gpt-4o-mini")
 
 agent = LLMAgent(
     jid="assistant@example.com",
@@ -230,9 +230,9 @@ coordinator = CoordinatorAgent(
     jid="city-coordinator@xmpp.local",
     password="secret",
     subagent_ids=subagents,
-    provider=LLMProvider.create_openai(
-        api_key="sk-...",
+    provider=LLMProvider(
         model="gpt-4o-mini",
+        api_key="sk-...",
     ),
     coordination_session="city_ops"
 )
@@ -397,7 +397,7 @@ from spade_llm import RetrievalAgent
 from spade_llm.rag import Chroma, VectorStoreRetriever
 from spade_llm.providers import LLMProvider
 
-provider = LLMProvider.create_ollama(model="nomic-embed-text")
+provider = LLMProvider(model="ollama/nomic-embed-text")
 vector_store = Chroma(
     collection_name="docs",
     embedding_fn=provider.get_embeddings
