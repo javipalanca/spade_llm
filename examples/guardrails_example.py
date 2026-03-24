@@ -1,30 +1,19 @@
 """
-Guardrails Example with Gemma Model from Ollama
+Guardrails Example
 
-Demonstrates input and output guardrails using two agents:
-- LLMAgent: Handles LLM requests with integrated guardrails
-- ChatAgent: Interactive user interface
+Demonstrates input and output guardrails with two LLM agents.
 
-Features:
-- Input guardrails: keyword filtering, profanity filter
-- Output guardrails: LLM-based safety validation
-- Real-time guardrail action logging
+Input guardrails:  keyword filter, profanity filter
+Output guardrails: LLM-based safety validator
 
-PREREQUISITES:
-1. Start SPADE built-in server in another terminal:
-   spade run
-   
-   (Advanced server configuration available but not needed)
-
-2. Install dependencies:
-   pip install spade_llm
-
-This example uses SPADE's default built-in server (localhost:5222) - no account registration needed!
+Setup:
+  1. cp examples/.env.example .env  (fill in LLM_MODEL)
+  2. spade run  (in a separate terminal)
+  3. python examples/guardrails_example.py
 """
 
-import asyncio
-import getpass
 import logging
+import os
 import spade
 
 from spade_llm.agent import LLMAgent, ChatAgent
@@ -33,6 +22,7 @@ from spade_llm.guardrails import (
     KeywordGuardrail, LLMGuardrail,
     GuardrailAction, InputGuardrail, OutputGuardrail
 )
+from spade_llm.utils import load_env_vars
 from typing import List
 
 logging.basicConfig(level=logging.INFO)
@@ -82,116 +72,73 @@ def create_output_guardrails(safety_provider: LLMProvider) -> List[OutputGuardra
 
 
 def on_guardrail_trigger(result):
-    """Callback function for when guardrails are triggered."""
     if result.action == GuardrailAction.BLOCK:
-        print(f"🚫 GUARDRAIL BLOCKED: {result.reason}")
+        print(f"[GUARDRAIL BLOCKED] {result.reason}")
     elif result.action == GuardrailAction.MODIFY:
-        print(f"✏️  GUARDRAIL MODIFIED: {result.reason}")
+        print(f"[GUARDRAIL MODIFIED] {result.reason}")
     elif result.action == GuardrailAction.WARNING:
-        print(f"⚠️  GUARDRAIL WARNING: {result.reason}")
+        print(f"[GUARDRAIL WARNING] {result.reason}")
 
 
 async def main():
-    """Main function demonstrating guardrails with two agents."""
-    print("=== Guardrails Example with Gemma Model ===\n")
-    
-    # XMPP server configuration - using default SPADE settings
-    xmpp_server = "localhost"
-    print("🌐 Using SPADE built-in server (localhost:5222)")
-    print("  No account registration needed!")
-    # Advanced server configuration available but not needed
-    
-    llm_jid = f"llm_guardian@{xmpp_server}"
-    
-    # Simple password (auto-registration with SPADE server)
-    llm_password = "llm_pass"
-    print(f"✓ Agent JID: {llm_jid}")
-    print("  Using auto-registration with built-in server")
-    
-    # Create Ollama providers
-    main_provider = LLMProvider.create_ollama(
-        model="gemma3:1b",
+    load_env_vars()
+    model = os.environ.get("LLM_MODEL")
+    if not model:
+        raise SystemExit("LLM_MODEL is not set — copy examples/.env.example to .env and configure it.")
+    print("=== Guardrails Example ===")
+
+    xmpp_server = os.environ.get("XMPP_SERVER", "localhost")
+
+    main_provider = LLMProvider(
+        model=model,
         temperature=0.7,
-        base_url="http://localhost:11434/v1",
-        timeout=120.0
+        timeout=120.0,
     )
-    
-    safety_provider = LLMProvider.create_ollama(
-        model="gemma3:1b",  # Using same model for safety check in demo
-        temperature=0.3,    # Lower temperature for safety validation
-        base_url="http://localhost:11434/v1",
-        timeout=60.0
+    safety_provider = LLMProvider(
+        model=model,
+        temperature=0.3,
+        timeout=60.0,
     )
-    
-    # Create guardrails
+
     input_guardrails = create_input_guardrails()
     output_guardrails = create_output_guardrails(safety_provider)
-    
-    # Create LLM agent with integrated guardrails
+
     llm_agent = LLMAgent(
-        jid=llm_jid,
-        password=llm_password,
+        jid=f"llm_guardian@{xmpp_server}",
+        password="llm_pass",
         provider=main_provider,
-        system_prompt="You are a helpful AI assistant with safety guardrails. Be concise and informative.",
+        system_prompt="You are a helpful AI assistant. Be concise and informative.",
         input_guardrails=input_guardrails,
         output_guardrails=output_guardrails,
-        on_guardrail_trigger=on_guardrail_trigger
+        on_guardrail_trigger=on_guardrail_trigger,
     )
-    
     await llm_agent.start()
-    print(f"✓ Guarded LLM agent started: {llm_jid}")
-    print("🛡️  Guardrails system initialized!")
-    print("• Input: keyword filter, profanity filter, personal info redaction")
-    print("• Output: LLM safety validator")
-    
-    # Chat agent setup
-    user_jid = f"user@{xmpp_server}"
-    
-    # Simple password (auto-registration with SPADE server)
-    user_password = "user_pass"
-    print(f"✓ Chat Agent JID: {user_jid}")
-    
+    print(f"LLM agent started: llm_guardian@{xmpp_server}")
+
     def display_response(message: str, sender: str):
-        print(f"\n🤖 Guardian AI: {message}")
-    
-    def on_send(message: str, recipient: str):
-        print(f"👤 You: {message}")
-    
+        print(f"\nAssistant: {message}")
+
     chat = ChatAgent(
-        jid=user_jid,
-        password=user_password,
-        target_agent_jid=llm_jid,
+        jid=f"user@{xmpp_server}",
+        password="user_pass",
+        target_agent_jid=f"llm_guardian@{xmpp_server}",
         display_callback=display_response,
-        on_message_sent=on_send,
-        verbose=False
+        verbose=False,
     )
-    
     await chat.start()
-    print(f"✓ Chat agent started: {user_jid}")
-    
-    print("\n🧪 Test the guardrails system:")
-    print("• Normal questions (should pass)")
-    print("• Messages with profanity (will be filtered)")
-    print("• Personal info like emails (will be redacted)")
-    print("• Harmful requests (will be blocked)")
-    print("\nType 'exit' to quit\n")
-    
-    # Run interactive chat
+    print(f"Chat agent started: user@{xmpp_server}")
+
+    print("\nGuardrails active:")
+    print("  Input:  keyword filter, profanity filter")
+    print("  Output: LLM safety validator")
+    print("Type 'exit' to quit.\n")
+
     await chat.run_interactive()
-    
-    # Cleanup
+
     await chat.stop()
     await llm_agent.stop()
-    print("Agents stopped. Goodbye!")
+    print("Agents stopped.")
 
 
 if __name__ == "__main__":
-    print("🔍 Prerequisites:")
-    print("• SPADE built-in server running in another terminal:")
-    print("  spade run")
-    print("• Ollama running: ollama serve")
-    print("• Gemma model: ollama pull gemma3:1b")
-    print("• Advanced server configuration available but not needed")
-    print()
-    
     spade.run(main())

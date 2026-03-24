@@ -1,32 +1,12 @@
 """
-Simple Coordinator Example - Minimal CoordinatorAgent Test
+Simple Coordinator Example
 
-This example demonstrates the CoordinatorAgent's core functionality with
-a small three-agent setup: Calculator, Reporter, and Saver.
+Minimal test of CoordinatorAgent: Calculator -> Reporter -> Saver.
 
-PURPOSE:
-This is a TESTING example to verify that the CoordinatorAgent mechanism works.
-For realistic workflows, see coordinator_agent_example.py.
-
-WORKFLOW:
-1. User requests a calculation, formatted report, and persistence
-2. Coordinator sends calculation to Calculator agent
-3. Coordinator sends result to Reporter agent
-4. Coordinator sends formatted report to Saver agent, which stores it in a text file
-5. Coordinator returns completion message to user
-
-PREREQUISITES:
-1. Start SPADE built-in server in another terminal:
-   spade run
-
-2. Install dependencies:
-   pip install spade_llm
-
-VERIFICATION:
-If the example outputs "30" as the calculation result and saves the formatted
-report to disk, coordination works!
-
-This example uses SPADE's default built-in server (localhost:5222) - no account registration needed!
+Setup:
+  1. cp examples/.env.example .env  (fill in LLM_MODEL)
+  2. spade run             (in a separate terminal)
+  3. python examples/simple_coordinator_example.py
 """
 
 import asyncio
@@ -117,138 +97,91 @@ def _create_save_report_tool(file_path: str) -> LLMTool:
 
 
 async def main():
-    """Main function demonstrating minimal coordinator usage."""
+    print("=== Simple Coordinator Example ===\n")
 
-    print("=" * 60)
-    print("SIMPLE COORDINATOR EXAMPLE - Testing CoordinatorAgent")
-    print("=" * 60)
-    print()
-
-    # 2. LOAD CONFIGURATION
     load_env_vars()
+    xmpp_server = os.environ.get("XMPP_SERVER", "localhost")
 
-    # API Key (with fallback to input)
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        api_key = input("Enter OpenAI API key: ")
+    model = os.environ.get("LLM_MODEL")
+    if not model:
+        raise SystemExit("LLM_MODEL is not set — copy examples/.env.example to .env and configure it.")
 
     if os.path.exists(REPORT_SAVE_PATH):
         os.remove(REPORT_SAVE_PATH)
 
-    print("🔧 Configuration:")
-    print(f"  • Server: localhost:5222 (SPADE built-in)")
-    print(f"  • Provider: OpenAI (gpt-4o-mini)")
-    print()
-
-    # 3. CREATE PROVIDER
-    provider = LLMProvider.create_openai(
-        api_key=api_key,
-        model="gpt-4o-mini"
+    provider = LLMProvider(
+        model=model,
     )
 
-    # 4. CREATE SUBAGENTS
-    print("🤖 Creating agents...")
-
     calculator = LLMAgent(
-        jid="calculator@localhost",
+        jid=f"calculator@{xmpp_server}",
         password="calc_pass",
         system_prompt=CALCULATOR_PROMPT,
         provider=provider,
-        verify_security=False
+        verify_security=False,
     )
-    print("  ✓ Calculator agent created")
 
     reporter = LLMAgent(
-        jid="reporter@localhost",
+        jid=f"reporter@{xmpp_server}",
         password="report_pass",
         system_prompt=REPORTER_PROMPT,
         provider=provider,
-        verify_security=False
+        verify_security=False,
     )
-    print("  ✓ Reporter agent created")
 
     saver = LLMAgent(
-        jid="saver@localhost",
+        jid=f"saver@{xmpp_server}",
         password="save_pass",
         system_prompt=SAVER_PROMPT,
         provider=provider,
         tools=[_create_save_report_tool(REPORT_SAVE_PATH)],
-        verify_security=False
+        verify_security=False,
     )
-    print("  ✓ Saver agent created")
 
-    # 5. CREATE COORDINATOR
     coordinator = CoordinatorAgent(
-        jid="coordinator@localhost",
+        jid=f"coordinator@{xmpp_server}",
         password="coord_pass",
         subagent_ids=[
-            "calculator@localhost",
-            "reporter@localhost",
-            "saver@localhost",
+            f"calculator@{xmpp_server}",
+            f"reporter@{xmpp_server}",
+            f"saver@{xmpp_server}",
         ],
         coordination_session="calc_session",
         provider=provider,
-        verify_security=False
+        verify_security=False,
     )
-    print("  ✓ Coordinator agent created")
-    print(f"    - Managing: calculator@localhost, reporter@localhost, saver@localhost")
-    print(f"    - Session: calc_session")
-    print()
 
-    # 6. CREATE CHAT AGENT (user interface)
     completion_detected = asyncio.Event()
     final_response = []
 
     def display_callback(message: str, sender: str):
-        """Callback to display responses and detect completion."""
-        print(f"📩 Response from {sender}:")
+        print(f"Response from {sender}:")
         print(f"   {message}")
         print()
-
         if "<TASK_COMPLETE>" in message or "<END>" in message or "<DONE>" in message:
-            print("✅ TASK COMPLETION DETECTED!")
+            print("Task complete.")
             final_response.append(message)
             completion_detected.set()
 
     chat_agent = ChatAgent(
-        jid="user@localhost",
+        jid=f"user@{xmpp_server}",
         password="user_pass",
-        target_agent_jid="coordinator@localhost",
+        target_agent_jid=f"coordinator@{xmpp_server}",
         display_callback=display_callback,
-        verify_security=False
+        verify_security=False,
     )
-    print("  ✓ Chat agent created (user interface)")
-    print()
 
-    # 7. START ALL AGENTS
-    print("🚀 Starting agents...")
     try:
         await calculator.start()
-        print("  ✓ Calculator started")
-
         await reporter.start()
-        print("  ✓ Reporter started")
-
         await saver.start()
-        print("  ✓ Saver started")
-
         await coordinator.start()
-        print("  ✓ Coordinator started")
-
         await chat_agent.start()
-        print("  ✓ Chat agent started")
 
-        print("\n⏳ Waiting for connections...")
+        print("All agents started.")
         await asyncio.sleep(2)
 
-        print("✅ All agents ready!")
-        print()
-
-        # 8. SEND TEST REQUEST
-        print("=" * 60)
-        print("TEST SCENARIO: Calculate (10 + 5) * 2, format it, and save to disk")
-        print("=" * 60)
-        print()
+        print("\nTest: Calculate (10 + 5) * 2, format it, and save to disk.\n")
 
         test_request = """Please coordinate this calculation task step by step:
 
@@ -261,75 +194,30 @@ Use your send_to_agent tool for each step. Work sequentially - wait for each res
 When everything is complete, end your response with <TASK_COMPLETE>
 """
 
-        print("📤 Sending coordination request to coordinator...")
-        print()
         chat_agent.send_message(test_request)
-
-        # Give time for the message to be sent by SendBehaviour
         await asyncio.sleep(1)
 
-        print("⏳ Waiting for coordination to complete (max 60 seconds)...")
-        print("   Watch for sequential agent interactions below:")
-        print()
+        print("Waiting for coordination to complete (max 60 seconds)...")
 
-        # 9. WAIT FOR COMPLETION
         try:
             await asyncio.wait_for(completion_detected.wait(), timeout=60)
-            print()
-            print("=" * 60)
-            print("COORDINATION COMPLETED SUCCESSFULLY!")
-            print("=" * 60)
-
-
-
+            print("\nCoordination completed successfully.")
         except asyncio.TimeoutError:
-            print()
-            print("⚠️  Coordination timed out after 60 seconds")
-            print("   Check that:")
-            print("   • SPADE server is running (spade run)")
-            print("   • OpenAI API key is valid")
-            print("   • Network connection is stable")
+            print("\nCoordination timed out after 60 seconds.")
 
     except Exception as e:
-        print(f"\n❌ Error occurred: {e}")
+        print(f"\nError: {e}")
         import traceback
         traceback.print_exc()
 
     finally:
-        # 10. CLEANUP
-        print()
-        print("🛑 Stopping agents...")
         await chat_agent.stop()
-        print("  ✓ Chat agent stopped")
         await coordinator.stop()
-        print("  ✓ Coordinator stopped")
         await saver.stop()
-        print("  ✓ Saver stopped")
         await reporter.stop()
-        print("  ✓ Reporter stopped")
         await calculator.stop()
-        print("  ✓ Calculator stopped")
-
-        print()
-        print("=" * 60)
-        print("EXAMPLE COMPLETED")
-        print("=" * 60)
+        print("Agents stopped.")
 
 
 if __name__ == "__main__":
-    print()
-    print("🔍 Prerequisites Check:")
-    print("  • SPADE built-in server running? (spade run)")
-    print("  • OpenAI API key available? (in .env or will prompt)")
-    print()
-    print("Press Ctrl+C to cancel, or wait to continue...")
-    print()
-
-    try:
-        spade.run(main())
-    except KeyboardInterrupt:
-        print("\n\n⚠️  Example cancelled by user")
-    except Exception as e:
-        print(f"\n\n❌ Fatal error: {e}")
-        import traceback
-        traceback.print_exc()
+    spade.run(main())

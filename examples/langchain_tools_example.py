@@ -1,22 +1,14 @@
 """
 LangChain Tools Example
 
-Demonstrates using LangChain tools with SPADE agents.
+Demonstrates using LangChain tools (DuckDuckGo search, Wikipedia) with SPADE agents.
 
-PREREQUISITES:
-1. Start SPADE built-in server in another terminal:
-   spade run
-   
-   (Advanced server configuration available but not needed)
-
-2. Install dependencies:
-   pip install spade_llm
-
-This example uses SPADE's default built-in server (localhost:5222) - no account registration needed!
+Setup:
+  1. cp examples/.env.example .env  (fill in LLM_MODEL)
+  2. spade run             (in a separate terminal)
+  3. python examples/langchain_tools_example.py
 """
 
-import asyncio
-import getpass
 import os
 import spade
 
@@ -25,77 +17,53 @@ from spade_llm.providers import LLMProvider
 from spade_llm.tools import LangChainToolAdapter
 from spade_llm.utils import load_env_vars
 
-from langchain_community.tools import DuckDuckGoSearchRun
-from langchain_community.tools import WikipediaQueryRun
+from langchain_community.tools import DuckDuckGoSearchRun, WikipediaQueryRun
 from langchain_community.utilities import WikipediaAPIWrapper
 
 
 async def main():
-    # Load environment
     load_env_vars()
-    api_key = os.environ.get("OPENAI_API_KEY") or input("OpenAI API key: ")
+    model = os.environ.get("LLM_MODEL")
+    if not model:
+        raise SystemExit("LLM_MODEL is not set — copy examples/.env.example to .env and configure it.")
+    xmpp_server = os.environ.get("XMPP_SERVER", "localhost")
 
-    # XMPP server configuration - using default SPADE settings
-    xmpp_server = "localhost"
-    print("🌐 Using SPADE built-in server (localhost:5222)")
-    print("  No account registration needed!")
-    # Advanced server configuration available but not needed
-    
-    smart_jid = f"smart@{xmpp_server}"
-    smart_password = "smart_pass"  # Simple password (auto-registration with SPADE server)
-
-    # Create LangChain tools
     tools = [
         LangChainToolAdapter(DuckDuckGoSearchRun()),
-        LangChainToolAdapter(WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper()))
+        LangChainToolAdapter(WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())),
     ]
 
-    # Create provider (choose one)
-    # Option 1: OpenAI
-    provider = LLMProvider.create_openai(
-        api_key=api_key,
-        model="gpt-4o-mini"
-    )
+    # Option 1: use model from .env (LiteLLM reads OPENAI_API_KEY and OPENAI_API_BASE)
+    provider = LLMProvider(model=model)
 
-    # Option 2: Ollama (uncomment to use)
-    # provider = LLMProvider.create_ollama(
-    #     model="qwen3:4b",
-    #     base_url="http://localhost:11434/v1"
-    # )
+    # Option 2: explicit provider (overrides .env)
+    # provider = LLMProvider(model="openai/gpt-4o-mini")
+    # provider = LLMProvider(model="anthropic/claude-3-5-haiku-20241022")
 
-    # Create LLM agent with tools
     smart_agent = LLMAgent(
-        jid=smart_jid,
-        password=smart_password,
+        jid=f"smart@{xmpp_server}",
+        password="smart_pass",
         provider=provider,
-        system_prompt="You are a helpful assistant with search and Wikipedia tools. Use them for current info.",
-        tools=tools  # Tools are now passed directly to the agent
+        system_prompt="You are a helpful assistant with web search and Wikipedia access. Use them for up-to-date information.",
+        tools=tools,
     )
 
     await smart_agent.start()
-    print(f"✓ Smart agent started: {smart_jid}")
-    print("Available tools: Web Search, Wikipedia")
-
-    # Human agent setup
-    human_jid = f"human@{xmpp_server}"
-    human_password = "human_pass"  # Simple password (auto-registration with SPADE server)
+    print(f"Smart agent started: smart@{xmpp_server}")
 
     chat = ChatAgent(
-        jid=human_jid,
-        password=human_password,
-        target_agent_jid=smart_jid
+        jid=f"human@{xmpp_server}",
+        password="human_pass",
+        target_agent_jid=f"smart@{xmpp_server}",
     )
 
     await chat.start()
-    print(f"✓ Chat agent started: {human_jid}")
+    print(f"Chat agent started: human@{xmpp_server}")
+    print("Available tools: DuckDuckGo Search, Wikipedia")
+    print("Type 'exit' to quit.\n")
 
-    print("\nAvailable tools: Web Search, Wikipedia")
-    print("Type 'exit' to quit\n")
-
-    # Run chat
     await chat.run_interactive()
 
-    # Cleanup
     await chat.stop()
     await smart_agent.stop()
     print("Agents stopped.")

@@ -1,24 +1,15 @@
 """
-Unified SPADE_LLM example that allows choosing between different LLM providers:
-- OpenAI
-- Ollama
-- LLM Studio (local models)
+Multi-Provider Chat Example
 
-PREREQUISITES:
-1. Start SPADE built-in server in another terminal:
-   spade run
-   
-   (Advanced server configuration available but not needed)
+Shows how to configure different LLM providers with SPADE agents.
+Uncomment the provider block you want, or use LLM_MODEL from .env.
 
-2. Install dependencies:
-   pip install spade_llm
-
-This example uses SPADE's default built-in server (localhost:5222) - no account registration needed!
-Users can comment/uncomment the configuration for the provider they want to use.
+Setup:
+  1. cp examples/.env.example .env  (configure provider)
+  2. spade run             (in a separate terminal)
+  3. python examples/multi_provider_chat_example.py
 """
 
-import asyncio
-import getpass
 import logging
 import os
 import spade
@@ -28,110 +19,61 @@ from spade_llm.providers import LLMProvider
 from spade_llm.utils import load_env_vars
 
 logging.basicConfig(level=logging.WARNING)
-logger = logging.getLogger("example")
 
 
 async def main():
-    # Load environment variables from .env file
-    env_vars = load_env_vars()
+    load_env_vars()
 
-    # XMPP server configuration - using default SPADE settings
-    xmpp_server = "localhost"
-    print("🌐 Using SPADE built-in server (localhost:5222)")
-    print("  No account registration needed!")
-    # Advanced server configuration available but not needed
+    xmpp_server = os.environ.get("XMPP_SERVER", "localhost")
 
-    # ==========================================
-    # LLM PROVIDER CONFIGURATION
-    # ==========================================
+    model = os.environ.get("LLM_MODEL")
+    if not model:
+        raise SystemExit("LLM_MODEL is not set — copy examples/.env.example to .env and configure it.")
 
+    # Uses LLM_MODEL from .env; LiteLLM reads OPENAI_API_KEY and OPENAI_API_BASE automatically.
+    provider = LLMProvider(model=model, temperature=0.7)
 
-    # --- OPTION 1: OpenAI ---
-    # Get OpenAI API key from environment variables or ask the user
-    openai_api_key = os.environ.get("OPENAI_API_KEY")
-    if not openai_api_key:
-        openai_api_key = input("Enter your OpenAI API key: ")
-        os.environ["OPENAI_API_KEY"] = openai_api_key
+    # Explicit provider examples (override LLM_MODEL):
+    # provider = LLMProvider(model="openai/gpt-4o-mini")
+    # provider = LLMProvider(model="anthropic/claude-3-5-haiku-20241022")
+    # provider = LLMProvider(model="openai/your-local-model", base_url="http://localhost:1234/v1")
 
-    llm_provider_openai = LLMProvider.create_openai(
-        api_key=openai_api_key,
-        model="gpt-4o-mini",
-        temperature=0.7
-    )
-    system_prompt = "You are a helpful AI assistant.  You should be concise but informative in your responses."
+    system_prompt = "You are a helpful AI assistant. Be concise but informative."
 
-    # --- OPTION 2: Ollama with Gemma ---
-    llm_provider_ollama = LLMProvider.create_ollama(
-        model="gemma3:1b",
-        temperature=0.7,
-        base_url="http://localhost:11434/v1",
-        timeout=120.0
-    )
-    system_prompt = "You are a helpful AI assistant.  You should be concise but informative in your responses."
-
-    # --- OPTION 3: LLM Studio with local model ---
-    LOCAL_BASE_URL = "http://localhost:1234/v1"
-    LOCAL_MODEL = "llama-3.2-1b-instruct"
-
-    llm_provider_lm_studio = LLMProvider.create_lm_studio(
-        model=LOCAL_MODEL,
-        base_url=LOCAL_BASE_URL
-    )
-    system_prompt = "You are a helpful AI assistant.  You should be concise but informative in your responses."
-
-    # ==========================================
-    # AGENT CONFIGURATION
-    # ==========================================
-
-    # Smart agent creation
-    smart_jid = f"smart@{xmpp_server}"
-    smart_password = "smart_pass"  # Simple password (auto-registration with SPADE server)
-
-    # Create the LLM agent with the selected provider
     smart_agent = LLMAgent(
-        jid=smart_jid,
-        password=smart_password,
-        provider=llm_provider_ollama,
+        jid=f"smart@{xmpp_server}",
+        password="smart_pass",
+        provider=provider,
         system_prompt=system_prompt,
         max_interactions_per_conversation=10,
     )
-
-    # Start the SmartAgent
     await smart_agent.start()
-    print(f"Smart agent {smart_jid} is running.")
+    print(f"Smart agent started: smart@{xmpp_server}")
 
-    # ChatAgent
-    human_jid = f"human@{xmpp_server}"
-    human_password = "human_pass"  # Simple password (auto-registration with SPADE server)
-
-    # Define a custom function to display responses
     def display_response(message: str, sender: str):
-        print(f"\nSmart agent response: '{message}'")
+        print(f"\nAssistant: {message}")
 
-    # Define a function to log when a message is sent
     def on_send(message: str, recipient: str):
-        print(f"Human sending: '{message}' to {recipient}")
+        print(f"You: {message}")
 
-    # Create the enhanced ChatAgent
     chat_agent = ChatAgent(
-        jid=human_jid,
-        password=human_password,
-        target_agent_jid=smart_jid,
+        jid=f"human@{xmpp_server}",
+        password="human_pass",
+        target_agent_jid=f"smart@{xmpp_server}",
         display_callback=display_response,
         on_message_sent=on_send,
-        verbose=False
+        verbose=False,
     )
-
     await chat_agent.start()
-    print(f"Chat agent {human_jid} is running.")
+    print(f"Chat agent started: human@{xmpp_server}")
 
-    print("\nYou can now chat with the smart agent. Type 'exit' to quit.")
+    print("\nType 'exit' to quit.\n")
 
     await chat_agent.run_interactive()
 
     await chat_agent.stop()
     await smart_agent.stop()
-    print("Agents stopped. Goodbye!")
+    print("Agents stopped.")
 
 
 if __name__ == "__main__":
