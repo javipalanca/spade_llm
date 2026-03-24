@@ -1,11 +1,9 @@
-"""Tests for the unified LLM provider implementation."""
+"""Tests for the unified LLM provider implementation using LiteLLM."""
 
-import json
 import pytest
-from unittest.mock import MagicMock, Mock, patch, AsyncMock
-from openai import OpenAI, OpenAIError
+from unittest.mock import Mock, patch
 
-from spade_llm.providers.llm_provider import LLMProvider, ModelFormat
+from spade_llm.providers.llm_provider import LLMProvider
 from spade_llm.context import ContextManager
 from spade_llm.tools import LLMTool
 
@@ -13,266 +11,152 @@ from spade_llm.tools import LLMTool
 class TestLLMProviderInit:
     """Test LLMProvider initialization and configuration."""
 
-    def test_init_with_defaults(self):
-        """Test initialization with default values."""
-        provider = LLMProvider()
-        
-        assert provider.api_key == "dummy"
+    def test_init_with_required_params(self):
+        """Test initialization with required model parameter."""
+        provider = LLMProvider(model="gpt-4o-mini")
+
         assert provider.model == "gpt-4o-mini"
-        assert provider.temperature == 0.7
+        assert provider.api_key is None
         assert provider.base_url is None
-        assert provider.timeout == 60.0
+        assert provider.temperature == 1.0
+        assert provider.timeout == 600.0
         assert provider.max_tokens is None
-        assert provider.model_format == ModelFormat.OPENAI
-        assert provider.provider_name == "OpenAI"
+        assert provider.num_retries == 0
 
     def test_init_with_custom_values(self):
         """Test initialization with custom values."""
         provider = LLMProvider(
-            api_key="test-key",
             model="gpt-4",
+            api_key="test-key",
             temperature=0.5,
             base_url="http://localhost:8000",
             timeout=120.0,
             max_tokens=1000,
-            model_format=ModelFormat.OLLAMA,
-            provider_name="CustomProvider"
+            num_retries=3,
         )
-        
-        assert provider.api_key == "test-key"
+
         assert provider.model == "gpt-4"
+        assert provider.api_key == "test-key"
         assert provider.temperature == 0.5
         assert provider.base_url == "http://localhost:8000"
         assert provider.timeout == 120.0
         assert provider.max_tokens == 1000
-        assert provider.model_format == ModelFormat.OLLAMA
-        assert provider.provider_name == "CustomProvider"
+        assert provider.num_retries == 3
 
-    @patch('spade_llm.providers.llm_provider.OpenAI')
-    def test_client_initialization(self, mock_openai):
-        """Test that OpenAI client is initialized correctly."""
-        mock_client = Mock()
-        mock_openai.return_value = mock_client
-        
-        provider = LLMProvider(api_key="test-key", base_url="http://test.com")
-        
-        mock_openai.assert_called_once_with(
+    def test_init_with_litellm_kwargs(self):
+        """Test initialization with extra kwargs passed through to LiteLLM."""
+        provider = LLMProvider(
+            model="gpt-4o-mini",
             api_key="test-key",
-            base_url="http://test.com"
+            custom_llm_provider="openai",
         )
-        assert provider.client == mock_client
 
-    @patch('spade_llm.providers.llm_provider.OpenAI')
-    def test_client_initialization_no_base_url(self, mock_openai):
-        """Test client initialization without base_url."""
-        mock_client = Mock()
-        mock_openai.return_value = mock_client
-        
-        provider = LLMProvider(api_key="test-key")
-        
-        mock_openai.assert_called_once_with(api_key="test-key")
+        assert provider.kwargs == {"custom_llm_provider": "openai"}
 
-
-class TestModelFormatDetection:
-    """Test model format detection logic."""
-
-    def test_detect_model_format_ollama_prefix(self):
-        """Test detection of Ollama format with ollama/ prefix."""
-        provider = LLMProvider()
-        format_result = provider._detect_model_format("ollama/llama3:8b", None)
-        assert format_result == ModelFormat.OLLAMA
-
-    def test_detect_model_format_openai_gpt(self):
-        """Test detection of OpenAI format with gpt- prefix."""
-        provider = LLMProvider()
-        format_result = provider._detect_model_format("gpt-4", None)
-        assert format_result == ModelFormat.OPENAI
-
-    def test_detect_model_format_openai_o1(self):
-        """Test detection of OpenAI format with o1- prefix."""
-        provider = LLMProvider()
-        format_result = provider._detect_model_format("o1-preview", None)
-        assert format_result == ModelFormat.OPENAI
-
-    def test_detect_model_format_custom_slash(self):
-        """Test detection of custom format with slash."""
-        provider = LLMProvider()
-        format_result = provider._detect_model_format("custom/model-name", None)
-        assert format_result == ModelFormat.CUSTOM
-
-    def test_detect_model_format_base_url_ollama(self):
-        """Test format detection based on base_url containing ollama."""
-        provider = LLMProvider()
-        format_result = provider._detect_model_format("llama3", "http://localhost:11434/ollama")
-        assert format_result == ModelFormat.OLLAMA
-
-    def test_detect_model_format_default_openai(self):
-        """Test default to OpenAI format."""
-        provider = LLMProvider()
-        format_result = provider._detect_model_format("some-model", None)
-        assert format_result == ModelFormat.OPENAI
-
-
-class TestProviderNameDetection:
-    """Test provider name detection logic."""
-
-    def test_detect_provider_name_no_base_url(self):
-        """Test provider name when no base_url provided."""
-        provider = LLMProvider()
-        name = provider._detect_provider_name(None, ModelFormat.OPENAI)
-        assert name == "OpenAI"
-
-    def test_detect_provider_name_ollama(self):
-        """Test detection of Ollama provider."""
-        provider = LLMProvider()
-        name = provider._detect_provider_name("http://localhost:11434/ollama", ModelFormat.OLLAMA)
-        assert name == "Ollama"
-
-    def test_detect_provider_name_vllm(self):
-        """Test detection of vLLM provider."""
-        provider = LLMProvider()
-        name = provider._detect_provider_name("http://localhost:8000/vllm", ModelFormat.OPENAI)
-        assert name == "vLLM"
-
-    def test_detect_provider_name_lmstudio(self):
-        """Test detection of LM Studio provider."""
-        provider = LLMProvider()
-        name = provider._detect_provider_name("http://localhost:1234/lmstudio", ModelFormat.OPENAI)
-        assert name == "LM Studio"
-
-    def test_detect_provider_name_localhost(self):
-        """Test detection of localhost provider."""
-        provider = LLMProvider()
-        name = provider._detect_provider_name("http://localhost:8000", ModelFormat.OPENAI)
-        assert name == "Local OpenAI-compatible"
-
-    def test_detect_provider_name_127001(self):
-        """Test detection of 127.0.0.1 provider."""
-        provider = LLMProvider()
-        name = provider._detect_provider_name("http://127.0.0.1:8000", ModelFormat.OPENAI)
-        assert name == "Local OpenAI-compatible"
-
-    def test_detect_provider_name_generic(self):
-        """Test generic OpenAI-compatible provider detection."""
-        provider = LLMProvider()
-        name = provider._detect_provider_name("http://api.example.com", ModelFormat.OPENAI)
-        assert name == "OpenAI-compatible"
-
-
-class TestModelNamePreparation:
-    """Test model name preparation for API calls."""
-
-    def test_prepare_model_name_ollama_with_prefix(self):
-        """Test preparation of Ollama model name with prefix."""
-        provider = LLMProvider(model="ollama/llama3:8b", model_format=ModelFormat.OLLAMA)
-        prepared = provider._prepare_model_name("ollama/llama3:8b")
-        assert prepared == "llama3:8b"
-
-    def test_prepare_model_name_ollama_without_prefix(self):
-        """Test preparation of Ollama model name without prefix."""
-        provider = LLMProvider(model="llama3:8b", model_format=ModelFormat.OLLAMA)
-        prepared = provider._prepare_model_name("llama3:8b")
-        assert prepared == "llama3:8b"
-
-    def test_prepare_model_name_openai(self):
-        """Test preparation of OpenAI model name (no change)."""
-        provider = LLMProvider(model="gpt-4", model_format=ModelFormat.OPENAI)
-        prepared = provider._prepare_model_name("gpt-4")
-        assert prepared == "gpt-4"
-
-    def test_prepare_model_name_custom(self):
-        """Test preparation of custom model name (no change)."""
-        provider = LLMProvider(model="custom/model", model_format=ModelFormat.CUSTOM)
-        prepared = provider._prepare_model_name("custom/model")
-        assert prepared == "custom/model"
-
-
-class TestCreateMethods:
-    """Test class methods for creating providers."""
-
-    def test_create_openai(self):
-        """Test creating OpenAI provider."""
-        provider = LLMProvider.create_openai(
-            api_key="test-key",
-            model="gpt-4",
-            temperature=0.5
+    def test_init_ollama_model(self):
+        """Test initialization with Ollama model format."""
+        provider = LLMProvider(
+            model="ollama/llama3:8b",
+            base_url="http://localhost:11434",
         )
-        
-        assert provider.api_key == "test-key"
-        assert provider.model == "gpt-4"
-        assert provider.temperature == 0.5
-        assert provider.provider_name == "OpenAI"
-        assert provider.base_url is None
 
-    def test_create_openai_with_kwargs(self):
-        """Test creating OpenAI provider with additional kwargs."""
-        provider = LLMProvider.create_openai(
-            api_key="test-key",
-            max_tokens=1000,
-            timeout=30.0
-        )
-        
-        assert provider.max_tokens == 1000
-        assert provider.timeout == 30.0
+        assert provider.model == "ollama/llama3:8b"
+        assert provider.base_url == "http://localhost:11434"
+        assert provider.api_key is None
 
-    def test_create_ollama(self):
-        """Test creating Ollama provider."""
-        provider = LLMProvider.create_ollama(
-            model="llama3:8b",
-            base_url="http://localhost:11434/v1",
-            temperature=0.8,
-            timeout=180.0
-        )
-        
-        assert provider.api_key == "dummy"
-        assert provider.model == "ollama/llama3:8b"  # Should add prefix
-        assert provider.base_url == "http://localhost:11434/v1"
-        assert provider.temperature == 0.8
-        assert provider.timeout == 180.0
-        assert provider.provider_name == "Ollama"
-        assert provider.model_format == ModelFormat.OLLAMA
 
-    def test_create_ollama_with_prefix(self):
-        """Test creating Ollama provider when model already has prefix."""
-        provider = LLMProvider.create_ollama(model="ollama/llama3:8b")
-        assert provider.model == "ollama/llama3:8b"  # Should not double-prefix
+class TestBuildCompletionKwargs:
+    """Test the _build_completion_kwargs helper method."""
 
-    def test_create_lm_studio(self):
-        """Test creating LM Studio provider."""
-        provider = LLMProvider.create_lm_studio(
-            model="local-model",
-            base_url="http://localhost:1234/v1",
-            temperature=0.6
-        )
-        
-        assert provider.api_key == "dummy"
-        assert provider.model == "local-model"
-        assert provider.base_url == "http://localhost:1234/v1"
-        assert provider.temperature == 0.6
-        assert provider.provider_name == "LM Studio"
+    def test_build_kwargs_basic(self):
+        """Test building kwargs with basic parameters."""
+        provider = LLMProvider(model="gpt-4o-mini", api_key="test-key")
+        mock_context = Mock(spec=ContextManager)
+        mock_context.get_tracing_metadata.return_value = {}
 
-    def test_create_vllm(self):
-        """Test creating vLLM provider."""
-        provider = LLMProvider.create_vllm(
-            model="meta-llama/Llama-2-7b-hf",
-            base_url="http://localhost:8000/v1"
-        )
-        
-        assert provider.api_key == "dummy"
-        assert provider.model == "meta-llama/Llama-2-7b-hf"
-        assert provider.base_url == "http://localhost:8000/v1"
-        assert provider.provider_name == "vLLM"
+        messages = [{"role": "user", "content": "hello"}]
+        kwargs = provider._build_completion_kwargs(mock_context, messages)
 
-    def test_create_vllm_with_kwargs(self):
-        """Test creating vLLM provider with additional kwargs."""
-        provider = LLMProvider.create_vllm(
-            model="test-model",
-            max_tokens=2000,
-            temperature=0.9
-        )
-        
-        assert provider.max_tokens == 2000
-        assert provider.temperature == 0.9
+        assert kwargs["model"] == "gpt-4o-mini"
+        assert kwargs["messages"] == messages
+        assert kwargs["temperature"] == 1.0
+        assert kwargs["timeout"] == 600.0
+        assert kwargs["api_key"] == "test-key"
+        assert "tools" not in kwargs
+
+    def test_build_kwargs_with_tools(self):
+        """Test building kwargs includes tools when provided."""
+        provider = LLMProvider(model="gpt-4o-mini")
+        mock_context = Mock(spec=ContextManager)
+        mock_context.get_tracing_metadata.return_value = {}
+
+        messages = [{"role": "user", "content": "hello"}]
+        tools = [{"type": "function", "function": {"name": "test"}}]
+        kwargs = provider._build_completion_kwargs(mock_context, messages, tools)
+
+        assert kwargs["tools"] == tools
+        assert kwargs["tool_choice"] == "auto"
+
+    def test_build_kwargs_with_base_url(self):
+        """Test building kwargs includes api_base when base_url is set."""
+        provider = LLMProvider(model="ollama/llama3:8b", base_url="http://localhost:11434")
+        mock_context = Mock(spec=ContextManager)
+        mock_context.get_tracing_metadata.return_value = {}
+
+        messages = [{"role": "user", "content": "hello"}]
+        kwargs = provider._build_completion_kwargs(mock_context, messages)
+
+        assert kwargs["api_base"] == "http://localhost:11434"
+
+    def test_build_kwargs_with_max_tokens(self):
+        """Test building kwargs includes max_tokens when set."""
+        provider = LLMProvider(model="gpt-4o-mini", max_tokens=1000)
+        mock_context = Mock(spec=ContextManager)
+        mock_context.get_tracing_metadata.return_value = {}
+
+        messages = [{"role": "user", "content": "hello"}]
+        kwargs = provider._build_completion_kwargs(mock_context, messages)
+
+        assert kwargs["max_tokens"] == 1000
+
+    def test_build_kwargs_without_max_tokens(self):
+        """Test building kwargs excludes max_tokens when not set."""
+        provider = LLMProvider(model="gpt-4o-mini")
+        mock_context = Mock(spec=ContextManager)
+        mock_context.get_tracing_metadata.return_value = {}
+
+        messages = [{"role": "user", "content": "hello"}]
+        kwargs = provider._build_completion_kwargs(mock_context, messages)
+
+        assert "max_tokens" not in kwargs
+
+    def test_build_kwargs_includes_tracing_metadata(self):
+        """Test building kwargs includes tracing metadata."""
+        provider = LLMProvider(model="gpt-4o-mini")
+        mock_context = Mock(spec=ContextManager)
+        mock_context.get_tracing_metadata.return_value = {
+            "conversation_id": "conv-123",
+            "sender_id": "agent1",
+            "receiver_id": "agent2",
+        }
+
+        messages = [{"role": "user", "content": "hello"}]
+        kwargs = provider._build_completion_kwargs(mock_context, messages)
+
+        assert kwargs["metadata"]["session_id"] == "conv-123"
+        assert "agent1" in kwargs["metadata"]["tags"]
+        assert "agent2" in kwargs["metadata"]["tags"]
+
+    def test_build_kwargs_extra_kwargs_passed(self):
+        """Test that extra kwargs from __init__ are included."""
+        provider = LLMProvider(model="gpt-4o-mini", custom_llm_provider="openai")
+        mock_context = Mock(spec=ContextManager)
+        mock_context.get_tracing_metadata.return_value = {}
+
+        messages = [{"role": "user", "content": "hello"}]
+        kwargs = provider._build_completion_kwargs(mock_context, messages)
+
+        assert kwargs["custom_llm_provider"] == "openai"
 
 
 class TestGetLLMResponse:
@@ -282,191 +166,243 @@ class TestGetLLMResponse:
         """Set up test fixtures."""
         self.mock_context = Mock(spec=ContextManager)
         self.mock_context.get_prompt.return_value = [{"role": "user", "content": "test"}]
+        self.mock_context.get_tracing_metadata.return_value = {}
 
-    @patch('spade_llm.providers.llm_provider.asyncio.to_thread')
-    @patch('spade_llm.providers.llm_provider.OpenAI')
+    @patch("spade_llm.providers.llm_provider.litellm.acompletion")
     @pytest.mark.asyncio
-    async def test_get_llm_response_text_only(self, mock_openai_class, mock_to_thread):
+    async def test_get_llm_response_text_only(self, mock_acompletion):
         """Test get_llm_response with text response only."""
-        # Setup mocks
-        mock_client = Mock()
-        mock_openai_class.return_value = mock_client
-        
         mock_message = Mock()
         mock_message.content = "Test response"
         mock_message.tool_calls = None
-        
+
         mock_response = Mock()
         mock_response.choices = [Mock(message=mock_message)]
-        
-        mock_to_thread.return_value = mock_response
-        
-        provider = LLMProvider()
+        mock_acompletion.return_value = mock_response
+
+        provider = LLMProvider(model="gpt-4o-mini")
         result = await provider.get_llm_response(self.mock_context)
-        
+
         assert result["text"] == "Test response"
         assert result["tool_calls"] == []
-        
-        # Verify the API call
-        mock_to_thread.assert_called_once()
-        call_args = mock_to_thread.call_args[1]
-        assert call_args["model"] == "gpt-4o-mini"
-        assert call_args["temperature"] == 0.7
-        assert call_args["timeout"] == 60.0
 
-    @patch('spade_llm.providers.llm_provider.asyncio.to_thread')
-    @patch('spade_llm.providers.llm_provider.OpenAI')
+        mock_acompletion.assert_called_once()
+        call_kwargs = mock_acompletion.call_args[1]
+        assert call_kwargs["model"] == "gpt-4o-mini"
+        assert call_kwargs["temperature"] == 1.0
+
+    @patch("spade_llm.providers.llm_provider.litellm.acompletion")
     @pytest.mark.asyncio
-    async def test_get_llm_response_with_tools(self, mock_openai_class, mock_to_thread):
+    async def test_get_llm_response_with_tools(self, mock_acompletion):
         """Test get_llm_response with tool calls."""
-        # Setup mocks
-        mock_client = Mock()
-        mock_openai_class.return_value = mock_client
-        
         mock_tool_call = Mock()
         mock_tool_call.id = "call_123"
         mock_tool_call.function.name = "test_tool"
         mock_tool_call.function.arguments = '{"param": "value"}'
-        
+
         mock_message = Mock()
         mock_message.content = None
         mock_message.tool_calls = [mock_tool_call]
-        
+
         mock_response = Mock()
         mock_response.choices = [Mock(message=mock_message)]
-        
-        mock_to_thread.return_value = mock_response
-        
-        # Create mock tool
+        mock_acompletion.return_value = mock_response
+
         mock_tool = Mock(spec=LLMTool)
         mock_tool.to_openai_tool.return_value = {
             "function": {"name": "test_tool"},
-            "type": "function"
+            "type": "function",
         }
-        
-        provider = LLMProvider()
+
+        provider = LLMProvider(model="gpt-4o-mini")
         result = await provider.get_llm_response(self.mock_context, tools=[mock_tool])
-        
+
         assert result["text"] is None
         assert len(result["tool_calls"]) == 1
         assert result["tool_calls"][0]["id"] == "call_123"
         assert result["tool_calls"][0]["name"] == "test_tool"
         assert result["tool_calls"][0]["arguments"] == {"param": "value"}
 
-    @patch('spade_llm.providers.llm_provider.asyncio.to_thread')
-    @patch('spade_llm.providers.llm_provider.OpenAI')
+    @patch("spade_llm.providers.llm_provider.litellm.acompletion")
     @pytest.mark.asyncio
-    async def test_get_llm_response_with_max_tokens(self, mock_openai_class, mock_to_thread):
+    async def test_get_llm_response_with_max_tokens(self, mock_acompletion):
         """Test get_llm_response includes max_tokens when set."""
-        mock_client = Mock()
-        mock_openai_class.return_value = mock_client
-        
         mock_message = Mock()
         mock_message.content = "Test response"
         mock_message.tool_calls = None
-        
+
         mock_response = Mock()
         mock_response.choices = [Mock(message=mock_message)]
-        
-        mock_to_thread.return_value = mock_response
-        
-        provider = LLMProvider(max_tokens=1000)
-        await provider.get_llm_response(self.mock_context)
-        
-        # Check that max_tokens was included in the call
-        call_args = mock_to_thread.call_args[1]
-        assert call_args["max_tokens"] == 1000
+        mock_acompletion.return_value = mock_response
 
-    @patch('spade_llm.providers.llm_provider.asyncio.to_thread')
-    @patch('spade_llm.providers.llm_provider.OpenAI')
+        provider = LLMProvider(model="gpt-4o-mini", max_tokens=1000)
+        await provider.get_llm_response(self.mock_context)
+
+        call_kwargs = mock_acompletion.call_args[1]
+        assert call_kwargs["max_tokens"] == 1000
+
+    @patch("spade_llm.providers.llm_provider.litellm.acompletion")
     @pytest.mark.asyncio
-    async def test_get_llm_response_json_decode_error(self, mock_openai_class, mock_to_thread):
+    async def test_get_llm_response_json_decode_error(self, mock_acompletion):
         """Test handling of JSON decode error in tool arguments."""
-        mock_client = Mock()
-        mock_openai_class.return_value = mock_client
-        
         mock_tool_call = Mock()
         mock_tool_call.id = "call_123"
         mock_tool_call.function.name = "test_tool"
-        mock_tool_call.function.arguments = 'invalid json{'
-        
+        mock_tool_call.function.arguments = "invalid json{"
+
         mock_message = Mock()
         mock_message.content = None
         mock_message.tool_calls = [mock_tool_call]
-        
+
         mock_response = Mock()
         mock_response.choices = [Mock(message=mock_message)]
-        
-        mock_to_thread.return_value = mock_response
-        
-        provider = LLMProvider()
+        mock_acompletion.return_value = mock_response
+
+        provider = LLMProvider(model="gpt-4o-mini")
         result = await provider.get_llm_response(self.mock_context)
-        
-        # Should handle the error gracefully
+
         assert len(result["tool_calls"]) == 1
-        assert result["tool_calls"][0]["arguments"] == {}  # Empty dict on error
+        assert result["tool_calls"][0]["arguments"] == {}
 
-    @patch('spade_llm.providers.llm_provider.asyncio.to_thread')
-    @patch('spade_llm.providers.llm_provider.OpenAI')
+    @patch("spade_llm.providers.llm_provider.litellm.acompletion")
     @pytest.mark.asyncio
-    async def test_get_llm_response_openai_error(self, mock_openai_class, mock_to_thread):
-        """Test handling of OpenAI API errors."""
-        mock_client = Mock()
-        mock_openai_class.return_value = mock_client
-        
-        mock_to_thread.side_effect = OpenAIError("API Error")
-        
-        provider = LLMProvider()
-        
-        with pytest.raises(OpenAIError):
+    async def test_get_llm_response_api_error(self, mock_acompletion):
+        """Test handling of API errors."""
+        mock_acompletion.side_effect = Exception("API Error")
+
+        provider = LLMProvider(model="gpt-4o-mini")
+
+        with pytest.raises(Exception, match="API Error"):
             await provider.get_llm_response(self.mock_context)
 
-    @patch('spade_llm.providers.llm_provider.asyncio.to_thread')
-    @patch('spade_llm.providers.llm_provider.OpenAI')
+    @patch("spade_llm.providers.llm_provider.litellm.acompletion")
     @pytest.mark.asyncio
-    async def test_get_llm_response_unexpected_error(self, mock_openai_class, mock_to_thread):
-        """Test handling of unexpected errors."""
-        mock_client = Mock()
-        mock_openai_class.return_value = mock_client
-        
-        mock_to_thread.side_effect = ValueError("Unexpected error")
-        
-        provider = LLMProvider()
-        
-        with pytest.raises(ValueError):
-            await provider.get_llm_response(self.mock_context)
+    async def test_get_llm_response_empty_content(self, mock_acompletion):
+        """Test handling of empty response content."""
+        mock_message = Mock()
+        mock_message.content = ""
+        mock_message.tool_calls = None
 
-    @patch('spade_llm.providers.llm_provider.asyncio.to_thread')
-    @patch('spade_llm.providers.llm_provider.OpenAI')
+        mock_response = Mock()
+        mock_response.choices = [Mock(message=mock_message)]
+        mock_acompletion.return_value = mock_response
+
+        provider = LLMProvider(model="gpt-4o-mini")
+        result = await provider.get_llm_response(self.mock_context)
+
+        assert result["text"] == ""
+        assert result["tool_calls"] == []
+
+    @patch("spade_llm.providers.llm_provider.litellm.acompletion")
     @pytest.mark.asyncio
-    async def test_get_llm_response_ollama_provider(self, mock_openai_class, mock_to_thread):
-        """Test get_llm_response with Ollama provider (includes special logging)."""
-        mock_client = Mock()
-        mock_openai_class.return_value = mock_client
-        
+    async def test_get_llm_response_none_content(self, mock_acompletion):
+        """Test handling of None response content (no tool calls either)."""
+        mock_message = Mock()
+        mock_message.content = None
+        mock_message.tool_calls = None
+
+        mock_response = Mock()
+        mock_response.choices = [Mock(message=mock_message)]
+        mock_acompletion.return_value = mock_response
+
+        provider = LLMProvider(model="gpt-4o-mini")
+        result = await provider.get_llm_response(self.mock_context)
+
+        assert result["text"] == ""
+        assert result["tool_calls"] == []
+
+    @patch("spade_llm.providers.llm_provider.litellm.acompletion")
+    @pytest.mark.asyncio
+    async def test_get_llm_response_multiple_tool_calls(self, mock_acompletion):
+        """Test handling of multiple tool calls in a single response."""
+        mock_tc1 = Mock()
+        mock_tc1.id = "call_1"
+        mock_tc1.function.name = "tool_a"
+        mock_tc1.function.arguments = '{"x": 1}'
+
+        mock_tc2 = Mock()
+        mock_tc2.id = "call_2"
+        mock_tc2.function.name = "tool_b"
+        mock_tc2.function.arguments = '{"y": 2}'
+
+        mock_message = Mock()
+        mock_message.content = None
+        mock_message.tool_calls = [mock_tc1, mock_tc2]
+
+        mock_response = Mock()
+        mock_response.choices = [Mock(message=mock_message)]
+        mock_acompletion.return_value = mock_response
+
+        provider = LLMProvider(model="gpt-4o-mini")
+        result = await provider.get_llm_response(self.mock_context)
+
+        assert len(result["tool_calls"]) == 2
+        assert result["tool_calls"][0]["name"] == "tool_a"
+        assert result["tool_calls"][1]["name"] == "tool_b"
+
+    @patch("spade_llm.providers.llm_provider.litellm.acompletion")
+    @pytest.mark.asyncio
+    async def test_get_llm_response_dict_arguments(self, mock_acompletion):
+        """Test handling of tool call arguments already parsed as dict."""
+        mock_tool_call = Mock()
+        mock_tool_call.id = "call_123"
+        mock_tool_call.function.name = "test_tool"
+        mock_tool_call.function.arguments = {"param": "value"}
+
+        mock_message = Mock()
+        mock_message.content = None
+        mock_message.tool_calls = [mock_tool_call]
+
+        mock_response = Mock()
+        mock_response.choices = [Mock(message=mock_message)]
+        mock_acompletion.return_value = mock_response
+
+        provider = LLMProvider(model="gpt-4o-mini")
+        result = await provider.get_llm_response(self.mock_context)
+
+        assert result["tool_calls"][0]["arguments"] == {"param": "value"}
+
+    @patch("spade_llm.providers.llm_provider.litellm.acompletion")
+    @pytest.mark.asyncio
+    async def test_get_llm_response_with_conversation_id(self, mock_acompletion):
+        """Test get_llm_response passes conversation_id to get_prompt."""
+        mock_message = Mock()
+        mock_message.content = "Response"
+        mock_message.tool_calls = None
+
+        mock_response = Mock()
+        mock_response.choices = [Mock(message=mock_message)]
+        mock_acompletion.return_value = mock_response
+
+        provider = LLMProvider(model="gpt-4o-mini")
+        await provider.get_llm_response(self.mock_context, conversation_id="conv-123")
+
+        self.mock_context.get_prompt.assert_called_once_with("conv-123")
+
+    @patch("spade_llm.providers.llm_provider.litellm.acompletion")
+    @pytest.mark.asyncio
+    async def test_get_llm_response_ollama_with_tools(self, mock_acompletion):
+        """Test get_llm_response with Ollama provider using tools."""
         mock_message = Mock()
         mock_message.content = "Test response"
         mock_message.tool_calls = None
-        
+
         mock_response = Mock()
         mock_response.choices = [Mock(message=mock_message)]
-        
-        mock_to_thread.return_value = mock_response
-        
-        # Create mock tool
+        mock_acompletion.return_value = mock_response
+
         mock_tool = Mock(spec=LLMTool)
         mock_tool.to_openai_tool.return_value = {
             "function": {"name": "test_tool"},
-            "type": "function"
+            "type": "function",
         }
-        
-        provider = LLMProvider.create_ollama()
+
+        provider = LLMProvider(model="ollama/llama3:8b")
         result = await provider.get_llm_response(self.mock_context, tools=[mock_tool])
-        
-        # Should complete successfully and include tools in the call
-        call_args = mock_to_thread.call_args[1]
-        assert "tools" in call_args
-        assert call_args["tool_choice"] == "auto"
+
+        call_kwargs = mock_acompletion.call_args[1]
+        assert "tools" in call_kwargs
+        assert call_kwargs["tool_choice"] == "auto"
 
 
 class TestLegacyMethods:
@@ -476,61 +412,61 @@ class TestLegacyMethods:
         """Set up test fixtures."""
         self.mock_context = Mock(spec=ContextManager)
 
-    @patch.object(LLMProvider, 'get_llm_response')
+    @patch.object(LLMProvider, "get_llm_response")
     @pytest.mark.asyncio
     async def test_get_response_returns_text(self, mock_get_llm_response):
         """Test get_response returns text from get_llm_response."""
         mock_get_llm_response.return_value = {
             "text": "Test response",
-            "tool_calls": []
+            "tool_calls": [],
         }
-        
-        provider = LLMProvider()
+
+        provider = LLMProvider(model="gpt-4o-mini")
         result = await provider.get_response(self.mock_context)
-        
+
         assert result == "Test response"
         mock_get_llm_response.assert_called_once_with(self.mock_context, None)
 
-    @patch.object(LLMProvider, 'get_llm_response')
+    @patch.object(LLMProvider, "get_llm_response")
     @pytest.mark.asyncio
     async def test_get_response_with_tools_parameter(self, mock_get_llm_response):
         """Test get_response passes tools parameter."""
         mock_get_llm_response.return_value = {"text": "Response", "tool_calls": []}
-        
+
         mock_tools = [Mock()]
-        provider = LLMProvider()
+        provider = LLMProvider(model="gpt-4o-mini")
         await provider.get_response(self.mock_context, tools=mock_tools)
-        
+
         mock_get_llm_response.assert_called_once_with(self.mock_context, mock_tools)
 
-    @patch.object(LLMProvider, 'get_llm_response')
+    @patch.object(LLMProvider, "get_llm_response")
     @pytest.mark.asyncio
     async def test_get_tool_calls_returns_list(self, mock_get_llm_response):
         """Test get_tool_calls returns tool_calls from get_llm_response."""
         expected_calls = [{"id": "call_1", "name": "tool", "arguments": {}}]
         mock_get_llm_response.return_value = {
             "text": None,
-            "tool_calls": expected_calls
+            "tool_calls": expected_calls,
         }
-        
-        provider = LLMProvider()
+
+        provider = LLMProvider(model="gpt-4o-mini")
         result = await provider.get_tool_calls(self.mock_context)
-        
+
         assert result == expected_calls
         mock_get_llm_response.assert_called_once_with(self.mock_context, None)
 
-    @patch.object(LLMProvider, 'get_llm_response')
+    @patch.object(LLMProvider, "get_llm_response")
     @pytest.mark.asyncio
     async def test_get_tool_calls_empty_list(self, mock_get_llm_response):
         """Test get_tool_calls returns empty list when no tool_calls."""
         mock_get_llm_response.return_value = {
             "text": "Just text",
-            "tool_calls": []
+            "tool_calls": [],
         }
-        
-        provider = LLMProvider()
+
+        provider = LLMProvider(model="gpt-4o-mini")
         result = await provider.get_tool_calls(self.mock_context)
-        
+
         assert result == []
 
 
@@ -540,22 +476,21 @@ class TestIntegration:
     @pytest.mark.asyncio
     async def test_provider_workflow_text_response(self, context_manager):
         """Test complete workflow with text response."""
-        with patch('spade_llm.providers.llm_provider.asyncio.to_thread') as mock_to_thread:
+        with patch("spade_llm.providers.llm_provider.litellm.acompletion") as mock_acompletion:
             mock_message = Mock()
             mock_message.content = "Hello, how can I help you?"
             mock_message.tool_calls = None
-            
+
             mock_response = Mock()
             mock_response.choices = [Mock(message=mock_message)]
-            mock_to_thread.return_value = mock_response
-            
-            provider = LLMProvider.create_openai("test-key")
-            
-            # Test the complete workflow
+            mock_acompletion.return_value = mock_response
+
+            provider = LLMProvider(model="gpt-4o-mini", api_key="test-key")
+
             llm_response = await provider.get_llm_response(context_manager)
-            text_response = await provider.get_response(context_manager)  
+            text_response = await provider.get_response(context_manager)
             tool_calls = await provider.get_tool_calls(context_manager)
-            
+
             assert llm_response["text"] == "Hello, how can I help you?"
             assert llm_response["tool_calls"] == []
             assert text_response == "Hello, how can I help you?"
@@ -564,34 +499,38 @@ class TestIntegration:
     @pytest.mark.asyncio
     async def test_provider_workflow_tool_calls(self, context_manager):
         """Test complete workflow with tool calls."""
-        with patch('spade_llm.providers.llm_provider.asyncio.to_thread') as mock_to_thread:
+        with patch("spade_llm.providers.llm_provider.litellm.acompletion") as mock_acompletion:
             mock_tool_call = Mock()
             mock_tool_call.id = "call_abc123"
             mock_tool_call.function.name = "get_weather"
             mock_tool_call.function.arguments = '{"location": "Paris"}'
-            
+
             mock_message = Mock()
             mock_message.content = None
             mock_message.tool_calls = [mock_tool_call]
-            
+
             mock_response = Mock()
             mock_response.choices = [Mock(message=mock_message)]
-            mock_to_thread.return_value = mock_response
-            
-            # Create a mock tool
+            mock_acompletion.return_value = mock_response
+
             mock_tool = Mock(spec=LLMTool)
             mock_tool.to_openai_tool.return_value = {
                 "type": "function",
-                "function": {"name": "get_weather"}
+                "function": {"name": "get_weather"},
             }
-            
-            provider = LLMProvider.create_openai("test-key")
-            
-            # Test the complete workflow
-            llm_response = await provider.get_llm_response(context_manager, tools=[mock_tool])
-            text_response = await provider.get_response(context_manager, tools=[mock_tool])
-            tool_calls = await provider.get_tool_calls(context_manager, tools=[mock_tool])
-            
+
+            provider = LLMProvider(model="gpt-4o-mini", api_key="test-key")
+
+            llm_response = await provider.get_llm_response(
+                context_manager, tools=[mock_tool]
+            )
+            text_response = await provider.get_response(
+                context_manager, tools=[mock_tool]
+            )
+            tool_calls = await provider.get_tool_calls(
+                context_manager, tools=[mock_tool]
+            )
+
             assert llm_response["text"] is None
             assert len(llm_response["tool_calls"]) == 1
             assert text_response is None
