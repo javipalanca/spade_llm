@@ -20,7 +20,7 @@ Tools are Python functions that your LLM agent can call to perform specific task
 
 ## Step 1: Basic Tool Creation
 
-Let's start with simple tools. Based on the `ollama_with_tools_example.py`, here's how to create basic tools:
+Let's start with simple tools. Based on the `ollama_with_tools.py`, here's how to create basic tools:
 
 ```python
 import spade

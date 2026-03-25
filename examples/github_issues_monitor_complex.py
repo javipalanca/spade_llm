@@ -11,7 +11,7 @@ Setup:
   1. cp examples/.env.example .env  (fill in LLM_MODEL, GITHUB_MCP_URL, NOTION_MCP_URL, GMAIL_MCP_URL)
   2. Start the human expert interface: python -m spade_llm.human_interface.web_server
   3. spade run             (in a separate terminal)
-  4. python examples/github_issues_monitor_complex_example.py
+  4. python examples/github_issues_monitor_complex.py
 
 Obtain MCP URLs from composio.dev after connecting your GitHub, Notion, and Gmail accounts.
 """

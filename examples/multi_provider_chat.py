@@ -7,7 +7,7 @@ Uncomment the provider block you want, or use LLM_MODEL from .env.
 Setup:
   1. cp examples/.env.example .env  (configure provider)
   2. spade run             (in a separate terminal)
-  3. python examples/multi_provider_chat_example.py
+  3. python examples/multi_provider_chat.py
 """
 
 import logging

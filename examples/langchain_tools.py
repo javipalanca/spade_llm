@@ -6,7 +6,7 @@ Demonstrates using LangChain tools (DuckDuckGo search, Wikipedia) with SPADE age
 Setup:
   1. cp examples/.env.example .env  (fill in LLM_MODEL)
   2. spade run             (in a separate terminal)
-  3. python examples/langchain_tools_example.py
+  3. python examples/langchain_tools.py
 """
 
 import os

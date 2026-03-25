@@ -336,11 +336,11 @@ graph LR
 
 The `/examples` directory contains complete working examples:
 
-- `multi_provider_chat_example.py` - Chat with different LLM providers
-- `ollama_with_tools_example.py` - Local models with tool calling
-- `langchain_tools_example.py` - LangChain tool integration
-- `guardrails_example.py` - Content filtering and safety controls
-- `human_in_the_loop_example.py` - Human expert consultation via web interface
+- `multi_provider_chat.py` - Chat with different LLM providers
+- `ollama_with_tools.py` - Local models with tool calling
+- `langchain_tools.py` - LangChain tool integration
+- `guardrails.py` - Content filtering and safety controls
+- `human_in_the_loop.py` - Human expert consultation via web interface
 - `valencia_multiagent_trip_planner.py` - Multi-agent workflow
 
 ## Requirements

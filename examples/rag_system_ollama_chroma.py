@@ -7,7 +7,7 @@ Runs standalone (no SPADE server required).
 Setup:
   1. pip install 'spade_llm[chroma]'
   2. cp examples/.env.example .env  (fill in EMBEDDING_MODEL)
-  3. python examples/rag_system_ollama_chroma_example.py
+  3. python examples/rag_system_ollama_chroma.py
 """
 
 import asyncio
@@ -24,7 +24,6 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.rule import Rule
 from rich.table import Table
-from rich.text import Text
 
 
 load_env_vars()

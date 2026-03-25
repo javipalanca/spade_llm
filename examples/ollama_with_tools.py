@@ -6,7 +6,7 @@ Demonstrates tool calling with SPADE agents.
 Setup:
   1. cp examples/.env.example .env  (fill in LLM_MODEL)
   2. spade run  (in a separate terminal)
-  3. python examples/ollama_with_tools_example.py
+  3. python examples/ollama_with_tools.py
 """
 
 import os

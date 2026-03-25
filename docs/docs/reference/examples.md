@@ -7,23 +7,23 @@ Complete working examples for SPADE_LLM applications.
 The [examples](https://github.com/javipalanca/spade_llm/tree/main/examples) directory contains complete working examples:
 
 **Tool Examples**:
-- `ollama_with_tools_example.py` - Local models with tools
-- `langchain_tools_example.py` - LangChain tool integration
+- `ollama_with_tools.py` - Local models with tools
+- `langchain_tools.py` - LangChain tool integration
 
 **Multi-Agent Examples**:
-- `multi_provider_chat_example.py` - Chat with different providers
-- `simple_coordinator_example.py` - Coordinator agent pattern
-- `valencia_smartCity_mcp_example.py` - Smart city multi-agent system
+- `multi_provider_chat.py` - Chat with different providers
+- `simple_coordinator.py` - Coordinator agent pattern
+- `valencia_smartCity_mcp.py` - Smart city multi-agent system
 
 **RAG Examples**:
-- `rag_system_ollama_chroma_example.py` - Complete RAG demonstration
+- `rag_system_ollama_chroma.py` - Complete RAG demonstration
 - `rag_vs_no_rag_demo.py` - Results comparison with and without RAG
 
 **Specialized Examples**:
 - `spanish_to_english_translator.py` - Translation agent
-- `trip_planner_example.py` - Trip planning workflow
-- `github_issues_monitor_complex_example.py` - GitHub monitoring
-- `guardrails_example.py` - Content filtering
+- `trip_planner.py` - Trip planning workflow
+- `github_issues_monitor_complex.py` - GitHub monitoring
+- `guardrails.py` - Content filtering
 
 ## Human-in-the-Loop Example
 

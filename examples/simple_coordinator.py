@@ -6,7 +6,7 @@ Minimal test of CoordinatorAgent: Calculator -> Reporter -> Saver.
 Setup:
   1. cp examples/.env.example .env  (fill in LLM_MODEL)
   2. spade run             (in a separate terminal)
-  3. python examples/simple_coordinator_example.py
+  3. python examples/simple_coordinator.py
 """
 
 import asyncio

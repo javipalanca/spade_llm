@@ -11,7 +11,7 @@ Setup:
   1. Install uv: https://docs.astral.sh/uv/getting-started/installation/
   2. cp examples/.env.example .env  (fill in LLM_MODEL and VALENCIA_MCP_PATH)
   3. spade run             (in a separate terminal)
-  4. python examples/valencia_smartCity_mcp_example.py
+  4. python examples/valencia_smartCity_mcp.py
 
 The Valencia Smart City MCP server runs automatically from GitHub (requires uv).
 Set VALENCIA_MCP_PATH in .env to use a local clone instead.

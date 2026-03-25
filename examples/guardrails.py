@@ -9,7 +9,7 @@ Output guardrails: LLM-based safety validator
 Setup:
   1. cp examples/.env.example .env  (fill in LLM_MODEL)
   2. spade run  (in a separate terminal)
-  3. python examples/guardrails_example.py
+  3. python examples/guardrails.py
 """
 
 import logging

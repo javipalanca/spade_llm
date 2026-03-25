@@ -9,7 +9,7 @@ SETUP:
   1. cp examples/.env.example .env  (fill in LLM_MODEL)
   2. Ensure regresion3d_simple.joblib exists in the models/ directory
   3. spade run             (in a separate terminal)
-  4. python examples/coordinador_predict3D_parameters/coordinator_predict3D.py
+  4. python examples/coordinator_params_predict/coordinator_predict.py
 
 USES:
   - SPADE Agent framework for custom behaviors
