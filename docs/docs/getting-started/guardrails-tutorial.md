@@ -47,9 +47,9 @@ async def main():
     xmpp_server = input("XMPP server domain (default: localhost): ") or "localhost"
     
     # Create provider
-    provider = LLMProvider.create_openai(
+    provider = LLMProvider(
+        model="gpt-4o-mini",
         api_key=getpass.getpass("OpenAI API key: "),
-        model="gpt-4o-mini"
     )
     
     # Create keyword guardrail that BLOCKS harmful content
@@ -230,10 +230,10 @@ def create_output_guardrails(safety_provider):
     return [safety_guardrail]
 
 # Create separate provider for safety validation
-safety_provider = LLMProvider.create_openai(
-    api_key=api_key,
+safety_provider = LLMProvider(
     model="gpt-4o-mini",
-    temperature=0.3  # Lower temperature for safety validation
+    api_key=api_key,
+    temperature=0.3,
 )
 
 output_guardrails = create_output_guardrails(safety_provider)
@@ -379,16 +379,16 @@ async def main():
     api_key = getpass.getpass("OpenAI API key: ")
     
     # Create providers
-    main_provider = LLMProvider.create_openai(
-        api_key=api_key,
+    main_provider = LLMProvider(
         model="gpt-4o-mini",
+        api_key=api_key,
         temperature=0.7
     )
     
-    safety_provider = LLMProvider.create_openai(
-        api_key=api_key,
+    safety_provider = LLMProvider(
         model="gpt-4o-mini",
-        temperature=0.3  # Lower temperature for safety validation
+        api_key=api_key,
+        temperature=0.3
     )
     
     # Create guardrails

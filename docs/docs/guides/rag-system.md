@@ -105,9 +105,9 @@ Embeddings convert text into vectors that capture semantic meaning. Two main opt
 ```python
 from spade_llm.providers import LLMProvider
 
-embedding_provider = LLMProvider.create_openai(
+embedding_provider = LLMProvider(
+    model="text-embedding-3-small",
     api_key="your-api-key",
-    model="text-embedding-3-small"
 )
 ```
 
@@ -117,8 +117,8 @@ embedding_provider = LLMProvider.create_openai(
 
 ```python
 # First: ollama pull nomic-embed-text
-embedding_provider = LLMProvider.create_ollama(
-    model="nomic-embed-text"
+embedding_provider = LLMProvider(
+    model="ollama/nomic-embed-text",
 )
 ```
 
@@ -201,7 +201,7 @@ retrieval_agent = RetrievalAgent(
 await retrieval_agent.start()
 
 # 2. Create LLM agent with retrieval tool
-llm_provider = LLMProvider.create_openai(api_key="your-key")
+llm_provider = LLMProvider(model="gpt-4o-mini")
 retrieval_tool = RetrievalTool(
     name="docs_search",
     description="Search technical documentation for code examples and explanations",

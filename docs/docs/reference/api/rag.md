@@ -330,7 +330,7 @@ ChromaDB vector store implementation.
 from spade_llm.rag import Chroma
 from spade_llm.providers import LLMProvider
 
-provider = LLMProvider.create_ollama(model="nomic-embed-text")
+provider = LLMProvider(model="ollama/nomic-embed-text")
 
 vector_store = Chroma(
     collection_name="my_collection",
@@ -647,7 +647,7 @@ from spade_llm.providers import LLMProvider
 
 async def main():
     # Setup
-    provider = LLMProvider.create_ollama(model="nomic-embed-text")
+    provider = LLMProvider(model="ollama/nomic-embed-text")
     
     vector_store = Chroma(
         collection_name="docs",
@@ -885,7 +885,7 @@ async def setup_retrieval():
     chunks = splitter.split_documents(documents)
     
     # Initialize vector store
-    provider = LLMProvider.create_ollama(model="nomic-embed-text")
+    provider = LLMProvider(model="ollama/nomic-embed-text")
     vector_store = Chroma(
         collection_name="documentation",
         embedding_fn=provider.get_embeddings

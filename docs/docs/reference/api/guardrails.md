@@ -196,9 +196,9 @@ LLMGuardrail(
 from spade_llm.guardrails import LLMGuardrail
 from spade_llm.providers import LLMProvider
 
-safety_provider = LLMProvider.create_openai(
+safety_provider = LLMProvider(
+    model="gpt-4o-mini",
     api_key="your-key",
-    model="gpt-3.5-turbo"
 )
 
 ai_safety = LLMGuardrail(

@@ -4,15 +4,15 @@ on:
   push:
     branches: [ "main", "dev" ]
     paths:
-      - 'docs/**'
-      - 'spade_llm/**'
-      - '.github/workflows/docs.yml'
+      - docs/**
+      - spade_llm/**
+      - .github/workflows/docs.yml
   pull_request:
     branches: [ "main", "dev" ]
     paths:
-      - 'docs/**'
-      - 'spade_llm/**'
-      - '.github/workflows/docs.yml'
+      - docs/**
+      - spade_llm/**
+      - .github/workflows/docs.yml
   workflow_dispatch:
 
 permissions:
@@ -29,23 +29,24 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: "3.11"
+
+      - uses: astral-sh/setup-uv@v7
 
       - name: Install dependencies
-        run: |
-          pip install -r docs/requirements.txt
-          pip install -e .
+        env:
+          UV_SYSTEM_PYTHON: "1"
+        run: uv pip install -e . -r docs/requirements.txt --override override.txt
 
       - name: Build mkdocs
         run: |
           cd docs
           mkdocs build --strict
-          
+
       - name: Add SEO files
         run: |
           # Copy robots.txt to build output
@@ -55,10 +56,10 @@ jobs:
 
       - name: Deploy to gh-pages branch
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs/site
           force_orphan: true
-          user_name: 'github-actions[bot]'
-          user_email: 'github-actions[bot]@users.noreply.github.com'
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com

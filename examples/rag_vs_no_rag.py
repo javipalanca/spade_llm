@@ -1,26 +1,18 @@
 """
 RAG Comparison Demo
 
-Demonstrates RAG by comparing LLM responses with and without retrieval.
-The knowledge base includes classic literature and the announcement of Claude Haiku 4.5.
+Compares LLM responses with and without retrieval.
+Knowledge base: classic literature + Anthropic news.
 
-PREREQUISITES:
-1. Install dependencies:
-   pip install spade_llm[chroma]
-
-2. Ollama setup:
-   ollama serve
-   ollama pull gpt-oss:20b
-   ollama pull nomic-embed-text
-
-3. SPADE server:
-   spade run
-
-USAGE:
-   python examples/rag_retrieval_vs_no_retrieval_demo.py
+Setup:
+  1. pip install 'spade_llm[chroma]'
+  2. cp examples/.env.example .env  (fill in LLM_MODEL and EMBEDDING_MODEL)
+  3. spade run  (in a separate terminal)
+  4. python examples/rag_vs_no_rag_demo.py
 """
 
 import asyncio
+import os
 import time
 import urllib.request
 from pathlib import Path
@@ -36,18 +28,20 @@ from spade_llm.rag import (
     VectorStoreRetriever,
 )
 from spade_llm.tools import RetrievalTool
+from spade_llm.utils import load_env_vars
 
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from rich.markdown import Markdown
-from rich.prompt import Confirm
 from rich import box
 
 
+load_env_vars()
+
 # Configuration
-XMPP_SERVER = "localhost"
+XMPP_SERVER = os.environ.get("XMPP_SERVER", "localhost")
 RETRIEVAL_AGENT_JID = f"retrieval_demo@{XMPP_SERVER}"
 RETRIEVAL_AGENT_PASSWORD = "retrieval_pass"
 LLM_WITH_RAG_JID = f"llm_with_rag@{XMPP_SERVER}"
@@ -55,11 +49,13 @@ LLM_WITH_RAG_PASSWORD = "rag_pass"
 LLM_NO_RAG_JID = f"llm_no_rag@{XMPP_SERVER}"
 LLM_NO_RAG_PASSWORD = "no_rag_pass"
 
-OLLAMA_BASE_URL = "http://localhost:11434/v1"
-LLM_MODEL = "gpt-oss:20b"
-EMBEDDING_MODEL = "nomic-embed-text"
+LLM_MODEL = os.environ.get("LLM_MODEL")
+EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL")
+if not LLM_MODEL or not EMBEDDING_MODEL:
+    raise SystemExit(
+        "LLM_MODEL and EMBEDDING_MODEL must be set — copy examples/.env.example to .env and configure them."
+    )
 
-KNOWLEDGE_BASE_DIR = Path(__file__).parent / ".data/gutenberg_books"
 VECTOR_DB_DIR = Path(__file__).parent / ".vector_db/retrieval_vs_no_retrieval_demo"
 
 console = Console()
@@ -188,16 +184,9 @@ async def setup_knowledge_base(embedding_provider: LLMProvider) -> Tuple[VectorS
     
     doc_count = await vector_store.get_document_count()
     if doc_count > 0:
-        console.print(f"   [green]Found existing database[/green] - {doc_count} chunks indexed")
-        reindex = Confirm.ask("   Do you want to re-download and re-index?", default=False)
-        
-        if not reindex:
-            retriever = VectorStoreRetriever(vector_store=vector_store)
-            return retriever, 6, doc_count
-        else:
-            await vector_store.delete_collection()
-            await vector_store.cleanup()
-            await vector_store.initialize()
+        console.print(f"   [green]Using existing database[/green] - {doc_count} chunks indexed")
+        retriever = VectorStoreRetriever(vector_store=vector_store)
+        return retriever, 6, doc_count
     
     books = get_gutenberg_books()
     news = get_anthropic_news()
@@ -434,15 +423,13 @@ async def main():
     
     console.print("[cyan]Initializing LLM providers...[/cyan]")
     
-    embedding_provider = LLMProvider.create_ollama(
+    embedding_provider = LLMProvider(
         model=EMBEDDING_MODEL,
-        base_url=OLLAMA_BASE_URL,
     )
     console.print(f"   [green]Ready[/green] - Embedding: {EMBEDDING_MODEL}")
     
-    llm_provider = LLMProvider.create_ollama(
+    llm_provider = LLMProvider(
         model=LLM_MODEL,
-        base_url=OLLAMA_BASE_URL,
         temperature=0.7,
     )
     console.print(f"   [green]Ready[/green] - Chat: {LLM_MODEL}")

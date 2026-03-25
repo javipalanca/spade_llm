@@ -6,7 +6,7 @@ from typing import Optional, List, Callable
 from spade.agent import Agent
 from spade_llm.agent import LLMAgent
 from spade_llm.behaviour import LLMBehaviour
-from spade_llm.providers.base_provider import LLMProvider
+from spade_llm.providers.base_provider import BaseLLMProvider
 from spade_llm.context import ContextManager
 from spade_llm.tools import LLMTool
 
@@ -57,7 +57,7 @@ def create_mocked_agent(jid: str = "test@localhost", password: str = "test_passw
 
 def create_mocked_llm_agent(jid: str = "llm_test@localhost", 
                            password: str = "test_password",
-                           provider: Optional[LLMProvider] = None):
+                           provider: Optional[BaseLLMProvider] = None):
     """Create a mocked LLM agent with optional provider."""
     if provider is None:
         from tests.conftest import MockLLMProvider

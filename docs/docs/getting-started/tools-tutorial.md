@@ -20,7 +20,7 @@ Tools are Python functions that your LLM agent can call to perform specific task
 
 ## Step 1: Basic Tool Creation
 
-Let's start with simple tools. Based on the `ollama_with_tools_example.py`, here's how to create basic tools:
+Let's start with simple tools. Based on the `ollama_with_tools.py`, here's how to create basic tools:
 
 ```python
 import spade
@@ -65,10 +65,9 @@ async def main():
     xmpp_server = input("XMPP server domain (default: localhost): ") or "localhost"
     
     # Create provider (using Ollama as in the example)
-    provider = LLMProvider.create_ollama(
-        model="qwen2.5:7b",  # Or any model that supports function calling
-        base_url="http://localhost:11434/v1",
-        temperature=0.7
+    provider = LLMProvider(
+        model="ollama/qwen2.5:7b",  # Or any model that supports function calling
+        temperature=0.7,
     )
     
     # Create tools with proper schema definitions
@@ -408,17 +407,16 @@ async def main():
     provider_type = input("Provider (openai/ollama): ").lower()
     
     if provider_type == "openai":
-        provider = LLMProvider.create_openai(
-            api_key=getpass.getpass("OpenAI API key: "),
+        provider = LLMProvider(
             model="gpt-4o-mini",
-            temperature=0.7
+            api_key=getpass.getpass("OpenAI API key: "),
+            temperature=0.7,
         )
     else:  # ollama
         model = input("Ollama model (default: qwen2.5:7b): ") or "qwen2.5:7b"
-        provider = LLMProvider.create_ollama(
-            model=model,
-            base_url="http://localhost:11434/v1",
-            temperature=0.7
+        provider = LLMProvider(
+            model=f"ollama/{model}",
+            temperature=0.7,
         )
     
     # Create tools

@@ -26,7 +26,7 @@ class TestCoordinatorAgentInitialization:
         assert agent.password == "password"
         assert agent.provider == mock_llm_provider
         assert agent.subagent_ids == set(subagent_ids)
-        assert agent.coordination_session == "main_coordination"
+        assert agent.coordination_session.startswith("coordination_")
         assert agent.routing_function is not None
         assert isinstance(agent.context, CoordinationContextManager)
         assert len(agent.agent_status) == 3

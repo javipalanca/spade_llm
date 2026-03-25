@@ -22,7 +22,6 @@ Uses:
 """
 
 import asyncio
-import getpass
 import os
 from datetime import datetime
 import spade
@@ -50,19 +49,19 @@ def price_routing_function(msg, response, context):
     if "<plan_approved>" in response_lower:
         return RoutingResponse(
             recipients=f"output@{domain}",
-            transform=lambda x: f"✅ VALENCIA TRIP PLAN APPROVED ✅\n\n{x.replace('<PLAN_APPROVED>', '').strip()}",
-            metadata={"status": "approved", "workflow": "completed"}
+            transform=lambda x: x.replace("<PLAN_APPROVED>", "").strip(),
+            metadata={"status": "approved", "workflow": "completed"},
         )
     elif "<expensive_plan>" in response_lower:
         return RoutingResponse(
             recipients=f"airbnb@{domain}",
-            transform=lambda x: f"🔄 BUDGET REVISION REQUEST:\n{x.replace('<EXPENSIVE_PLAN>', '').strip()}",
-            metadata={"revision_type": "budget_optimization"}
+            transform=lambda x: f"BUDGET REVISION REQUEST:\n{x.replace('<EXPENSIVE_PLAN>', '').strip()}",
+            metadata={"revision_type": "budget_optimization"},
         )
     elif "<revision_needed>" in response_lower:
         return RoutingResponse(
             recipients=f"routeplanner@{domain}",
-            transform=lambda x: f"🔄 PLAN REVISION REQUEST:\n{x.replace('<REVISION_NEEDED>', '').strip()}"
+            transform=lambda x: f"PLAN REVISION REQUEST:\n{x.replace('<REVISION_NEEDED>', '').strip()}",
         )
     else:
         # Default to plan maker for minor adjustments
@@ -70,61 +69,49 @@ def price_routing_function(msg, response, context):
 
 
 async def main():
-    print("🏖️ === Valencia Trip Planner - Multi-Agent Workflow === 🏖️\n")
+    print("=== Valencia Trip Planner ===")
 
-    # Load environment
     load_env_vars()
-    api_key = os.environ.get("OPENAI_API_KEY") or input("OpenAI API key: ")
+    model = os.environ.get("LLM_MODEL")
+    if not model:
+        raise SystemExit("LLM_MODEL is not set — copy examples/.env.example to .env and configure it.")
+    XMPP_SERVER = os.environ.get("XMPP_SERVER", "localhost")
 
-    # XMPP server configuration - using default SPADE settings
-    XMPP_SERVER = "localhost"
-    print("🌐 Using SPADE built-in server (localhost:5222)")
-    print("  No account registration needed!")
-    # Advanced server configuration available but not needed
-
-    # Agent credentials configuration
     agents_config = {
         "airbnb": (f"airbnb@{XMPP_SERVER}", "Airbnb Search Agent"),
         "routeplanner": (f"routeplanner@{XMPP_SERVER}", "Route Planner Agent"),
-        #"planmaker": (f"planmaker@{XMPP_SERVER}", "Plan Maker Agent"),
         "pricereviewer": (f"pricereviewer@{XMPP_SERVER}", "Price Reviewer Agent"),
         "output": (f"output@{XMPP_SERVER}", "Output Agent"),
-        "human": (f"human@{XMPP_SERVER}", "Human Agent")
+        "human": (f"human@{XMPP_SERVER}", "Human Agent"),
     }
-
-    # Get passwords for all agents - simple passwords (auto-registration with SPADE server)
-    passwords = {}
-    for role in agents_config.keys():
-        passwords[role] = f"{role}_pass"
-    print("✓ Using auto-registration with built-in server")
+    passwords = {role: f"{role}_pass" for role in agents_config}
 
     # Create LLM provider
-    OLLAMA_BASE_URL = "OLLAMA_BASE_URL"
-
-    provider = LLMProvider.create_openai(
-        api_key=api_key,
-        model="gpt-4o-mini",
-        temperature=0.7
-    )
-    provider = LLMProvider.create_ollama(
-        model='qwen2.5:latest',
-        base_url=OLLAMA_BASE_URL,
+    provider = LLMProvider(
+        model=model,
         temperature=0.7,
-        timeout=60.0  # Timeout generoso para modelos grandes
     )
-
 
     # MCP Server configurations
-    print("\n📡 Configuring MCP servers...")
-
-    # Valencia Smart City MCP
-    valencia_mcp = StdioServerConfig(
-        name="ValenciaSmart",
-        command="C:/Users/manel/PycharmProjects/SmartCityMCP/.venv/Scripts/python.exe",
-        args= [
-        "C:/Users/manel/PycharmProjects/SmartCityMCP/valencia_traffic_mcp.py"],
-        cache_tools=True
-    )
+    local_mcp_path = os.environ.get("VALENCIA_MCP_PATH")
+    if local_mcp_path:
+        valencia_mcp = StdioServerConfig(
+            name="ValenciaSmart",
+            command="uv",
+            args=["run", local_mcp_path],
+            cache_tools=True,
+        )
+    else:
+        # Fetch and run directly from GitHub (requires uv)
+        valencia_mcp = StdioServerConfig(
+            name="ValenciaSmart",
+            command="uv",
+            args=[
+                "run",
+                "https://raw.githubusercontent.com/olafmeneses/SmartCityMCP/refs/heads/master/valencia_smart_city_mcp.py",
+            ],
+            cache_tools=True,
+        )
 
     # Airbnb MCP
     airbnb_mcp = StdioServerConfig(
@@ -138,7 +125,7 @@ async def main():
     agents = {}
 
     # 1. Airbnb Search Agent
-    print("🏨 Creating Airbnb Search Agent...")
+    print("Creating agents...")
     agents["airbnb"] = LLMAgent(
         jid=agents_config["airbnb"][0],
         password=passwords["airbnb"],
@@ -195,7 +182,6 @@ async def main():
     )
 
     # 2. Route Planner Agent
-    print("🚴‍♂️ Creating Route Planner Agent...")
     agents["routeplanner"] = LLMAgent(
         jid=agents_config["routeplanner"][0],
         password=passwords["routeplanner"],
@@ -309,7 +295,6 @@ async def main():
 
 
     # 4. Price Reviewer Agent
-    print("💰 Creating Price Reviewer Agent...")
     agents["pricereviewer"] = LLMAgent(
         jid=agents_config["pricereviewer"][0],
         password=passwords["pricereviewer"],
@@ -424,7 +409,6 @@ async def main():
     )
 
     # 5. Output Agent (for final plan storage)
-    print("📄 Creating Output Agent...")
 
     class OutputAgent(spade.agent.Agent):
         async def setup(self):
@@ -435,15 +419,13 @@ async def main():
                         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                         filename = f"valencia_trip_plan_{timestamp}.txt"
 
-                        # Save to file
                         with open(filename, 'w', encoding='utf-8') as f:
-                            f.write("🏖️ VALENCIA TRIP PLAN 🏖️\n")
+                            f.write("VALENCIA TRIP PLAN\n")
                             f.write("=" * 50 + "\n\n")
                             f.write(msg.body)
-                            f.write(f"\n\n Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                            f.write(f"\n\nGenerated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-                        print(f"\n✅ Valencia trip plan saved to: {filename}")
-                        print("📋 Plan contents:")
+                        print(f"\nTrip plan saved to: {filename}")
                         print("-" * 50)
                         print(msg.body)
                         print("-" * 50)
@@ -458,19 +440,12 @@ async def main():
     )
 
     # 6. Human Agent (ChatAgent for user interaction)
-    print("👤 Creating Human Interface Agent...")
-
     def display_callback(message, sender):
         agent_name = sender.split('@')[0].upper()
-        print(f"\n📨 {agent_name} AGENT RESPONSE:")
-        print("=" * 60)
+        print(f"\n[{agent_name}]")
         print(message)
-        print("=" * 60)
-
-        # Check for workflow completion
         if "VALENCIA TRIP PLAN APPROVED" in message:
-            print("\n🎉 WORKFLOW COMPLETED SUCCESSFULLY! 🎉")
-            print("Your Valencia trip plan has been generated and saved.")
+            print("\nWorkflow completed. Trip plan saved.")
 
     agents["human"] = ChatAgent(
         jid=agents_config["human"][0],
@@ -480,37 +455,24 @@ async def main():
     )
 
     # Start all agents
-    print("\n🚀 Starting all agents...")
+    print("Starting agents...")
     for name, agent in agents.items():
         await agent.start()
-        print(f"✅ {name.capitalize()} agent started")
 
-    print("\n" + "=" * 70)
-    print("🏖️ VALENCIA TRIP PLANNER - MULTI-AGENT WORKFLOW 🏖️")
-    print("=" * 70)
-    print("\nWorkflow: Airbnb Search → Route Planning → Plan Creation → Price Review")
-    print("\n📝 USAGE INSTRUCTIONS:")
-    print("• Describe your Valencia trip requirements")
-    print("• Include: duration, number of people, budget range, interests")
-    print("• The agents will collaborate to create your perfect plan")
-    print("• Type 'exit' to quit\n")
+    print("All agents ready.")
+    print("\nDescribe your Valencia trip (duration, people, budget, interests).")
+    print("Type 'exit' to quit.\n")
 
-    print("\n" + "-" * 70)
-
-    # Run interactive workflow
     await agents["human"].run_interactive(
-        input_prompt="🏖️ Trip Request> ",
+        input_prompt="Trip> ",
         exit_command="exit",
-        response_timeout=60.0  # Longer timeout for complex processing
+        response_timeout=60.0,
     )
 
-    # Stop all agents
-    print("\n🔄 Stopping all agents...")
-    for name, agent in agents.items():
+    for agent in agents.values():
         await agent.stop()
-        print(f"✅ {name.capitalize()} agent stopped")
 
-    print("\n👋 Valencia Trip Planner workflow completed. ¡Buen viaje!")
+    print("Done.")
 
 
 if __name__ == "__main__":

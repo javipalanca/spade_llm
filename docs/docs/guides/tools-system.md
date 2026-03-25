@@ -247,7 +247,7 @@ from spade_llm.providers import LLMProvider
 from spade_llm.rag import Chroma, VectorStoreRetriever
 
 # 1. Create vector store and retriever
-embedding_provider = LLMProvider.create_ollama(model="nomic-embed-text")
+embedding_provider = LLMProvider(model="ollama/nomic-embed-text")
 
 vector_store = Chroma(
     collection_name="documentation",
@@ -275,7 +275,7 @@ retrieval_tool = RetrievalTool(
 )
 
 # 4. Add to LLM agent
-llm_provider = LLMProvider.create_openai(api_key="your-key")
+llm_provider = LLMProvider(model="gpt-4o-mini")
 
 llm_agent = LLMAgent(
     jid="assistant@localhost",

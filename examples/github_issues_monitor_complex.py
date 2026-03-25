@@ -1,36 +1,25 @@
 """
-GitHub Issues/PRs Monitor with Email Notification System - Multi-Agent MCP Workflow
+GitHub Issues/PRs Monitor with Email Notifications
 
-This example demonstrates a complete multi-agent GitHub monitoring system with:
-- Input guardrails (GitHub-only requests)
-- GitHub MCP integration (list issues/PRs)
-- Notion MCP with HTTP streaming (storage)
-- Human-in-the-loop (email confirmation)
-- Gmail MCP (email sending)
+A 4-agent workflow that:
+1. Analyzes GitHub issues and pull requests via GitHub MCP
+2. Stores summaries in Notion via Notion MCP
+3. Asks a human expert for email confirmation (human-in-the-loop)
+4. Sends the summary via Gmail MCP
 
-Features a 4-agent workflow: ChatAgent → GitHubAnalyzerAgent → NotionManagerAgent → EmailManagerAgent
-All parameters are configurable - no hardcoded values.
+Setup:
+  1. cp examples/.env.example .env  (fill in LLM_MODEL, GITHUB_MCP_URL, NOTION_MCP_URL, GMAIL_MCP_URL)
+  2. Start the human expert interface: python -m spade_llm.human_interface.web_server
+  3. spade run             (in a separate terminal)
+  4. python examples/github_issues_monitor_complex.py
 
-PREREQUISITES:
-1. Start SPADE built-in server in another terminal:
-   spade run
-   
-   (Advanced server configuration available but not needed)
-
-2. Install dependencies:
-   pip install spade_llm
-
-3. MCP services (configurable URLs in the example)
-
-This example uses SPADE's default built-in server (localhost:5222) - no account registration needed!
+Obtain MCP URLs from composio.dev after connecting your GitHub, Notion, and Gmail accounts.
 """
 
 import asyncio
-import getpass
 import os
 import spade
 import logging
-from datetime import datetime
 from typing import Dict, Any
 
 from spade_llm.agent import LLMAgent, ChatAgent
@@ -266,49 +255,32 @@ class GitHubOnlyGuardrail(Guardrail):
 async def main():
     """Main function of the GitHub Issues Monitor example."""
     
-    # 2. PARAMETRIC CONFIGURATION (no hardcoding)
     load_env_vars()
-    
-    print("🐙 === GitHub Issues/PRs Monitor with Email Notification === 🐙\n")
-    
-    # XMPP server configuration - using default SPADE settings
-    xmpp_server = "localhost"
-    print("🌐 Using SPADE built-in server (localhost:5222)")
-    print("  No account registration needed!")
-    # Advanced server configuration available but not needed
-    
-    # API Key (with fallback)
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        api_key = input("Enter OpenAI API key: ")
-    
-    # MCP server URLs (configurable)
-    print("\n🔧 MCP Server Configuration:")
-    github_mcp_url = input("Enter GitHub MCP server URL (or press Enter for default): ").strip()
-    if not github_mcp_url:
-        github_mcp_url = "https://mcp.composio.dev/composio/server/1d9fa71f-916e-4a6b-8bb6-e68ef758f255/mcp?include_composio_helper_actions=true"
-    
-    notion_mcp_url = input("Enter Notion MCP server URL (or press Enter for default): ").strip()
-    if not notion_mcp_url:
-        notion_mcp_url = "https://mcp.composio.dev/composio/server/902f9f2b-01dc-4af4-82ba-8707c3b11fe2/mcp?include_composio_helper_actions=true"
-    
-    gmail_mcp_url = input("Enter Gmail MCP server URL (or press Enter for default): ").strip()
-    if not gmail_mcp_url:
-        gmail_mcp_url = "https://mcp.composio.dev/composio/server/0a3005ff-2ff2-4dcd-a949-37a0bbb8a03e/mcp?include_composio_helper_actions=true"
+
+    print("=== GitHub Issues/PRs Monitor ===")
+
+    xmpp_server = os.environ.get("XMPP_SERVER", "localhost")
+
+    model = os.environ.get("LLM_MODEL")
+    if not model:
+        raise SystemExit("LLM_MODEL is not set — copy examples/.env.example to .env and configure it.")
+
+    # MCP server URLs - configure in .env (see examples/.env.example)
+    github_mcp_url = os.environ.get("GITHUB_MCP_URL")
+    notion_mcp_url = os.environ.get("NOTION_MCP_URL")
+    gmail_mcp_url = os.environ.get("GMAIL_MCP_URL")
+    if not all([github_mcp_url, notion_mcp_url, gmail_mcp_url]):
+        raise ValueError(
+            "GITHUB_MCP_URL, NOTION_MCP_URL, and GMAIL_MCP_URL must be set. "
+            "See .env.example for details."
+        )
     
     # 3. DECLARE THE PROVIDER
-    provider = LLMProvider.create_openai(
-        api_key=api_key,
-        model="gpt-4o-mini",
-        temperature=0.7
+    provider = LLMProvider(
+        model=model,
+        temperature=0.7,
     )
-    
-    # Alternative for Ollama (commented):
-    # provider = LLMProvider.create_ollama(
-    #     model="gemma2:2b",
-    #     base_url="http://localhost:11434/v1"
-    # )
-    
+
     # MCP Server configurations
     github_mcp = StreamableHttpServerConfig(
         name="GitHubMCP",
@@ -373,9 +345,8 @@ async def main():
         description="Ask human expert for email sending confirmation and recipient details"
     )
     
-    # Display callback for chat responses
     def display_response(message: str, sender: str):
-        print(f"\n🤖 GitHub Monitor: {message}")
+        print(f"\nGitHub Monitor: {message}")
         print("-" * 50)
     
     # 5. INITIALIZE AGENTS WITH LLMAgent()
@@ -425,83 +396,53 @@ async def main():
         verify_security=False
     )
     
-    # 6. START AGENTS
     try:
-        print("\n🚀 Starting agents...")
+        print("Starting agents...")
         agents = {
             "chat": chat_agent,
             "analyzer": analyzer_agent,
             "notion": notion_agent,
             "email": email_agent,
         }
-        
+
         for name, agent in agents.items():
             await agent.start()
-            print(f"✅ {name.capitalize()} agent started")
-        
-        await asyncio.sleep(3)  # Time for connections
-        
-        print("✅ All agents started successfully")
-        
-        # 7. INTERACTIVE DEMO
-        print(f"\n{'='*70}")
-        print("🐙 GITHUB ISSUES/PRS MONITOR SYSTEM")
-        print("="*70)
-        print("\n🎯 What this system does:")
-        print("1. 📊 Analyzes GitHub issues and pull requests")
-        print("2. 📚 Stores summaries in Notion database")
-        print("3. 🤔 Asks human expert about email notifications")
-        print("4. 📧 Sends professional summaries via Gmail")
-        print("\n🛡️ Guardrails: Only GitHub-related requests accepted")
-        print("\n💡 Example requests:")
-        print("• 'Show me recent issues in the repository'")
-        print("• 'Analyze pull requests from this week'")
-        print("• 'Review GitHub activity and send summary'")
-        print("\n⚠️  Note: All MCP services use HTTP streaming.")
-        print("Ensure human expert is available for email confirmations.")
-        print(f"\n👤 Human Expert Instructions:")
-        print(f"🌐 Open web interface: http://localhost:8080")
-        print(f"🔑 Connect as: {human_jid}")
-        print("📧 You'll be asked about email sending decisions")
-        print("\nType 'exit' to quit")
-        print(f"{'='*70}\n")
-        
+
+        await asyncio.sleep(3)
+
+        print("All agents ready.")
+        print("\n" + "=" * 70)
+        print("GITHUB ISSUES/PRS MONITOR")
+        print("=" * 70)
+        print("\nGuardrails: Only GitHub-related requests accepted")
+        print("\nExample requests:")
+        print("  - 'Show me recent issues in the repository'")
+        print("  - 'Analyze pull requests from this week'")
+        print("  - 'Review GitHub activity and send summary'")
+        print("\nNote: All MCP services use HTTP streaming.")
+        print("Ensure the human expert web interface is running.")
+        print(f"  Human expert: http://localhost:8080  (connect as: {human_jid})")
+        print("\nType 'exit' to quit.")
+        print("=" * 70 + "\n")
+
         await chat_agent.run_interactive(
-            input_prompt="🐙 GitHub> ",
+            input_prompt="GitHub> ",
             exit_command="exit",
-            response_timeout=120.0  # Longer timeout for multi-agent processing
+            response_timeout=120.0,
         )
         
     except KeyboardInterrupt:
-        print("\n👋 Shutting down...")
-        
+        print("\nShutting down...")
+
     except Exception as e:
-        print(f"❌ Error: {e}")
-        
+        print(f"Error: {e}")
+
     finally:
-        # 8. CLEANUP
-        print("\n🛑 Stopping agents...")
+        print("\nStopping agents...")
         for name, agent in agents.items():
             await agent.stop()
-            print(f"✅ {name.capitalize()} agent stopped")
-        print("✅ GitHub Monitor system shutdown complete!")
+        print("Done.")
 
 
 if __name__ == "__main__":
-    print("🚀 Starting GitHub Issues/PRs Monitor...")
-    print("\n📋 Prerequisites:")
-    print("• SPADE built-in server running in another terminal:")
-    print("  spade run")
-    print("• Advanced server configuration available but not needed")
-    print("• OpenAI API key")
-    print("• Internet connection for MCP services")
-    print("• Human expert web interface: python -m spade_llm.human_interface.web_server")
-    print()
-    
-    try:
-        spade.run(main())
-    except KeyboardInterrupt:
-        print("\n👋 Example terminated by user")
-    except Exception as e:
-        print(f"\n❌ Example failed: {e}")
-        print("💡 Check your configuration and try again")
+    spade.run(main())

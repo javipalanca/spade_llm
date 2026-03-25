@@ -4,7 +4,7 @@ import pytest
 from abc import ABC
 from unittest.mock import AsyncMock
 
-from spade_llm.providers.base_provider import LLMProvider
+from spade_llm.providers.base_provider import BaseLLMProvider
 from spade_llm.context import ContextManager
 from spade_llm.tools import LLMTool
 
@@ -13,23 +13,21 @@ class TestBaseLLMProvider:
     """Test the base LLM provider abstract class."""
     
     def test_base_provider_is_abstract(self):
-        """Test that LLMProvider is an abstract class."""
-        # Should not be able to instantiate directly
+        """Test that BaseLLMProvider is an abstract class."""
         with pytest.raises(TypeError):
-            LLMProvider()
+            BaseLLMProvider()
     
     def test_base_provider_inheritance(self):
-        """Test that LLMProvider inherits from ABC."""
-        assert issubclass(LLMProvider, ABC)
+        """Test that BaseLLMProvider inherits from ABC."""
+        assert issubclass(BaseLLMProvider, ABC)
     
     def test_abstract_method_exists(self):
         """Test that get_llm_response is an abstract method."""
-        # Check that the method exists and is abstract
-        assert hasattr(LLMProvider, 'get_llm_response')
-        assert getattr(LLMProvider.get_llm_response, '__isabstractmethod__', False)
+        assert hasattr(BaseLLMProvider, 'get_llm_response')
+        assert getattr(BaseLLMProvider.get_llm_response, '__isabstractmethod__', False)
 
 
-class ConcreteLLMProvider(LLMProvider):
+class ConcreteLLMProvider(BaseLLMProvider):
     """Concrete implementation for testing legacy methods."""
     
     def __init__(self, mock_response=None, mock_tool_calls=None):
@@ -125,7 +123,7 @@ class TestProviderInterface:
     def test_concrete_provider_must_implement_get_llm_response(self):
         """Test that concrete providers must implement get_llm_response."""
         
-        class IncompleteProvider(LLMProvider):
+        class IncompleteProvider(BaseLLMProvider):
             pass  # Missing get_llm_response implementation
         
         # Should not be able to instantiate without implementing abstract method
@@ -136,7 +134,7 @@ class TestProviderInterface:
         """Test that properly implemented concrete provider can be instantiated."""
         provider = ConcreteLLMProvider()
         
-        assert isinstance(provider, LLMProvider)
+        assert isinstance(provider, BaseLLMProvider)
         assert hasattr(provider, 'get_llm_response')
         assert callable(provider.get_llm_response)
     
@@ -189,7 +187,7 @@ class TestProviderErrorHandling:
     async def test_provider_can_raise_exceptions(self, context_manager):
         """Test that providers can raise exceptions."""
         
-        class ErrorProvider(LLMProvider):
+        class ErrorProvider(BaseLLMProvider):
             async def get_llm_response(self, context, tools=None):
                 raise ValueError("Provider error")
         
@@ -202,7 +200,7 @@ class TestProviderErrorHandling:
     async def test_legacy_methods_propagate_exceptions(self, context_manager):
         """Test that legacy methods propagate exceptions from get_llm_response."""
         
-        class ErrorProvider(LLMProvider):
+        class ErrorProvider(BaseLLMProvider):
             async def get_llm_response(self, context, tools=None):
                 raise RuntimeError("LLM error")
         
@@ -224,7 +222,7 @@ class TestProviderWithTools:
     async def test_provider_receives_tools_parameter(self, context_manager, mock_simple_tool, mock_async_tool):
         """Test that provider receives tools parameter correctly."""
         
-        class ToolInspectingProvider(LLMProvider):
+        class ToolInspectingProvider(BaseLLMProvider):
             def __init__(self):
                 super().__init__()
                 self.last_tools = None
@@ -250,7 +248,7 @@ class TestProviderContextHandling:
     async def test_provider_receives_context(self, context_manager):
         """Test that provider receives context parameter."""
         
-        class ContextInspectingProvider(LLMProvider):
+        class ContextInspectingProvider(BaseLLMProvider):
             def __init__(self):
                 super().__init__()
                 self.last_context = None
@@ -270,7 +268,7 @@ class TestProviderContextHandling:
     async def test_provider_can_access_context_methods(self, context_manager):
         """Test that provider can access context methods."""
         
-        class ContextUsingProvider(LLMProvider):
+        class ContextUsingProvider(BaseLLMProvider):
             async def get_llm_response(self, context, tools=None):
                 # Provider should be able to call context methods
                 prompt = context.get_prompt()

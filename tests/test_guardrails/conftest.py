@@ -9,13 +9,13 @@ from spade_llm.guardrails import (
     GuardrailAction, GuardrailResult,
     KeywordGuardrail, RegexGuardrail, CustomFunctionGuardrail
 )
-from spade_llm.providers.base_provider import LLMProvider
+from spade_llm.providers.base_provider import BaseLLMProvider
 
 
 @pytest.fixture
 def mock_llm_provider():
     """Create a mock LLM provider for LLMGuardrail tests."""
-    provider = Mock(spec=LLMProvider)
+    provider = Mock(spec=BaseLLMProvider)
     
     # Mock the get_response method to return JSON
     async def mock_get_response(context, tools=None):
@@ -28,7 +28,7 @@ def mock_llm_provider():
 @pytest.fixture
 def mock_unsafe_llm_provider():
     """Create a mock LLM provider that flags content as unsafe."""
-    provider = Mock(spec=LLMProvider)
+    provider = Mock(spec=BaseLLMProvider)
     
     async def mock_get_response(context, tools=None):
         return '{"safe": false, "reason": "Content contains harmful material"}'
@@ -38,9 +38,9 @@ def mock_unsafe_llm_provider():
 
 
 @pytest.fixture
-def ºmock_error_llm_provider():
+def mock_error_llm_provider():
     """Create a mock LLM provider that raises errors."""
-    provider = Mock(spec=LLMProvider)
+    provider = Mock(spec=BaseLLMProvider)
     provider.get_response = AsyncMock(side_effect=Exception("LLM provider error"))
     return provider
 

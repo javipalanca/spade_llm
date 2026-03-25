@@ -178,9 +178,9 @@ async def main():
     # First, start SPADE's built-in server:
     # spade run
     
-    provider = LLMProvider.create_openai(
+    provider = LLMProvider(
+        model="gpt-4o-mini",
         api_key="your-api-key",
-        model="gpt-4o-mini"
     )
     
     agent = LLMAgent(
@@ -231,11 +231,11 @@ if __name__ == "__main__":
 
 Explore the [examples directory](https://github.com/javipalanca/spade_llm/tree/main/examples) for complete working examples:
 
-- **`multi_provider_chat_example.py`** - Chat with different LLM providers
-- **`ollama_with_tools_example.py`** - Local models with tool calling
-- **`guardrails_example.py`** - Content filtering and safety controls
-- **`langchain_tools_example.py`** - LangChain tool integration
-- **`rag_system_ollama_chroma_example.py`** - Complete RAG system demonstration
+- **`multi_provider_chat.py`** - Chat with different LLM providers
+- **`ollama_with_tools.py`** - Local models with tool calling
+- **`guardrails.py`** - Content filtering and safety controls
+- **`langchain_tools.py`** - LangChain tool integration
+- **`rag_system_ollama_chroma.py`** - Complete RAG system demonstration
 - **`rag_vs_no_rag_demo.py`** - Comparison of responses with and without RAG
 - **`valencia_multiagent_trip_planner.py`** - Multi-agent workflow
 

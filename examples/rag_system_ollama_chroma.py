@@ -1,28 +1,18 @@
 """
-RAG System Example with Ollama and ChromaDB.
+RAG System Example with ChromaDB
 
-Demonstrates the core RAG (Retrieval-Augmented Generation) components of SPADE-LLM:
-- Document creation and text splitting
-- Vector embeddings using Ollama
-- ChromaDB vector store operations (add, search, delete)
-- Semantic retrieval with filtering and scoring
+Demonstrates core RAG components: document indexing, semantic search, and deletion.
+Runs standalone (no SPADE server required).
 
-PREREQUISITES:
-1. Install dependencies with Chroma support:
-   pip install spade_llm[chroma]
-
-2. Ollama setup:
-   ollama serve
-   ollama pull nomic-embed-text
-
-3. Configure Ollama base URL:
-   - For local: http://localhost:11434
-   - Update OLLAMA_BASE_URL variable below if needed.
-
-NOTE: This example runs standalone without SPADE server - it only demonstrates RAG components.
+Setup:
+  1. pip install 'spade_llm[chroma]'
+  2. cp examples/.env.example .env  (fill in EMBEDDING_MODEL)
+  3. python examples/rag_system_ollama_chroma.py
 """
 
 import asyncio
+import os
+from spade_llm.utils import load_env_vars
 from spade_llm.rag import (
     Document,
     Chroma,
@@ -34,11 +24,13 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.rule import Rule
 from rich.table import Table
-from rich.text import Text
 
 
-OLLAMA_BASE_URL = "http://localhost:11434/v1"
-EMBEDDING_MODEL = "nomic-embed-text"
+load_env_vars()
+
+EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL")
+if not EMBEDDING_MODEL:
+    raise SystemExit("EMBEDDING_MODEL is not set — copy examples/.env.example to .env and configure it.")
 
 console = Console()
 
@@ -168,10 +160,9 @@ async def main():
         border_style="cyan"
     ))
     
-    llm_provider = LLMProvider.create_ollama(
+    llm_provider = LLMProvider(
         model=EMBEDDING_MODEL,
-        base_url=OLLAMA_BASE_URL,
-        timeout=60
+        timeout=60,
     )
     
     vector_store = Chroma(
@@ -226,19 +217,7 @@ async def main():
         
     except Exception as e:
         console.print(f"\n[bold red]Error: {e}[/bold red]")
-        
-        if "Cannot connect" in str(e) or "Ollama" in str(e):
-            troubleshooting_text = Text()
-            troubleshooting_text.append("1. Install Ollama: https://ollama.com\n", style="default")
-            troubleshooting_text.append(f"2. Pull model: ollama pull {EMBEDDING_MODEL}\n", style="default")
-            troubleshooting_text.append(f"3. Verify server: curl {OLLAMA_BASE_URL}/api/tags", style="default")
-            
-            console.print(Panel(
-                troubleshooting_text,
-                title="[yellow]Troubleshooting[/yellow]",
-                border_style="yellow",
-                padding=(1, 2)
-            ))
+        console.print("[yellow]Check that the embedding provider is reachable and EMBEDDING_MODEL is correct.[/yellow]")
     
     finally:
         console.print("\n[blue]Cleaning up...[/blue]")

@@ -589,9 +589,11 @@ class TestLLMBehaviourEdgeCases:
         
         await behaviour.run()
         
-        # Should create conversation ID from sender_to
-        expected_conv_id = f"{msg.sender}_{msg.to}"
-        assert expected_conv_id in behaviour._active_conversations
+        # Should create conversation ID from sender_receiver_uuid format
+        assert any(
+            key.startswith("sender_receiver_")
+            for key in behaviour._active_conversations
+        )
     
     @pytest.mark.asyncio
     async def test_message_with_empty_body(self, mock_llm_provider):

@@ -864,9 +864,9 @@ from spade_llm.memory import AgentBaseMemory, AgentInteractionMemory
 
 async def memory_integration_example():
     # Create provider
-    provider = LLMProvider.create_openai(
+    provider = LLMProvider(
+        model="gpt-4o-mini",
         api_key="your-api-key",
-        model="gpt-4"
     )
     
     # Create agent with both memory types

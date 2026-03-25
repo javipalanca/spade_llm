@@ -158,8 +158,7 @@ class TestConversationIDOverrideLogic:
 
         conv_id = coordination_context_manager._get_coordination_conversation_id(msg)
 
-        expected = f"{msg.sender}_{msg.to}"
-        assert conv_id == expected
+        assert conv_id.startswith("user_coordinator_")
 
     def test_conversation_id_mixed_scenarios(
         self, coordination_context_manager, coordination_session_id

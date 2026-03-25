@@ -32,10 +32,10 @@ from spade_llm import LLMAgent, LLMProvider
 
 async def main():
     # Create an LLM provider
-    provider = LLMProvider.create_openai(
-        api_key="your-api-key-here",
+    provider = LLMProvider(
         model="gpt-4o-mini",
-        temperature=0.7
+        api_key="your-api-key-here",
+        temperature=0.7,
     )
     
     # Create the LLM agent (using SPADE's built-in server)
@@ -57,25 +57,24 @@ if __name__ == "__main__":
 
 ### Understanding the Components
 
-**LLMProvider**: Your interface to different LLM services. SPADE-LLM supports multiple providers:
+**LLMProvider**: Your interface to different LLM services. SPADE-LLM uses [LiteLLM](https://docs.litellm.ai/) to support 100+ providers:
 
 ```python
 # OpenAI
-provider = LLMProvider.create_openai(
+provider = LLMProvider(
+    model="gpt-4o-mini",
     api_key="your-api-key",
-    model="gpt-4o-mini"
 )
 
 # Ollama (local)
-provider = LLMProvider.create_ollama(
-    model="llama3.1:8b",
-    base_url="http://localhost:11434/v1"
+provider = LLMProvider(
+    model="ollama/llama3.1:8b",
 )
 
-# LM Studio (local)
-provider = LLMProvider.create_lm_studio(
-    model="local-model",
-    base_url="http://localhost:1234/v1"
+# Any OpenAI-compatible API (LM Studio, vLLM, etc.)
+provider = LLMProvider(
+    model="openai/local-model",
+    base_url="http://localhost:1234/v1",
 )
 ```
 
@@ -101,9 +100,9 @@ async def main():
     input("Press Enter when the server is running...")
     
     # Create LLM provider
-    provider = LLMProvider.create_openai(
+    provider = LLMProvider(
+        model="gpt-4o-mini",
         api_key="your-api-key",
-        model="gpt-4o-mini"
     )
     
     # Create the LLM agent
@@ -182,10 +181,10 @@ logger = logging.getLogger(__name__)
 async def main():
     try:
         # Create provider with error handling
-        provider = LLMProvider.create_openai(
-            api_key="your-api-key",
+        provider = LLMProvider(
             model="gpt-4o-mini",
-            timeout=30.0  # Set timeout
+            api_key="your-api-key",
+            timeout=30.0,
         )
         
         # Create agents with error handling
@@ -242,17 +241,16 @@ async def main():
     
     if provider_type == "openai":
         api_key = getpass.getpass("OpenAI API key: ")
-        provider = LLMProvider.create_openai(
-            api_key=api_key,
+        provider = LLMProvider(
             model="gpt-4o-mini",
-            timeout=30.0
+            api_key=api_key,
+            timeout=30.0,
         )
     else:  # ollama
         model = input("Ollama model (default: llama3.1:8b): ") or "llama3.1:8b"
-        provider = LLMProvider.create_ollama(
-            model=model,
-            base_url="http://localhost:11434/v1",
-            timeout=60.0
+        provider = LLMProvider(
+            model=f"ollama/{model}",
+            timeout=60.0,
         )
     
     # Simple passwords for built-in server (no need for getpass)

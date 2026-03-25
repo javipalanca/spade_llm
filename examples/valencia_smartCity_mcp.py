@@ -1,71 +1,57 @@
 """
-Valencia Smart City MCP Example
+Valencia Smart City Assistant
 
-Demonstrates using Valencia Smart City MCP server with SPADE agents.
-The MCP server provides real-time data about Valencia, Spain including:
-- Traffic conditions and congestion
-- Valenbisi bike station availability
-- Air quality monitoring
+An LLM agent with access to real-time Valencia city data via MCP:
 - Weather forecasts
+- Traffic conditions
+- Valenbisi bike availability
+- Air quality
 
-PREREQUISITES:
-1. Install dependencies:
-   pip install spade_llm
+Setup:
+  1. Install uv: https://docs.astral.sh/uv/getting-started/installation/
+  2. cp examples/.env.example .env  (fill in LLM_MODEL and VALENCIA_MCP_PATH)
+  3. spade run             (in a separate terminal)
+  4. python examples/valencia_smartCity_mcp.py
 
-2. Install uv (Python package installer) if you don't have it:
-   https://docs.astral.sh/uv/getting-started/installation/
-
-3. Start SPADE built-in server in another terminal:
-   spade run
-
-4. (Optional) Configure your LLM:
-   - Default: Ollama with gpt-oss:20b model
-   - Modify OLLAMA_BASE_URL and LLM_MODEL variables if needed
-
-QUICK START:
-- The MCP server runs automatically from GitHub - no manual setup required!
-- You can also clone the SmartCityMCP repo and run locally by changing LOCAL_MCP_PATH.
-
-This example uses SPADE's default built-in server (localhost:5222) - no account registration needed!
+The Valencia Smart City MCP server runs automatically from GitHub (requires uv).
+Set VALENCIA_MCP_PATH in .env to use a local clone instead.
 """
 
+import os
 import spade
 
 from spade_llm.agent import LLMAgent, ChatAgent
 from spade_llm.providers import LLMProvider
 from spade_llm.mcp import StdioServerConfig
+from spade_llm.utils import load_env_vars
 
 from rich.console import Console
 from rich.panel import Panel
 from rich.markdown import Markdown
 from rich import box
 
-OLLAMA_BASE_URL = "http://localhost:11434/v1"
-LLM_MODEL = "gpt-oss:20b"
+load_env_vars()
 
-# Change this path if you've cloned the repo from https://github.com/olafmeneses/SmartCityMCP)
-LOCAL_MCP_PATH = None  # example -> "../SmartCityMCP/valencia_smart_city_mcp.py"
+LLM_MODEL = os.environ.get("LLM_MODEL")
+if not LLM_MODEL:
+    raise SystemExit("LLM_MODEL is not set — copy examples/.env.example to .env and configure it.")
+LOCAL_MCP_PATH = os.environ.get("VALENCIA_MCP_PATH")
 
 console = Console()
 
 async def main():
     console.print("\n")
     console.print(Panel(
-        "[bold cyan]🌆 Valencia Smart City Assistant[/bold cyan]\n"
+        "[bold cyan]Valencia Smart City Assistant[/bold cyan]\n"
         "[bold]Powered by MCP & SPADE[/bold]",
         box=box.DOUBLE,
         border_style="cyan"
     ))
-    
-    # XMPP server configuration - using default SPADE settings
-    xmpp_server = "localhost"
-    console.print("\n[cyan]Server Configuration[/cyan]")
-    console.print("   [green]✓[/green] Using SPADE built-in server (localhost:5222)")
-    console.print("   [green]✓[/green] No account registration needed!")
-    
-    # Agent credentials
+
+    xmpp_server = os.environ.get("XMPP_SERVER", "localhost")
+
     llm_jid = f"llm_agent@{xmpp_server}"
-    llm_password = "llm_pass"  # Simple password (auto-registration with SPADE server)
+    llm_password = "llm_pass"
 
     # Valencia Smart City MCP server configuration
     console.print("\n[cyan]MCP Server Configuration[/cyan]")
@@ -97,10 +83,7 @@ async def main():
 
     # Create provider
     console.print("\n[cyan]Initializing LLM Provider...[/cyan]")
-    provider = LLMProvider.create_ollama(
-        model=LLM_MODEL,
-        base_url=OLLAMA_BASE_URL,
-    )
+    provider = LLMProvider(model=LLM_MODEL)
     console.print(f"   [green]✓[/green] Provider ready: {LLM_MODEL}")
 
     # Create LLM agent with MCP
@@ -118,14 +101,14 @@ async def main():
 
     # Human agent setup
     human_jid = f"human@{xmpp_server}"
-    human_password = "human_pass"  # Simple password (auto-registration with SPADE server)
+    human_password = "human_pass"
 
     # Rich console display callback with markdown support
     def display_response(message: str, sender: str):
         console.print("\n")
         console.print(Panel(
             Markdown(message),
-            title="[bold green]🌆 Valencia Smart Assistant[/bold green]",
+            title="[bold green]Valencia Smart Assistant[/bold green]",
             border_style="green",
             box=box.ROUNDED,
         ))

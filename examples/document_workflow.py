@@ -1,23 +1,15 @@
 """
-Document Creation Workflow Example
+Document Creation Workflow
 
-Multi-agent workflow for collaborative document creation:
-Research -> Editor -> Reviewer -> Publisher
+Multi-agent pipeline: Researcher -> Editor -> Reviewer -> Publisher.
 
-PREREQUISITES:
-1. Start SPADE built-in server in another terminal:
-   spade run
-   
-   (Advanced server configuration available but not needed)
-
-2. Install dependencies:
-   pip install spade_llm
-
-This example uses SPADE's default built-in server (localhost:5222) - no account registration needed!
+Setup:
+  1. cp examples/.env.example .env  (fill in LLM_MODEL)
+  2. spade run             (in a separate terminal)
+  3. python examples/document_workflow.py
 """
 
 import asyncio
-import getpass
 import os
 from datetime import datetime
 import spade
@@ -28,8 +20,6 @@ from spade_llm.providers import LLMProvider
 from spade_llm.tools import LangChainToolAdapter
 from spade_llm.utils import load_env_vars
 
-# Import LangChain tools
-from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_community.tools import WikipediaQueryRun
 from langchain_community.utilities import WikipediaAPIWrapper
 import logging
@@ -57,14 +47,10 @@ def review_router(msg, response, context):
 async def main():
     # Load environment
     load_env_vars()
-    api_key = os.environ.get("OPENAI_API_KEY") or input("OpenAI API key: ")
-
-    # XMPP server configuration - using default SPADE settings
-    XMPP_SERVER = "localhost"
-    print("🌐 Using SPADE built-in server (localhost:5222)")
-    print("  No account registration needed!")
-    # Advanced server configuration available but not needed
-    # Agent credentials
+    model = os.environ.get("LLM_MODEL")
+    if not model:
+        raise SystemExit("LLM_MODEL is not set — copy examples/.env.example to .env and configure it.")
+    XMPP_SERVER = os.environ.get("XMPP_SERVER", "localhost")
     agents_config = {
         "researcher": (f"researcher@{XMPP_SERVER}", "Research Agent"),
         "editor": (f"editor@{XMPP_SERVER}", "Editor Agent"),
@@ -73,23 +59,16 @@ async def main():
         "human": (f"human@{XMPP_SERVER}", "Human Agent")
     }
 
-    # Get passwords - simple passwords (auto-registration with SPADE server)
-    passwords = {}
-    for role in agents_config.keys():
-        passwords[role] = f"{role}_pass"
-    print("✓ Using auto-registration with built-in server")
+    passwords = {role: f"{role}_pass" for role in agents_config}
 
     # Create provider
-    provider = LLMProvider.create_openai(
-        api_key=api_key,
-        model="gpt-4o-mini"
+    provider = LLMProvider(
+        model=model,
     )
 
 
-    # Create tools
     tools = [
-        #LangChainToolAdapter(DuckDuckGoSearchRun()),
-        LangChainToolAdapter(WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper()))
+        LangChainToolAdapter(WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())),
     ]
 
     # Create agents
@@ -150,7 +129,7 @@ async def main():
                         filename = f"published_document_{timestamp}.txt"
                         with open(filename, 'w') as f:
                             f.write(msg.body)
-                        print(f"✓ Document saved to: {filename}")
+                        print(f"Document saved to: {filename}")
                     await asyncio.sleep(0.1)
 
             self.add_behaviour(PublishBehaviour())
@@ -162,9 +141,9 @@ async def main():
 
     # Human Agent (using ChatAgent)
     def display_callback(message, sender):
-        print(f"\n📄 Document from {sender}:\n{message}\n")
+        print(f"\nDocument from {sender}:\n{message}\n")
         if "<TASK_COMPLETE>" in message:
-            print("✅ Workflow completed!\n")
+            print("Workflow completed.\n")
 
     agents["human"] = ChatAgent(
         jid=agents_config["human"][0],
