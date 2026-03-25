@@ -6,38 +6,20 @@ on:
     tags:
       - "*"
     paths-ignore:
-      - 'docs/**'
-      - '**.md'
-      - '.github/workflows/docs.yml'
+      - docs/**
+      - "**.md"
+      - .github/workflows/docs.yml
   pull_request:
     branches: [ "main", "dev" ]
     paths-ignore:
-      - 'docs/**'
-      - '**.md'
-      - '.github/workflows/docs.yml'
+      - docs/**
+      - "**.md"
+      - .github/workflows/docs.yml
 
 permissions:
   contents: read
 
 jobs:
-  tox:
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.11"]
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install tox tox-gh-actions virtualenv
-      - name: Tox
-        run: tox
-
   test:
     strategy:
       matrix:
@@ -45,41 +27,30 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e .
-        python -m pip install -r requirements_dev.txt
-        python -m pip install -r requirements.txt
-    - name: Debug info
-      run: |
-        python -c "import sys; print(sys.path)"
-        pip list
-        python -V
-    - name: Test with pytest
-      run: |
-        pytest
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: astral-sh/setup-uv@v7
+      - name: Install dependencies
+        env:
+          UV_SYSTEM_PYTHON: "1"
+        run: uv pip install -e . -r requirements_dev.txt --override override.txt
+      - name: Test with pytest
+        run: pytest
 
   coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
+      - uses: astral-sh/setup-uv@v7
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e .
-          python -m pip install -r requirements_dev.txt
-          python -m pip install -r requirements.txt
-          pip install coverage
+        env:
+          UV_SYSTEM_PYTHON: "1"
+        run: uv pip install -e . -r requirements_dev.txt --override override.txt
       - name: Run coverage
         run: |
           coverage erase
@@ -92,14 +63,7 @@ jobs:
           file: coverage.xml
           format: cobertura
       - name: Send coverage report to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           file: ./coverage.xml
           flags: unittests
-
-  coveralls_finish:
-    needs: coverage
-    runs-on: ubuntu-latest
-    steps:
-    - name: Coveralls Finished
-      run: echo "Coverage reporting finished."
