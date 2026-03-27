@@ -1,3 +1,12 @@
+# --- Variables ---
+package := "spade_llm"
+pytest  := "uv run pytest"
+ruff    := "uvx ruff"
+mkdocs  := "uv run mkdocs"
+twine   := "uvx twine"
+
+# --- Recipes ---
+
 # List all available commands
 default:
     @just --list
@@ -6,33 +15,37 @@ default:
 lock-safe:
     uv lock --exclude-newer '1 week'
 
+# Sync dev dependencies
+sync-dev:
+    uv sync --extra dev
+
 # Run standard tests
-test:
-    uv run pytest
+test: sync-dev
+    {{pytest}}
 
 # Run tests with coverage reporting
-test-cov:
-    uv run pytest --cov=spade_llm --cov-report=term-missing
+test-cov: sync-dev
+    {{pytest}} --cov={{package}} --cov-report=term-missing
 
 # Lint the codebase
 lint:
-    uvx ruff check spade_llm
+    {{ruff}} check {{package}}
 
 # Format and automatically fix linting errors
 fix:
-    uvx ruff format .
-    uvx ruff check --fix .
+    {{ruff}} format .
+    {{ruff}} check --fix .
 
 # Build and upload to PyPI
 ship:
     uv build
-    uvx twine check dist/*
-    uvx twine upload dist/*
+    {{twine}} check dist/*
+    {{twine}} upload dist/*
 
 # Build documentation
-build-docs:
-    uv run mkdocs build --strict
+build-docs: sync-dev
+    {{mkdocs}} build --strict
 
 # Serve documentation locally for development
-see-docs:
-    uv run mkdocs serve --strict
+see-docs: sync-dev
+    {{mkdocs}} serve --strict
