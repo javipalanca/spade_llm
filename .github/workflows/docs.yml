@@ -40,7 +40,7 @@ jobs:
 
       - name: Build mkdocs
         run: |
-          mkdocs build --strict
+          uv run mkdocs build --strict
 
       - name: Add SEO files
         run: |

@@ -8,7 +8,7 @@ Learn how to install and use SPADE_LLM to create LLM-powered agents.
 
 ## Prerequisites
 
-- Python 3.10+
+- Python 3.11+
 - Basic knowledge of Python async/await
 - XMPP server
 - Access to an LLM provider (OpenAI API key or local model)

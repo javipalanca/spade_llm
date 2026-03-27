@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = "Extension for SPADE to integrate Large Language Models in agents"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.10, <3.14"
+requires-python = ">=3.11, <3.13"
 authors = [
     { name = "Javier Palanca Cámara", email = "jpalanca@dsic.upv.es" },
 ]
@@ -27,10 +27,8 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Internet :: XMPP",
@@ -49,7 +47,7 @@ langchain = [
     "langchain-community>=0.3.2",
 ]
 chroma = [
-    "chromadb>=0.4.0",
+    "chromadb>=1.5.5",
 ]
 dev = [
     "pytest>=7.0.0",

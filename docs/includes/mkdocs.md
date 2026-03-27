@@ -42,4 +42,4 @@
 
 <!-- note-compatibility.md -->
 !!! note "Compatibility"
-    This feature requires Python 3.10+ and SPADE 3.3.0+.
+    This feature requires Python 3.11+ and SPADE 3.3.0+.

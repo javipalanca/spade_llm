@@ -10,7 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/spade-llm?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/spade-llm)
 [![Coverage Status](https://coveralls.io/repos/github/javipalanca/spade_llm/badge.svg?branch=main)](https://coveralls.io/github/javipalanca/spade_llm?branch=main)
-![Python Version](https://img.shields.io/badge/python-3.10%20to%203.12-orange?logo=python&logoColor=green)
+![Python Version](https://img.shields.io/badge/python-3.11%20to%203.12-orange?logo=python&logoColor=green)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/javipalanca/spade_llm/python-app.yml?label=build)](https://github.com/javipalanca/spade_llm/actions)
 [![Docs Status](https://img.shields.io/github/actions/workflow/status/javipalanca/spade_llm/docs.yml?label=docs)](https://github.com/javipalanca/spade_llm/actions/workflows/docs.yml)
 
@@ -61,7 +61,7 @@
 
 ### Requirements
 
-- Python 3.10+
+- Python 3.11+
 - (recommended) `uv` [installation](https://docs.astral.sh/uv/getting-started/installation/) for environment management
 
 ### Install
