@@ -41,7 +41,7 @@ keywords: SPADE-LLM, multi-agent systems, large language models, OpenAI, GPT, Ol
   },
   "keywords": ["SPADE", "LLM", "multi-agent", "OpenAI", "GPT", "Ollama", "AI", "chatbot", "Python"],
   "softwareVersion": "latest",
-  "requirements": "Python 3.10+",
+  "requirements": "Python 3.11+",
   "featureList": [
     "Multi-LLM Provider Support",
     "Advanced Tool System", 
@@ -199,7 +199,7 @@ if __name__ == "__main__":
 </div>
 
 <div style="text-align: center; margin: 2rem 0;">
-  <span class="badge badge--success">Python 3.10+</span>
+  <span class="badge badge--success">Python 3.11+</span>
   <span class="badge badge--info">MIT License</span>
   <span class="badge badge--warning">Beta Release</span>
 </div>

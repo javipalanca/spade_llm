@@ -23,39 +23,33 @@ jobs:
   test:
     strategy:
       matrix:
-        python-version: ["3.10", "3.11"]
+        python-version: ["3.11", "3.12"]
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: astral-sh/setup-uv@v7
       - name: Install dependencies
-        env:
-          UV_SYSTEM_PYTHON: "1"
-        run: uv pip install -e . -r requirements_dev.txt --override override.txt
+        run: uv sync --extra dev
       - name: Test with pytest
-        run: pytest
+        run: uv run pytest
 
   coverage:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           python-version: "3.11"
-      - uses: astral-sh/setup-uv@v7
       - name: Install dependencies
-        env:
-          UV_SYSTEM_PYTHON: "1"
-        run: uv pip install -e . -r requirements_dev.txt --override override.txt
+        run: uv sync --extra dev
       - name: Run coverage
         run: |
-          coverage erase
-          PYTHONPATH=$PYTHONPATH:$(pwd) coverage run --source=spade_llm -m pytest
-          coverage xml
+          uv run coverage erase
+          uv run coverage run --source=spade_llm -m pytest
+          uv run coverage xml
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2.2.0
         with:

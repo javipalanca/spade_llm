@@ -5,8 +5,7 @@ In this tutorial, you'll learn how to create your first SPADE-LLM agent step by 
 ## Prerequisites
 
 Before starting, ensure you have:
-- Python 3.10 or higher installed
-- SPADE-LLM installed (`pip install spade_llm`)
+- Read the [installation instructions](installation.md)
 - **SPADE's built-in server running** (recommended - no external setup needed!)
 - Access to at least one LLM provider (OpenAI API key or local Ollama installation)
 

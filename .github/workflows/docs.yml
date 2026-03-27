@@ -31,35 +31,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           python-version: "3.11"
 
-      - uses: astral-sh/setup-uv@v7
-
       - name: Install dependencies
-        env:
-          UV_SYSTEM_PYTHON: "1"
-        run: uv pip install -e . -r docs/requirements.txt --override override.txt
+        run: uv sync --extra docs
 
       - name: Build mkdocs
         run: |
-          cd docs
-          mkdocs build --strict
+          uv run mkdocs build --strict
 
       - name: Add SEO files
         run: |
           # Copy robots.txt to build output
-          cp docs/docs/robots.txt docs/site/robots.txt
+          cp docs/robots.txt site/robots.txt
           # Ensure .nojekyll exists
-          touch docs/site/.nojekyll
+          touch site/.nojekyll
 
       - name: Deploy to gh-pages branch
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/site
+          publish_dir: ./site
           force_orphan: true
           user_name: github-actions[bot]
           user_email: github-actions[bot]@users.noreply.github.com
