@@ -52,11 +52,10 @@ coverage.xml
 uv.lock
 
 # Documentation
-docs/_build/
+site/
 
 # Logs
 *.log
-/docs/site/
 /.claude/
 
 # other
