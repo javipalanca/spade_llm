@@ -473,7 +473,7 @@ RAG System Example with Ollama and ChromaDB
 Demonstrates document loading, splitting, embedding, and retrieval.
 
 Prerequisites:
-1. pip install spade_llm[chroma]
+1. pip install spade_llm[chroma]  (or uv add spade_llm --extra chroma)
 2. ollama pull nomic-embed-text
 3. ollama serve
 """
@@ -573,8 +573,8 @@ See `examples/rag_vs_no_rag_demo.py` for a complete comparison demonstrating:
 
 ## Running Examples
 
-1. **Install dependencies**: `pip install spade_llm`
-2. **For RAG examples**: `pip install spade_llm[chroma]`, `ollama pull nomic-embed-text` 
+1. **Install dependencies**: `pip install spade_llm` or `uv add spade_llm`
+2. **For RAG examples**: `pip install spade_llm[chroma]` (or `uv add spade_llm --extra chroma`), `ollama pull nomic-embed-text` 
 3. **Set environment variables**: `export OPENAI_API_KEY="your-key"`
 4. **Run example**: `python example.py`
 

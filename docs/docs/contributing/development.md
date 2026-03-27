@@ -4,76 +4,41 @@ Detailed guide for SPADE_LLM development and testing.
 
 ## Development Environment
 
+### Prerequisites
+| Tool | Requirement | Purpose |
+| :--- | :--- | :--- |
+| [**git**](https://git-scm.com/install/) | **Required** | Version control |
+| [**uv**](https://docs.astral.sh/uv/getting-started/installation/) | **Required** | Python management |
+| [**just**](https://www.google.com/search?q=https://github.com/casey/just%23installation) | *Optional* | Task runner |
+
+
 ### Setup
 
 ```bash
 # Clone repository
 git clone https://github.com/javipalanca/spade_llm.git
+# If you forked, clone your fork instead
 cd spade_llm
 
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate
-
 # Install development dependencies
-pip install -e ".[dev,docs]"
-
-# Setup pre-commit hooks
-pre-commit install
+uv sync --extra dev
 ```
 
-### Project Structure
-
-```
-spade_llm/
-├── spade_llm/          # Main package
-│   ├── agent/          # Agent implementations
-│   ├── behaviour/      # Behaviour classes
-│   ├── context/        # Context management
-│   ├── providers/      # LLM providers
-│   ├── tools/          # Tool system
-│   ├── routing/        # Message routing
-│   ├── mcp/           # MCP integration
-│   └── utils/         # Utilities
-├── tests/             # Test suite
-├── examples/          # Usage examples
-├── docs/             # Documentation
-└── requirements*.txt  # Dependencies
-```
 
 ## Testing
 
-### Test Organization
-
-```
-tests/
-├── test_agent/        # Agent tests
-├── test_behaviour/    # Behaviour tests
-├── test_context/      # Context tests
-├── test_providers/    # Provider tests
-├── test_tools/        # Tool tests
-├── test_routing/      # Routing tests
-├── conftest.py        # Test configuration
-└── factories.py       # Test factories
-```
 
 ### Running Tests
 
 ```bash
 # Run all tests
-pytest
+uv run pytest
 
 # Run with coverage
-pytest --cov=spade_llm --cov-report=html
+uv run pytest --cov=spade_llm
 
-# Run specific test module
-pytest tests/test_agent/
-
-# Run specific test
-pytest tests/test_agent/test_llm_agent.py::test_agent_creation
-
-# Run with verbose output
-pytest -v -s
+# Run just to see available tasks (tests, linting, etc.)
+just
 ```
 
 
@@ -139,4 +104,4 @@ class ExampleClass:
 ```
 
 
-This development guide should help you contribute effectively to SPADE_LLM. For specific questions, check the existing issues or create a new one.
+This development guide should help you contribute to SPADE_LLM. For specific questions, check the existing issues or create a new one.

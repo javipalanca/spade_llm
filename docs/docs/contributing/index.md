@@ -2,7 +2,7 @@
 
 We welcome contributions to SPADE_LLM! This guide will help you get started.
 
-## Quick Start
+## How to contribute
 
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally
@@ -12,46 +12,7 @@ We welcome contributions to SPADE_LLM! This guide will help you get started.
 
 ## Development Setup
 
-### Prerequisites
-
-- Python 3.10+
-- Git
-- Virtual environment tool (venv, conda, etc.)
-- A XMPP server connection 
-
-### Installation
-
-```bash
-# Clone your fork
-git clone https://github.com/your-username/spade_llm.git
-cd spade_llm
-
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install in development mode
-pip install -e ".[dev]"
-
-# Install pre-commit hooks
-pre-commit install
-```
-
-### Running Tests
-
-```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=spade_llm
-
-# Run specific test file
-pytest tests/test_agent/test_llm_agent.py
-
-# Run with verbose output
-pytest -v
-```
+See the [Development Guide](development.md) for detailed instructions on setting up your environment, running tests, and contributing code.
 
 ## Types of Contributions
 
@@ -90,9 +51,8 @@ For new features, please:
 
 3. **Test your changes**
    ```bash
-   pytest
-   flake8 spade_llm tests
-   mypy spade_llm
+   uv run pytest
+   uv run ruff check .
    ```
 
 4. **Commit with clear messages**
@@ -126,19 +86,6 @@ For new features, please:
 - **Keep interfaces simple** and consistent
 - **Favor composition** over inheritance
 
-### Code Organization
-
-```
-spade_llm/
-├── agent/          # Agent classes
-├── behaviour/      # Behaviour implementations
-├── context/        # Context management
-├── providers/      # LLM provider interfaces
-├── tools/          # Tool system
-├── routing/        # Message routing
-├── mcp/           # MCP integration
-└── utils/         # Utility functions
-```
 
 ## Release Process
 
@@ -182,4 +129,4 @@ Contributors are recognized in:
 - **Release notes** for significant contributions
 - **Documentation** acknowledgments
 
-Thank you for contributing to SPADE_LLM! 🚀
+Thank you for contributing to SPADE_LLM!

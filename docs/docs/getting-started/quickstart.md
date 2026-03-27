@@ -95,8 +95,7 @@ Building production systems? Go directly to **Tutorial 4** for advanced patterns
 Before starting any tutorial, make sure you have:
 
 ### 1. Prerequisites
-- Python 3.10+ installed
-- SPADE-LLM installed: `pip install spade_llm`
+- Read the [installation instructions](installation.md)
 - **SPADE built-in server running** (recommended for beginners)
 
 ### 2. Start SPADE Server

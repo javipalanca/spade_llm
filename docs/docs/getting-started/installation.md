@@ -1,24 +1,4 @@
-# Installation
-
-## Requirements
-
-- Python 3.10+
-- 4GB+ RAM (8GB+ for local models)
-
-## Install
-
-```bash
-pip install spade_llm
-```
-
-## Verify Installation
-
-```python
-import spade_llm
-from spade_llm import LLMAgent, LLMProvider
-
-print(f"SPADE_LLM version: {spade_llm.__version__}")
-```
+--8<-- "../README.md:setup_instructions"
 
 ## XMPP Server Setup
 
@@ -86,6 +66,9 @@ For RAG (Retrieval-Augmented Generation) support, install with ChromaDB:
 ```bash
 # Install with ChromaDB support
 pip install spade_llm[chroma]
+
+# Or with uv
+uv add spade_llm --extra chroma
 ```
 
 ### Prerequisites for RAG
@@ -111,11 +94,8 @@ export OPENAI_API_KEY="your-api-key"
 
 ## Development Install
 
-```bash
-git clone https://github.com/javipalanca/spade_llm.git
-cd spade_llm
-pip install -e ".[dev]"
-```
+See the [Development Guide](../contributing/development.md) for instructions on setting up a development environment, running tests, and contributing code.
+
 
 ## Troubleshooting
 
@@ -137,10 +117,6 @@ spade run
 python your_agent.py
 ```
 
-**Import errors**: Ensure you're in the correct Python environment
-```bash
-python -m pip install spade_llm
-```
 
 **SSL errors**: For development with built-in server, disable SSL verification:
 ```python
