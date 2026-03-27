@@ -29,5 +29,10 @@ ship:
     uv run twine check dist/*
     uv run twine upload dist/*
 
-docs:
+# Build documentation
+build-docs:
     uv run mkdocs build --strict
+
+# Serve documentation locally for development
+see-docs:
+    uv run mkdocs serve --strict
