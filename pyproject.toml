@@ -56,9 +56,7 @@ dev = [
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=4.0.0",
     "pytest-mock>=3.10.0",
-    "ruff>=0.4.0",
     "coverage>=7.0.0",
-    "pre-commit>=3.0.0",
     "spade_llm[chroma,langchain,docs]",
 ]
 docs = [
@@ -103,7 +101,7 @@ line-length = 120
 target-version = "py310"
 
 [tool.ruff.lint]
-select = ["E", "F", "W"]
+select = ["E", "F", "W", "I"]
 ignore = ["E501"]
 
 [tool.coverage.run]

@@ -45,16 +45,16 @@ jobs:
       - name: Add SEO files
         run: |
           # Copy robots.txt to build output
-          cp docs/docs/robots.txt docs/site/robots.txt
+          cp docs/robots.txt site/robots.txt
           # Ensure .nojekyll exists
-          touch docs/site/.nojekyll
+          touch site/.nojekyll
 
       - name: Deploy to gh-pages branch
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/site
+          publish_dir: ./site
           force_orphan: true
           user_name: github-actions[bot]
           user_email: github-actions[bot]@users.noreply.github.com

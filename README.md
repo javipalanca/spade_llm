@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/docs/assets/images/spade_llm_logo.png" alt="SPADE-LLM Logo" width="200"/>
+  <img src="docs/assets/images/spade_llm_logo.png" alt="SPADE-LLM Logo" width="200"/>
 </div>
 
 <div align="center">

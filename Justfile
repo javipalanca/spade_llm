@@ -16,18 +16,18 @@ test-cov:
 
 # Lint the codebase
 lint:
-    uv run ruff check spade_llm
+    uvx ruff check spade_llm
 
 # Format and automatically fix linting errors
 fix:
-    uv run ruff format .
-    uv run ruff check --fix .
+    uvx ruff format .
+    uvx ruff check --fix .
 
 # Build and upload to PyPI
 ship:
     uv build
-    uv run twine check dist/*
-    uv run twine upload dist/*
+    uvx twine check dist/*
+    uvx twine upload dist/*
 
 # Build documentation
 build-docs:
