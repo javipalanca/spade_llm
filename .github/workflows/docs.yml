@@ -31,16 +31,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           python-version: "3.11"
 
-      - uses: astral-sh/setup-uv@v7
-
       - name: Install dependencies
-        env:
-          UV_SYSTEM_PYTHON: "1"
-        run: uv pip install -e . -r docs/requirements.txt --override override.txt
+        run: uv sync --extra docs
 
       - name: Build mkdocs
         run: |
