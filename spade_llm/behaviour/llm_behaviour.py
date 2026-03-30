@@ -1,5 +1,6 @@
 """LLM Behaviour implementation for SPADE agents."""
 
+import json
 import logging
 import time
 from typing import Any, Callable, Dict, List, Optional, Set
@@ -22,6 +23,7 @@ from ..guardrails import (
 from ..providers.base_provider import BaseLLMProvider
 from ..routing import RoutingFunction, RoutingResponse
 from ..tools import LLMTool
+from ..structured_output import ReadyForStructuredOutputTool
 
 logger = logging.getLogger("spade_llm.behaviour")
 
@@ -66,6 +68,7 @@ class LLMBehaviour(CyclicBehaviour):
         output_guardrails: Optional[List[OutputGuardrail]] = None,
         on_guardrail_trigger: Optional[Callable[[GuardrailResult], None]] = None,
         interaction_memory=None,
+        output_schema: Optional[Any] = None,
     ):
         """
         Initialize the LLM behaviour.
@@ -83,6 +86,7 @@ class LLMBehaviour(CyclicBehaviour):
             output_guardrails: List of guardrails to apply to LLM responses
             on_guardrail_trigger: Callback when a guardrail blocks/modifies content
             interaction_memory: Optional AgentInteractionMemory instance for agent-to-agent memory
+            output_schema: Optional Pydantic BaseModel for structured output
         """
         super().__init__()
         self.provider = llm_provider
@@ -114,6 +118,9 @@ class LLMBehaviour(CyclicBehaviour):
 
         # Interaction memory
         self.interaction_memory = interaction_memory
+
+        # Structured output schemas
+        self.output_schema = output_schema
 
         # Track active conversations
         self._active_conversations: Dict[str, Dict[str, Any]] = {}
@@ -224,6 +231,7 @@ class LLMBehaviour(CyclicBehaviour):
             conversation_id: The ID of the conversation
         """
         final_response = None
+        structured_response = None
         max_tool_iterations = (
             20  # Limit to prevent infinite loops -- should be parametrized
         )
@@ -234,6 +242,21 @@ class LLMBehaviour(CyclicBehaviour):
             prepared_tools = self._prepare_tools_with_conversation_context(
                 conversation_id
             )
+            # Get output schema for this conversation (can be set per-conversation or use default)
+            output_schema = self.context.get_output_schema(conversation_id) or self.output_schema
+
+            # Handle structured outputs with the ready signal pattern
+            ready_signal_tool = None
+            if output_schema and prepared_tools:
+                # When both output_schema and tools are specified, inject ready signal tool
+                ready_signal_tool = ReadyForStructuredOutputTool(output_schema)
+                prepared_tools = list(prepared_tools) + [ready_signal_tool]
+                logger.info(
+                    f"Injected {ReadyForStructuredOutputTool.TOOL_NAME} tool for structured output with tools"
+                )
+            
+            # Track if we're ready to generate structured output
+            structured_output_ready = False
 
             # Tool processing loop until a final response is obtained
             while final_response is None and current_iteration < max_tool_iterations:
@@ -244,11 +267,12 @@ class LLMBehaviour(CyclicBehaviour):
 
                 # Pass prepared tools to provider for this specific call
                 llm_response = await self.provider.get_llm_response(
-                    self.context, prepared_tools, conversation_id
+                    self.context, prepared_tools, conversation_id, output_schema
                 )
 
                 tool_calls = llm_response.get("tool_calls", [])
                 text_response = llm_response.get("text")
+                structured_response = llm_response.get("structured")
 
                 if not tool_calls:
                     final_response = text_response
@@ -267,6 +291,12 @@ class LLMBehaviour(CyclicBehaviour):
                 # Add the formatted message to context
                 self.context.add_message_dict(assistant_msg, conversation_id)
 
+                # Reorder tool_calls so that if there are many, ready_for_structured output is always processed last
+                tool_calls = sorted(
+                    tool_calls,
+                    key=lambda tc: tc.get("name") == ReadyForStructuredOutputTool.TOOL_NAME
+                )
+                
                 # Process each tool call
                 for tool_call in tool_calls:
                     tool_name = tool_call.get("name")
@@ -278,6 +308,20 @@ class LLMBehaviour(CyclicBehaviour):
                     logger.info(
                         f"Processing tool call: {tool_name} with args: {tool_args}"
                     )
+
+                    # Check if this is the ready signal for structured output
+                    if tool_name == ReadyForStructuredOutputTool.TOOL_NAME and ready_signal_tool:
+                        logger.info("LLM signaled readiness for structured output, switching to parsing API")
+                        structured_output_ready = True
+                        
+                        # Add the tool result to context
+                        result = await ready_signal_tool.execute(**tool_args)
+                        self.context.add_tool_result(
+                            tool_name, result, tool_id, conversation_id
+                        )
+                        
+                        # Break the tool loop and trigger structured generation
+                        break
 
                     # Find the tool by name in the prepared tools
                     tool = next(
@@ -308,51 +352,82 @@ class LLMBehaviour(CyclicBehaviour):
                         self.context.add_tool_result(
                             tool_name, {"error": error_msg}, tool_id, conversation_id
                         )
+                
+                # If the ready signal was detected, generate structured output
+                if structured_output_ready:
+                    logger.info("Generating structured output with parsing API")
+                    structured_llm_response = await self.provider.get_llm_response(
+                        self.context, tools=None, conversation_id=conversation_id, output_schema=output_schema
+                    )
+                    structured_response = structured_llm_response.get("structured")
+                    if structured_response:
+                        logger.info(f"Successfully generated structured output: {type(structured_response).__name__}")
+                        break
+                    else:
+                        logger.warning("Failed to generate structured output after ready signal")
+                        final_response = structured_llm_response.get("text")
+                        break
 
             # Handle case where max iterations was reached
-            if final_response is None and current_iteration >= max_tool_iterations:
+            if final_response is None and structured_response is None and current_iteration >= max_tool_iterations:
                 logger.warning(
                     f"Reached maximum tool iterations ({max_tool_iterations}), forcing final response"
                 )
-                final_response = (
-                    await self.provider.get_llm_response(self.context, prepared_tools, conversation_id)
-                ).get("text")
+                output_schema = self.context.get_output_schema(conversation_id) or self.output_schema
+                force_response = await self.provider.get_llm_response(
+                    self.context, tools=None, conversation_id=conversation_id, output_schema=output_schema
+                )
+                final_response = force_response.get("text")
+                structured_response = force_response.get("structured")
 
         except Exception as e:
             logger.error(f"Error in tool processing loop: {e}")
             # Instead of setting generic error message, re-raise to see actual error
             raise
 
+        # Handle structured responses
+        if structured_response:
+            logger.info(f"Received structured response: {type(structured_response).__name__}")
+            # Convert structured response to JSON string for transmission
+            if hasattr(structured_response, 'model_dump_json'):
+                final_response = structured_response.model_dump_json()
+            elif hasattr(structured_response, 'json'):
+                final_response = structured_response.json()
+            else:
+                final_response = json.dumps(structured_response)
+            logger.debug(f"Structured response as JSON: {final_response}")
+
         if not final_response:
             final_response = "I'm sorry, I couldn't complete this request properly. Please try again or rephrase your query."
 
-        # Apply output guardrails before sending
-        final_response = await apply_output_guardrails(
-            content=final_response,
-            original_message=msg,
-            guardrails=self.output_guardrails,
-            on_trigger=self.on_guardrail_trigger,
-        )
+        # Apply output guardrails before sending (skip for structured responses)
+        if not structured_response:
+            final_response = await apply_output_guardrails(
+                content=final_response,
+                original_message=msg,
+                guardrails=self.output_guardrails,
+                on_trigger=self.on_guardrail_trigger,
+            )
 
         # Add assistant response to context before sending
         self.context.add_assistant_message(final_response, conversation_id)
 
-        # Check for termination markers
-        if final_response and any(
+        # Check for termination markers (only for text responses)
+        if not structured_response and final_response and any(
             marker in final_response for marker in self.termination_markers
         ):
             await self._end_conversation(conversation_id, ConversationState.COMPLETED)
 
-        await self._send_response(final_response, msg, conversation_id)
+        await self._send_response(final_response, msg, conversation_id, structured_response)
 
     async def _send_response(
-        self, response: str, original_msg: Message, conversation_id: str
+        self, response: str, original_msg: Message, conversation_id: str, structured_data: Optional[Any] = None
     ) -> None:
         """
         Send response with optional conditional routing.
 
         Args:
-            response: The LLM's response text
+            response: The LLM's response text (or JSON string for structured responses)
             original_msg: The original message received
             conversation_id: The conversation identifier
         """

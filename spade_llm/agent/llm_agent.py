@@ -51,6 +51,7 @@ class LLMAgent(Agent):
         on_guardrail_trigger: Optional[Callable[[GuardrailResult], None]] = None,
         interaction_memory: Union[bool, Tuple[bool, str]] = False,
         agent_base_memory: Union[bool, Tuple[bool, str]] = False,
+        output_schema: Optional[Any] = None,
         verify_security: bool = False,
         **kwargs
     ):
@@ -79,6 +80,8 @@ class LLMAgent(Agent):
             agent_base_memory: Enable agent base memory. Can be:
                 - bool: True/False (uses default path)
                 - tuple: (True, "/custom/path") for custom path
+            output_schema: Optional Pydantic BaseModel for structured output.
+                          If set, the agent's response will be structured according to this schema.
             verify_security: Whether to verify security certificates
         """
         super().__init__(jid, password, verify_security=verify_security)
@@ -147,6 +150,9 @@ class LLMAgent(Agent):
         self.output_guardrails = output_guardrails or []
         self.on_guardrail_trigger = on_guardrail_trigger
 
+        # Structured output schema
+        self.output_schema = output_schema
+
         # Create LLM behaviour with all parameters
         self.llm_behaviour = LLMBehaviour(
             llm_provider=provider,
@@ -161,6 +167,7 @@ class LLMAgent(Agent):
             output_guardrails=self.output_guardrails,
             on_guardrail_trigger=self.on_guardrail_trigger,
             interaction_memory=self.interaction_memory,
+            output_schema=self.output_schema,
         )
 
     async def setup(self):

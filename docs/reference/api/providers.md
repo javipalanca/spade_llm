@@ -64,18 +64,28 @@ provider = LLMProvider(
 async def get_llm_response(
     self, 
     context: ContextManager, 
-    tools: Optional[List[LLMTool]] = None
+    tools: Optional[List[LLMTool]] = None,
+    conversation_id: Optional[str] = None,
+    output_schema: Optional[Type[BaseModel]] = None
 ) -> Dict[str, Any]
 ```
 
 Get complete response from LLM.
 
+**Parameters:**
+
+- `context` - The conversation context manager
+- `tools` - Optional list of tools available for this call
+- `conversation_id` - Optional conversation ID for multi-conversation contexts
+- `output_schema` - Optional Pydantic `BaseModel` class. When provided (and no tools), the response will be parsed into the given schema using the provider's structured output API. When both `output_schema` and tools are present, the [two-phase structured output pattern](../../guides/structured-output.md) is used instead (handled by `LLMBehaviour`).
+
 **Returns:**
 
 ```python
 {
-    'text': Optional[str],      # Text response
-    'tool_calls': List[Dict]    # Tool calls requested
+    'text': Optional[str],       # Text response
+    'tool_calls': List[Dict],    # Tool calls requested
+    'structured': Optional[Any]  # Parsed Pydantic model instance (when output_schema is used)
 }
 ```
 

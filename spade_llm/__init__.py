@@ -1,7 +1,7 @@
 """SPADE_LLM - Extension de SPADE para integrar Large Language Models en agentes."""
 
 from .agent import ChatAgent, LLMAgent, RetrievalAgent
-from .behaviour import HumanInteractionBehaviour, LLMBehaviour
+from .behaviour import HumanInteractionBehaviour, LLMBehaviour, RetrievalBehaviour
 from .context import ContextManager
 from .guardrails import (
     CompositeGuardrail,
@@ -18,6 +18,7 @@ from .guardrails import (
 from .memory import AgentInteractionMemory, AgentMemoryTool
 from .providers import LLMProvider
 from .routing import RoutingFunction, RoutingResponse
+from .structured_output import ReadyForStructuredOutputTool
 from .tools import HumanInTheLoopTool, LLMTool, RetrievalTool
 from .utils import load_env_vars
 from .version import __version__
@@ -26,6 +27,7 @@ from . import rag
 __all__ = [
     "LLMBehaviour",
     "HumanInteractionBehaviour",
+    "RetrievalBehaviour",
     "ContextManager",
     "LLMTool",
     "HumanInTheLoopTool",
@@ -53,5 +55,7 @@ __all__ = [
     "rag",
     "RetrievalAgent",
     "RetrievalTool",
+    # Structured output
+    "ReadyForStructuredOutputTool",
     "__version__",
 ]

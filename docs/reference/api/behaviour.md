@@ -17,7 +17,8 @@ LLMBehaviour(
     termination_markers: Optional[List[str]] = None,
     max_interactions_per_conversation: Optional[int] = None,
     on_conversation_end: Optional[Callable[[str, str], None]] = None,
-    tools: Optional[List[LLMTool]] = None
+    tools: Optional[List[LLMTool]] = None,
+    output_schema: Optional[Type[BaseModel]] = None
 )
 ```
 
@@ -31,6 +32,7 @@ LLMBehaviour(
 - `max_interactions_per_conversation` - Interaction limit
 - `on_conversation_end` - End callback
 - `tools` - Available tools
+- `output_schema` - Optional Pydantic `BaseModel` class for [structured output](../../guides/structured-output.md)
 
 ### Methods
 
@@ -75,7 +77,8 @@ The behaviour automatically:
 2. Updates conversation context
 3. Calls LLM provider
 4. Executes requested tools
-5. Routes responses
+5. If `output_schema` is set with tools, handles the two-phase structured output pattern (see [Structured Output guide](../../guides/structured-output.md))
+6. Routes responses
 
 ### Conversation States
 

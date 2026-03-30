@@ -92,7 +92,7 @@ class TestLLMToolSerialization:
     def test_to_openai_tool(self, mock_simple_tool):
         """Test converting tool to OpenAI format."""
         openai_format = mock_simple_tool.to_openai_tool()
-        
+
         expected = {
             "type": "function",
             "function": {
@@ -101,14 +101,12 @@ class TestLLMToolSerialization:
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "text": {
-                            "type": "string",
-                            "description": "Text to process"
-                        }
+                        "text": {"type": "string", "description": "Text to process"}
                     },
-                    "required": ["text"]
-                }
-            }
+                    "required": ["text"],
+                },
+                "strict": False,
+            },
         }
         
         assert openai_format == expected

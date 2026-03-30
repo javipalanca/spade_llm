@@ -7,6 +7,7 @@ Comprehensive guides for SPADE_LLM features and concepts.
 - **[Architecture](architecture.md)** - System components and design
 - **[Providers](providers.md)** - LLM provider configuration and usage
 - **[Tools System](tools-system.md)** - Function calling and tool integration
+- **[Structured Output](structured-output.md)** - Type-safe structured responses with Pydantic schemas
 - **[RAG System](rag-system.md)** - Retrieval-Augmented Generation with multi-agent collaboration
 - **[Context Management](context-management.md)** - Advanced context control and message management
 - **[Memory System](memory.md)** - Dual memory architecture for agent learning and conversation continuity

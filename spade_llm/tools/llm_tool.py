@@ -21,6 +21,7 @@ class LLMTool:
         description: str,
         parameters: Dict[str, Any],
         func: Callable[..., Any],
+        strict: bool = False,
     ):
         """
         Initialize a new LLM tool.
@@ -30,11 +31,13 @@ class LLMTool:
             description: A description of what the tool does.
             parameters: JSON Schema definition of the tool's parameters.
             func: The function to execute when this tool is invoked.
+            strict: If True, enforce strict parameter validation.
         """
         self.name = name
         self.description = description
         self.parameters = parameters
         self.func = func
+        self.strict = strict
 
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -62,6 +65,7 @@ class LLMTool:
                 "name": self.name,
                 "description": self.description,
                 "parameters": self.parameters,
+                "strict": self.strict,
             },
         }
 
