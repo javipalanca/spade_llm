@@ -197,7 +197,7 @@ from spade_llm.guardrails import LLMGuardrail
 from spade_llm.providers import LLMProvider
 
 safety_provider = LLMProvider(
-    model="gpt-4o-mini",
+    model="gpt-5-nano",
     api_key="your-key",
 )
 

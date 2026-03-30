@@ -275,7 +275,7 @@ retrieval_tool = RetrievalTool(
 )
 
 # 4. Add to LLM agent
-llm_provider = LLMProvider(model="gpt-4o-mini")
+llm_provider = LLMProvider(model="gpt-5-nano")
 
 llm_agent = LLMAgent(
     jid="assistant@localhost",

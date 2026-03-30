@@ -8,7 +8,7 @@ Setup:
   1. pip install 'spade_llm[chroma]'
   2. cp .env.example .env  (fill in LLM_MODEL and EMBEDDING_MODEL)
   3. spade run  (in a separate terminal)
-  4. python examples/rag_vs_no_rag_demo.py
+  4. python examples/rag_vs_no_rag.py
 """
 
 import asyncio

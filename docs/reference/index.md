@@ -21,7 +21,7 @@ Complete API documentation for SPADE_LLM components.
 ```python
 from spade_llm import LLMAgent, LLMProvider
 
-provider = LLMProvider(model="gpt-4o-mini")
+provider = LLMProvider(model="gpt-5-nano")
 agent = LLMAgent(jid="agent@server.com", password="pass", provider=provider)
 ```
 
@@ -92,7 +92,7 @@ OPENAI_API_KEY=your-api-key
 
 ```python
 # OpenAI
-provider = LLMProvider(model="gpt-4o-mini", api_key="key")
+provider = LLMProvider(model="gpt-5-nano", api_key="key")
 
 # Ollama  
 provider = LLMProvider(model="ollama/llama3.1:8b")

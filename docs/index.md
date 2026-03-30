@@ -1,5 +1,5 @@
 ---
-title: SPADE-LLM Documentation - Multi-Agent LLM Framework for Python
+title: Home
 description: Complete documentation for SPADE-LLM, a Python framework for integrating Large Language Models into multi-agent systems. OpenAI GPT, Ollama, LM Studio support for AI agents and chatbots.
 keywords: SPADE-LLM, multi-agent systems, large language models, OpenAI, GPT, Ollama, Python AI framework, chatbot development, distributed AI, agent communication
 ---
@@ -50,31 +50,15 @@ keywords: SPADE-LLM, multi-agent systems, large language models, OpenAI, GPT, Ol
     "Message Routing",
     "Content Safety Guardrails",
     "MCP Integration",
-    "Human-in-the-Loop"
+    "Human-in-the-Loop",
+    "RAG System",
+    "Structured Outputs",
+    "Coordinator Agents"
   ]
 }
 </script>
 
 ## Key Features
-
-<div class="stats-grid">
-  <div class="stat-card">
-    <span class="stat-number">8+</span>
-    <div class="stat-label">LLM Providers</div>
-  </div>
-  <div class="stat-card">
-    <span class="stat-number">100%</span>
-    <div class="stat-label">Python Native</div>
-  </div>
-  <div class="stat-card">
-    <span class="stat-number">0</span>
-    <div class="stat-label">External Dependencies</div>
-  </div>
-  <div class="stat-card">
-    <span class="stat-number">∞</span>
-    <div class="stat-label">Agent Scalability</div>
-  </div>
-</div>
 
 <div class="feature-grid">
   <div class="feature-card">
@@ -86,19 +70,13 @@ keywords: SPADE-LLM, multi-agent systems, large language models, OpenAI, GPT, Ol
   <div class="feature-card">
     <div class="feature-icon">🧠</div>
     <h3>Multi-Provider Support</h3>
-    <p>OpenAI Ollama and LM Studio. Switch providers seamlessly.</p>
+    <p>140+ providers via LiteLLM. Switch providers seamlessly.</p>
   </div>
   
   <div class="feature-card">
     <div class="feature-icon">⚡</div>
     <h3>Advanced Tool System</h3>
     <p>Function calling with async execution, human-in-the-loop workflows, and LangChain integration.</p>
-  </div>
-  
-  <div class="feature-card">
-    <div class="feature-icon">💾</div>
-    <h3>Dual Memory Architecture</h3>
-    <p>Agent learning and conversation continuity with SQLite persistence and contextual retrieval.</p>
   </div>
   
   <div class="feature-card">
@@ -114,14 +92,8 @@ keywords: SPADE-LLM, multi-agent systems, large language models, OpenAI, GPT, Ol
   </div>
   
   <div class="feature-card">
-    <div class="feature-icon">🔗</div>
-    <h3>Message Routing</h3>
-    <p>Conditional routing based on LLM responses with flexible workflows and decision trees.</p>
-  </div>
-  
-  <div class="feature-card">
     <div class="feature-icon">🌐</div>
-    <h3>MCP Integration</h3>
+    <h3>MCP<br>Integration</h3>
     <p>Model Context Protocol server support for external tool integration and service connectivity.</p>
   </div>
 
@@ -133,8 +105,14 @@ keywords: SPADE-LLM, multi-agent systems, large language models, OpenAI, GPT, Ol
   
   <div class="feature-card">
     <div class="feature-icon">📚</div>
-    <h3>RAG System</h3>
+    <h3>RAG<br>System</h3>
     <p>Ground agent responses in your own documents. Load, chunk, and retrieve relevant context for more accurate answers.</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-icon">📐</div>
+    <h3>Structured Outputs</h3>
+    <p>Define a Pydantic model as the expected response format and get back strongly-typed structured data from any LLM.</p>
   </div>
 </div>
 
@@ -149,7 +127,9 @@ graph LR
     A --> E[LLMTool]
     A --> G[Guardrails]
     A --> M[Memory]
-    D --> F[OpenAI/Ollama/etc]
+    A --> S[Structured Outputs]
+    D --> F[LiteLLM]
+    F --> R[Anthropic/OpenAI-Compatible/OpenRouter/...]
     G --> H[Input/Output Filtering]
     E --> I[Human-in-the-Loop]
     E --> J[MCP]
@@ -179,7 +159,7 @@ async def main():
     # spade run
     
     provider = LLMProvider(
-        model="gpt-4o-mini",
+        model="gpt-5-nano",
         api_key="your-api-key",
     )
     

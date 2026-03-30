@@ -32,7 +32,7 @@ from spade_llm import LLMAgent, LLMProvider
 async def main():
     # Create an LLM provider
     provider = LLMProvider(
-        model="gpt-4o-mini",
+        model="gpt-5-nano",
         api_key="your-api-key-here",
         temperature=0.7,
     )
@@ -61,7 +61,7 @@ if __name__ == "__main__":
 ```python
 # OpenAI
 provider = LLMProvider(
-    model="gpt-4o-mini",
+    model="gpt-5-nano",
     api_key="your-api-key",
 )
 
@@ -100,7 +100,7 @@ async def main():
     
     # Create LLM provider
     provider = LLMProvider(
-        model="gpt-4o-mini",
+        model="gpt-5-nano",
         api_key="your-api-key",
     )
     
@@ -181,7 +181,7 @@ async def main():
     try:
         # Create provider with error handling
         provider = LLMProvider(
-            model="gpt-4o-mini",
+            model="gpt-5-nano",
             api_key="your-api-key",
             timeout=30.0,
         )
@@ -241,7 +241,7 @@ async def main():
     if provider_type == "openai":
         api_key = getpass.getpass("OpenAI API key: ")
         provider = LLMProvider(
-            model="gpt-4o-mini",
+            model="gpt-5-nano",
             api_key=api_key,
             timeout=30.0,
         )

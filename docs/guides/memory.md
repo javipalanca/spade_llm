@@ -271,7 +271,7 @@ from spade_llm.providers import LLMProvider
 
 async def basic_memory_example():
     provider = LLMProvider(
-        model="gpt-4o-mini",
+        model="gpt-5-nano",
         api_key="your-api-key",
     )
     
@@ -306,7 +306,7 @@ if __name__ == "__main__":
 ```python
 async def dual_memory_example():
     provider = LLMProvider(
-        model="gpt-4o-mini",
+        model="gpt-5-nano",
         api_key="your-api-key",
     )
     
@@ -337,7 +337,7 @@ async def dual_memory_example():
 ```python
 async def multi_agent_memory_example():
     provider = LLMProvider(
-        model="gpt-4o-mini",
+        model="gpt-5-nano",
         api_key="your-api-key",
     )
     

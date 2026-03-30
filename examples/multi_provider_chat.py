@@ -35,7 +35,7 @@ async def main():
     provider = LLMProvider(model=model, temperature=0.7)
 
     # Explicit provider examples (override LLM_MODEL):
-    # provider = LLMProvider(model="openai/gpt-4o-mini")
+    # provider = LLMProvider(model="openai/gpt-5-nano")
     # provider = LLMProvider(model="anthropic/claude-3-5-haiku-20241022")
     # provider = LLMProvider(model="openai/your-local-model", base_url="http://localhost:1234/v1")
 

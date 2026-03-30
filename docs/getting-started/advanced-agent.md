@@ -1,6 +1,6 @@
 # Advanced Multi-Feature Agent Tutorial
 
-In this tutorial, you'll learn how to create sophisticated multi-agent systems with advanced features like MCP integration, human-in-the-loop workflows, custom guardrails, and complex routing. This tutorial is based on the `github_issues_monitor.py` and demonstrates production-ready patterns.
+In this tutorial, you'll learn how to create sophisticated multi-agent systems with advanced features like MCP integration, human-in-the-loop workflows, custom guardrails, and complex routing. This tutorial is based on the `github_issues_monitor_complex.py` and demonstrates production-ready patterns.
 
 ## What You'll Build
 
@@ -607,7 +607,7 @@ async def main():
     
     # Create LLM provider
     provider = LLMProvider(
-        model="gpt-4o-mini",
+        model="gpt-5-nano",
         api_key=openai_key,
         temperature=0.7,
     )

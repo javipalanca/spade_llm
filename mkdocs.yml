@@ -1,18 +1,18 @@
-site_name: SPADE-LLM Documentation - Multi-Agent LLM Framework
+site_name: SPADE-LLM Documentation
 site_description: 'SPADE-LLM: Python framework for Large Language Model integration in multi-agent systems. OpenAI GPT, Ollama, LM Studio support for AI agents, chatbots, and distributed AI applications. Complete documentation and examples.'
-site_author: 'Manel Soler Sanz'
+site_author: 'Javier Palanca Cámara'
 site_url: 'https://spadeagents.eu/docs/spade_llm'
 
 repo_name: 'javipalanca/spade_llm'
 repo_url: 'https://github.com/javipalanca/spade_llm'
 
-copyright: Copyright &copy; 2025 Javier Palanca Cámara
+copyright: Copyright &copy; 2026 Javier Palanca Cámara
 
 theme:
   name: material
   language: en
   logo: assets/images/spade_llm_logo.png
-  favicon: assets/images/favicon.png
+  favicon: assets/images/spade_llm_logo.png
   palette:
     # Light mode
     - media: "(prefers-color-scheme: light)"
@@ -111,6 +111,10 @@ nav:
     - getting-started/index.md
     - Installation: getting-started/installation.md
     - Quick Start: getting-started/quickstart.md
+    - First Agent: getting-started/first-agent.md
+    - Advanced Agent: getting-started/advanced-agent.md
+    - Tools Tutorial: getting-started/tools-tutorial.md
+    - Guardrails Tutorial: getting-started/guardrails-tutorial.md
   - Guides:
     - guides/index.md
     - Architecture: guides/architecture.md

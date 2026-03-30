@@ -201,7 +201,7 @@ retrieval_agent = RetrievalAgent(
 await retrieval_agent.start()
 
 # 2. Create LLM agent with retrieval tool
-llm_provider = LLMProvider(model="gpt-4o-mini")
+llm_provider = LLMProvider(model="gpt-5-nano")
 retrieval_tool = RetrievalTool(
     name="docs_search",
     description="Search technical documentation for code examples and explanations",

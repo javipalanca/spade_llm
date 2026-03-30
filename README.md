@@ -40,6 +40,8 @@
   - [Examples](#examples)
     - [Multi-Provider Support](#multi-provider-support)
     - [Tools and Function Calling](#tools-and-function-calling)
+    - [Structured Outputs](#structured-outputs)
+    - [RAG (Retrieval-Augmented Generation)](#rag-retrieval-augmented-generation)
   - [Documentation](#documentation)
   - [Contributing](#contributing)
   - [License](#license)
@@ -48,7 +50,10 @@
 
 
 - **Built-in XMPP Server** - No external server setup needed! Start agents with one command
-- **Multi-LLM Provider Support** - Integrate OpenAI models, Ollama local models, LM Studio and more.
+- **Multi-LLM Provider Support** - Integrate OpenAI models, Ollama local models, LM Studio and more via LiteLLM
+- **RAG System** - Retrieval-Augmented Generation with document loading, text splitting, and vector store retrieval (ChromaDB)
+- **Structured Outputs** - Type-safe LLM responses using Pydantic models; define the schema, get back structured data
+- **Coordinator Agents** - LLM-driven orchestration of SPADE subagents with shared context and automatic routing
 - **Advanced Tool System** - Function calling, async execution, LangChain tool integration, custom tool development
 - **Smart Context Management** - Multi-conversation support, automatic cleanup, sliding window, token-aware context
 - **Persistent Memory** - Agent-based memory, conversation threading, long-term state persistence across sessions
@@ -127,7 +132,7 @@ from spade_llm import LLMAgent, LLMProvider
 
 async def main():
     provider = LLMProvider(
-        model="gpt-4o-mini",
+        model="gpt-5-nano",
         api_key="your-api-key",
     )
     
@@ -156,7 +161,7 @@ python your_agent.py
 
 ```python
 # OpenAI
-provider = LLMProvider(model="gpt-5.4", api_key="key")
+provider = LLMProvider(model="gpt-5-nano", api_key="key")
 
 # Ollama (local)
 provider = LLMProvider(model="ollama/llama3.1:8b")
@@ -192,6 +197,48 @@ agent = LLMAgent(
 )
 ```
 
+### Structured Outputs
+
+```python
+from pydantic import BaseModel
+from spade_llm import LLMAgent, LLMProvider
+
+class WeatherReport(BaseModel):
+    city: str
+    temperature: float
+    conditions: str
+
+provider = LLMProvider(model="gpt-5-nano", api_key="key")
+agent = LLMAgent(
+    jid="weather@localhost",
+    password="password",
+    provider=provider,
+    system_prompt="Extract weather information",
+    output_schema=WeatherReport,
+)
+```
+
+### RAG (Retrieval-Augmented Generation)
+
+```python
+from spade_llm import RetrievalAgent, LLMProvider
+from spade_llm.rag import DirectoryLoader, RecursiveCharacterTextSplitter, ChromaVectorStore, VectorStoreRetriever
+
+# Load, split, and index documents
+loader = DirectoryLoader("./docs")
+splitter = RecursiveCharacterTextSplitter(chunk_size=500)
+docs = splitter.split_documents(loader.load())
+store = ChromaVectorStore(collection_name="my_docs")
+await store.add_documents(docs)
+
+retriever = VectorStoreRetriever(vector_store=store)
+agent = RetrievalAgent(
+    jid="rag@localhost",
+    password="password",
+    provider=LLMProvider(model="gpt-5-nano", api_key="key"),
+    retriever=retriever,
+)
+```
 
 ## Documentation
 
@@ -199,6 +246,8 @@ agent = LLMAgent(
 - **[Quick Start](https://spadeagents.eu/docs/spade_llm/getting-started/quickstart/)** - Basic usage examples
 - **[Providers](https://spadeagents.eu/docs/spade_llm/guides/providers/)** - LLM provider configuration
 - **[Tools](https://spadeagents.eu/docs/spade_llm/guides/tools-system/)** - Function calling system
+- **[RAG](https://spadeagents.eu/docs/spade_llm/guides/rag-system/)** - Retrieval-Augmented Generation
+- **[Structured Outputs](https://spadeagents.eu/docs/spade_llm/guides/structured-output/)** - Type-safe LLM responses
 - **[Guardrails](https://spadeagents.eu/docs/spade_llm/guides/guardrails/)** - Content filtering and safety
 - **[API Reference](https://spadeagents.eu/docs/spade_llm/reference/)** - Complete API documentation
 

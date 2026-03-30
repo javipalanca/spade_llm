@@ -113,7 +113,7 @@ coordinator = CoordinatorAgent(
     password="secret",
     subagent_ids=subagents,
     provider=LLMProvider(
-        model="gpt-4o-mini",
+        model="gpt-5-nano",
         api_key="sk-...",
     ),
     coordination_session="valencia_city_ops"

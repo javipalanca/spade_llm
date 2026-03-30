@@ -17,13 +17,15 @@ The [examples](https://github.com/javipalanca/spade_llm/tree/main/examples) dire
 
 **RAG Examples**:
 - `rag_system_ollama_chroma.py` - Complete RAG demonstration
-- `rag_vs_no_rag_demo.py` - Results comparison with and without RAG
+- `rag_vs_no_rag.py` - Results comparison with and without RAG
 
 **Specialized Examples**:
 - `spanish_to_english_translator.py` - Translation agent
 - `trip_planner.py` - Trip planning workflow
 - `github_issues_monitor_complex.py` - GitHub monitoring
 - `guardrails.py` - Content filtering
+- `document_workflow.py` - Document creation workflow with routing
+- `coordinator_params_predict/` - Coordinator agent with parameter prediction
 
 ## Human-in-the-Loop Example
 
@@ -65,7 +67,7 @@ async def main():
     
     # Create OpenAI provider
     provider = LLMProvider(
-        model="gpt-4o-mini",
+        model="gpt-5-nano",
         api_key=env_vars["OPENAI_API_KEY"],
         temperature=0.7,
     )
@@ -175,7 +177,7 @@ from spade_llm import LLMAgent, ChatAgent, LLMProvider
 async def main():
     # Create LLM provider
     provider = LLMProvider(
-        model="gpt-4o-mini",
+        model="gpt-5-nano",
         api_key="your-api-key",
     )
     
@@ -256,7 +258,7 @@ async def main():
     
     # Create provider
     provider = LLMProvider(
-        model="gpt-4o-mini",
+        model="gpt-5-nano",
         api_key="your-api-key",
     )
     
@@ -305,7 +307,7 @@ def reviewer_router(msg, response, context):
 
 async def main():
     provider = LLMProvider(
-        model="gpt-4o-mini",
+        model="gpt-5-nano",
         api_key="your-api-key",
     )
     
@@ -404,7 +406,7 @@ def conversation_ended(conversation_id: str, reason: str):
 
 async def main():
     provider = LLMProvider(
-        model="gpt-4o-mini",
+        model="gpt-5-nano",
         api_key="your-api-key",
     )
     
@@ -558,7 +560,7 @@ if __name__ == "__main__":
 
 ### RAG vs No RAG Comparison
 
-See `examples/rag_vs_no_rag_demo.py` for a complete comparison demonstrating:
+See `examples/rag_vs_no_rag.py` for a complete comparison demonstrating:
 
 - Loading classic literature from Project Gutenberg
 - Indexing documents with ChromaDB
@@ -591,5 +593,5 @@ load_env_vars()
 
 # Use environment variables
 api_key = os.getenv("OPENAI_API_KEY")
-model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+model = os.getenv("OPENAI_MODEL", "gpt-5-nano")
 ```

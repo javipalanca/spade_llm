@@ -125,7 +125,7 @@ from spade_llm.providers import LLMProvider
 
 # Create safety validation model
 safety_provider = LLMProvider(
-    model="gpt-3.5-turbo",
+    model="gpt-5-nano",
     api_key="your-key",
     temperature=0.1,
 )

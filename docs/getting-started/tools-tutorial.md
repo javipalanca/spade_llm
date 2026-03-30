@@ -408,7 +408,7 @@ async def main():
     
     if provider_type == "openai":
         provider = LLMProvider(
-            model="gpt-4o-mini",
+            model="gpt-5-nano",
             api_key=getpass.getpass("OpenAI API key: "),
             temperature=0.7,
         )

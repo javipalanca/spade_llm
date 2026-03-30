@@ -222,7 +222,7 @@ retrieval_tool = RetrievalTool(
     description="Search the documentation for information about SPADE-LLM"
 )
 
-provider = LLMProvider(model="gpt-4o-mini")
+provider = LLMProvider(model="gpt-5-nano")
 llm_agent = LLMAgent(
     jid="assistant@localhost",
     password="password",

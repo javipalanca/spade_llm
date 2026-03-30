@@ -273,7 +273,7 @@ async def main():
     
     # Create LLM provider
     provider = LLMProvider(
-        model="gpt-4o-mini",
+        model="gpt-5-nano",
         api_key="your-api-key",
     )
     

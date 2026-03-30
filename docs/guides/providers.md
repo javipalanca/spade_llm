@@ -15,7 +15,7 @@ graph TD
     B --> F[Azure OpenAI]
     B --> G[Any OpenAI-compatible API]
     
-    C --> H[GPT-4o / GPT-4o-mini]
+    C --> H[GPT-5-nano]
     D --> I[Llama / Mistral / Gemma]
     E --> J[Claude 3.5]
     G --> K[vLLM / LM Studio / etc.]
@@ -25,7 +25,7 @@ graph TD
 
 The **unified LLMProvider** uses the [LiteLLM model format](https://docs.litellm.ai/docs/providers) (`provider/model-name`):
 
-- **OpenAI** - GPT models (model name directly, e.g. `gpt-5.4`)
+- **OpenAI** - GPT models (model name directly, e.g. `gpt-5-nano`)
 - **Anthropic** - Claude models (prefix `anthropic/`, e.g. `anthropic/claude-sonnet-4-6`)
 - **Ollama** - Local models (prefix `ollama/`, e.g. `ollama/gpt-oss-20b`)
 - **OpenAI-compatible API** - For vLLM, LM Studio or custom endpoints; use the `openai/` prefix with custom `base_url`.
@@ -38,7 +38,7 @@ The **unified LLMProvider** uses the [LiteLLM model format](https://docs.litellm
 from spade_llm.providers import LLMProvider
 
 provider = LLMProvider(
-    model="gpt-4o-mini",
+    model="gpt-5-nano",
     api_key="your-api-key",
     temperature=0.7,
 )

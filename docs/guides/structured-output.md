@@ -24,7 +24,7 @@ class WeatherReport(BaseModel):
     temperature: float
     summary: str
 
-provider = LLMProvider(model="gpt-4o-mini")
+provider = LLMProvider(model="gpt-5-nano")
 
 agent = LLMAgent(
     jid="weather@example.com",
@@ -84,7 +84,7 @@ hotel_tool = LLMTool(
     func=search_hotels
 )
 
-provider = LLMProvider(model="gpt-4o-mini")
+provider = LLMProvider(model="gpt-5-nano")
 
 agent = LLMAgent(
     jid="planner@example.com",
@@ -162,5 +162,5 @@ This implementation follows a similar approach to Google's ADK (Agent Developmen
 
 ## Limitations
 
-- Structured output support depends on the underlying LLM provider. Models that support OpenAI-compatible `response_format` (GPT-4o, GPT-4o-mini, etc.) work best.
+- Structured output support depends on the underlying LLM provider. Models that support OpenAI-compatible `response_format` (GPT-5-nano, etc.) work best.
 - Output guardrails are skipped for structured responses since the schema already constrains the output.

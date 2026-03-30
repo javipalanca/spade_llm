@@ -25,7 +25,7 @@ Create a provider instance. Uses [LiteLLM model format](https://docs.litellm.ai/
 
 **Parameters:**
 
-- `model` - Model name in LiteLLM format (e.g., `"gpt-4o-mini"`, `"ollama/llama3.1:8b"`, `"openai/local-model"`)
+- `model` - Model name in LiteLLM format (e.g., `"gpt-5-nano"`, `"ollama/llama3.1:8b"`, `"openai/local-model"`)
 - `api_key` - API key (optional, can be set via environment variables)
 - `base_url` - Custom API base URL (for OpenAI-compatible servers)
 - `temperature` - Sampling temperature (0.0-2.0)
@@ -38,7 +38,7 @@ Create a provider instance. Uses [LiteLLM model format](https://docs.litellm.ai/
 ```python
 # OpenAI
 provider = LLMProvider(
-    model="gpt-4o-mini",
+    model="gpt-5-nano",
     api_key="sk-...",
     temperature=0.7,
 )
@@ -162,7 +162,7 @@ provider_prefix/model_name
 
 | Provider | Format | Example |
 |----------|--------|---------|
-| OpenAI | `model_name` (no prefix) | `gpt-4o-mini` |
+| OpenAI | `model_name` (no prefix) | `gpt-5-nano` |
 | Ollama | `ollama/model_name` | `ollama/llama3.1:8b` |
 | Anthropic | `anthropic/model_name` | `anthropic/claude-3-5-sonnet` |
 | OpenAI-compat | `openai/model_name` + `base_url` | `openai/local-model` |

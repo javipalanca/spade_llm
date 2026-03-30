@@ -48,7 +48,7 @@ async def main():
     
     # Create provider
     provider = LLMProvider(
-        model="gpt-4o-mini",
+        model="gpt-5-nano",
         api_key=getpass.getpass("OpenAI API key: "),
     )
     
@@ -231,7 +231,7 @@ def create_output_guardrails(safety_provider):
 
 # Create separate provider for safety validation
 safety_provider = LLMProvider(
-    model="gpt-4o-mini",
+    model="gpt-5-nano",
     api_key=api_key,
     temperature=0.3,
 )
@@ -380,13 +380,13 @@ async def main():
     
     # Create providers
     main_provider = LLMProvider(
-        model="gpt-4o-mini",
+        model="gpt-5-nano",
         api_key=api_key,
         temperature=0.7
     )
     
     safety_provider = LLMProvider(
-        model="gpt-4o-mini",
+        model="gpt-5-nano",
         api_key=api_key,
         temperature=0.3
     )

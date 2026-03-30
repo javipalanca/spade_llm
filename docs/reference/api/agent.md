@@ -84,7 +84,7 @@ if state:
 ```python
 from spade_llm import LLMAgent, LLMProvider
 
-provider = LLMProvider(model="gpt-4o-mini")
+provider = LLMProvider(model="gpt-5-nano")
 
 agent = LLMAgent(
     jid="assistant@example.com",
@@ -233,7 +233,7 @@ coordinator = CoordinatorAgent(
     password="secret",
     subagent_ids=subagents,
     provider=LLMProvider(
-        model="gpt-4o-mini",
+        model="gpt-5-nano",
         api_key="sk-...",
     ),
     coordination_session="city_ops"

@@ -37,7 +37,7 @@ async def main():
     provider = LLMProvider(model=model)
 
     # Option 2: explicit provider (overrides .env)
-    # provider = LLMProvider(model="openai/gpt-4o-mini")
+    # provider = LLMProvider(model="openai/gpt-5-nano")
     # provider = LLMProvider(model="anthropic/claude-3-5-haiku-20241022")
 
     smart_agent = LLMAgent(

@@ -865,7 +865,7 @@ from spade_llm.memory import AgentBaseMemory, AgentInteractionMemory
 async def memory_integration_example():
     # Create provider
     provider = LLMProvider(
-        model="gpt-4o-mini",
+        model="gpt-5-nano",
         api_key="your-api-key",
     )
     

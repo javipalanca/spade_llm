@@ -152,12 +152,12 @@ async def main():
     """Run the RAG system demonstration."""
     console.print(Panel("[bold cyan]SPADE-LLM RAG System Example[/bold cyan]", expand=False, border_style="cyan"))
 
-    llm_provider = LLMProvider(
+    embedding_provider = LLMProvider(
         model=EMBEDDING_MODEL,
         timeout=60,
     )
 
-    vector_store = Chroma(collection_name="rag_example", embedding_fn=llm_provider.get_embeddings)
+    vector_store = Chroma(collection_name="rag_example", embedding_fn=embedding_provider.get_embeddings)
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
 
