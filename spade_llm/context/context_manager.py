@@ -58,6 +58,9 @@ class ContextManager:
 
         # Context management strategy
         self.context_management = context_management or NoContextManagement()
+        
+        # Structured output schemas per conversation
+        self._output_schemas: Dict[str, Optional[Any]] = {}
 
     def add_message_dict(
         self, message_dict: ContextMessage, conversation_id: str
@@ -337,6 +340,32 @@ class ContextManager:
 
         total_messages = len(self._conversations[conv_id])
         return self.context_management.get_stats(total_messages)
+
+    def set_output_schema(self, schema: Optional[Any], conversation_id: Optional[str] = None) -> None:
+        """
+        Set the output schema for a conversation.
+
+        Args:
+            schema: Pydantic BaseModel class for output validation
+            conversation_id: Optional conversation ID. If not provided, uses current conversation.
+        """
+        conv_id = conversation_id or self._current_conversation_id
+        if conv_id:
+            self._output_schemas[conv_id] = schema
+            logger.debug(f"Set output schema for conversation {conv_id}: {schema.__name__ if schema else None}")
+
+    def get_output_schema(self, conversation_id: Optional[str] = None) -> Optional[Any]:
+        """
+        Get the output schema for a conversation.
+
+        Args:
+            conversation_id: Optional conversation ID. If not provided, uses current conversation.
+
+        Returns:
+            Pydantic BaseModel class or None
+        """
+        conv_id = conversation_id or self._current_conversation_id
+        return self._output_schemas.get(conv_id) if conv_id else None
 
     def update_context_management(
         self, new_context_management: ContextManagement

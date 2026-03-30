@@ -91,8 +91,11 @@ class LLMProvider(BaseLLMProvider):
         return kwargs
 
     async def get_llm_response(
-        self, context: ContextManager, tools: Optional[List[LLMTool]] = None,
-        conversation_id: Optional[str] = None
+        self, 
+        context: ContextManager, 
+        tools: Optional[List[LLMTool]] = None,
+        conversation_id: Optional[str] = None,
+        output_schema: Optional[Any] = None
     ) -> Dict[str, Any]:
         """
         Get complete response from the LLM including both text and tool calls.
@@ -101,11 +104,13 @@ class LLMProvider(BaseLLMProvider):
             context: The conversation context manager
             tools: Optional list of tools available for this specific call
             conversation_id: Optional conversation ID to retrieve specific conversation context
+            output_schema: Optional Pydantic model for structured output
 
         Returns:
             Dictionary containing:
-            - 'text': The text response (None if there are tool calls)
+            - 'text': The text response (None if there are tool calls or structured output)
             - 'tool_calls': List of tool calls (empty if there are none)
+            - 'structured': Parsed Pydantic model instance (None if no output_schema)
         """
         prompt = context.get_prompt(conversation_id)
         logger.info(f"Sending prompt to {self.model}")
@@ -120,12 +125,46 @@ class LLMProvider(BaseLLMProvider):
             )
 
         try:
+            # Build base completion kwargs
             completion_kwargs = self._build_completion_kwargs(context, prompt, formatted_tools)
+            
+            # Add response_format for structured output if provided and no tools
+            use_parse_api = output_schema is not None and not formatted_tools
+            if use_parse_api:
+                logger.info(
+                    f"Using structured output with response_format: {output_schema.__name__}"
+                )
+                completion_kwargs["response_format"] = output_schema
 
             # Call LiteLLM async completion
             response = await litellm.acompletion(**completion_kwargs)
             message = response.choices[0].message
-            result = {"tool_calls": [], "text": None}
+            result = {"tool_calls": [], "text": None, "structured": None}
+
+            # Handle structured output if using parse API
+            if use_parse_api:
+                # For structured output, LiteLLM may return the parsed object or content
+                if hasattr(message, "parsed") and message.parsed:
+                    result["structured"] = message.parsed
+                    logger.info(f"Successfully parsed structured output: {output_schema.__name__}")
+                elif hasattr(message, "refusal") and message.refusal:
+                    logger.warning(f"Model refused to provide structured output: {message.refusal}")
+                    result["text"] = message.refusal
+                else:
+                    # Try to parse from content if available
+                    content = message.content or ""
+                    if content:
+                        try:
+                            parsed_data = json.loads(content)
+                            result["structured"] = output_schema(**parsed_data)
+                            logger.info(f"Parsed structured output from content: {output_schema.__name__}")
+                        except Exception as e:
+                            logger.warning(f"Failed to parse structured output from content: {e}")
+                            result["text"] = content
+                    else:
+                        result["text"] = content
+                        logger.warning("Structured parsing failed, falling back to text response")
+                return result
 
             # Process tool calls if present
             if hasattr(message, "tool_calls") and message.tool_calls:
