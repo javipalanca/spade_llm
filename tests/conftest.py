@@ -148,16 +148,19 @@ class MockLLMProvider(BaseLLMProvider):
     def __init__(self, 
                  responses: Optional[List[str]] = None,
                  tool_calls: Optional[List[Dict[str, Any]]] = None,
-                 should_error: bool = False):
+                 should_error: bool = False,
+                 structured_responses: Optional[List[Any]] = None):
         super().__init__()
         self.responses = responses or ["Mock LLM response"]
         self.tool_calls = tool_calls or []
         self.should_error = should_error
+        self.structured_responses = structured_responses or []
         self.call_count = 0
         self.call_history = []
         
     async def get_llm_response(self, context: ContextManager, tools: Optional[List[LLMTool]] = None,
-                                 conversation_id: Optional[str] = None) -> Dict[str, Any]:
+                                 conversation_id: Optional[str] = None,
+                                 output_schema: Optional[Any] = None) -> Dict[str, Any]:
         """Mock implementation that returns predefined responses or tool calls."""
         if self.should_error:
             raise Exception("Mock LLM provider error")
@@ -168,20 +171,34 @@ class MockLLMProvider(BaseLLMProvider):
             "prompt": prompt,
             "tools": [tool.name for tool in (tools or [])],
             "call_number": self.call_count,
-            "conversation_id": conversation_id
+            "conversation_id": conversation_id,
+            "output_schema": output_schema
         })
+
+        # If output_schema is set and no tools, return structured response
+        if output_schema is not None and not tools and self.structured_responses:
+            idx = min(self.call_count, len(self.structured_responses) - 1)
+            result = {
+                'text': None,
+                'tool_calls': [],
+                'structured': self.structured_responses[idx]
+            }
+            self.call_count += 1
+            return result
 
         # Return tool calls if specified, otherwise return text response
         if self.tool_calls and self.call_count < len(self.tool_calls):
             result = {
                 'text': None,
-                'tool_calls': self.tool_calls[self.call_count]
+                'tool_calls': self.tool_calls[self.call_count],
+                'structured': None
             }
         else:
             response_index = self.call_count % len(self.responses)
             result = {
                 'text': self.responses[response_index],
-                'tool_calls': []
+                'tool_calls': [],
+                'structured': None
             }
 
         self.call_count += 1

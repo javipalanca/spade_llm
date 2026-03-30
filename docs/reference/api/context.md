@@ -154,6 +154,42 @@ conversations = context.get_active_conversations()
 print(f"Active conversations: {conversations}")
 ```
 
+#### set_output_schema()
+
+```python
+def set_output_schema(self, schema: Optional[Type[BaseModel]], conversation_id: Optional[str] = None) -> None
+```
+
+Set a [structured output](../../guides/structured-output.md) schema for a specific conversation. Per-conversation schemas take precedence over the agent-level `output_schema`.
+
+**Example:**
+
+```python
+from pydantic import BaseModel
+
+class WeatherReport(BaseModel):
+    city: str
+    temperature: float
+
+context.set_output_schema(WeatherReport, "conv_1")
+```
+
+#### get_output_schema()
+
+```python
+def get_output_schema(self, conversation_id: Optional[str] = None) -> Optional[Type[BaseModel]]
+```
+
+Get the structured output schema for a conversation.
+
+**Example:**
+
+```python
+schema = context.get_output_schema("conv_1")
+if schema:
+    print(f"Conversation expects: {schema.__name__}")
+```
+
 #### set_current_conversation()
 
 ```python

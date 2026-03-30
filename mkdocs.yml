@@ -116,6 +116,7 @@ nav:
     - Architecture: guides/architecture.md
     - Providers: guides/providers.md
     - Tools System: guides/tools-system.md
+    - Structured Output: guides/structured-output.md
     - RAG System: guides/rag-system.md
     - Context Management: guides/context-management.md
     - Memory System: guides/memory.md

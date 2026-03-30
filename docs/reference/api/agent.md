@@ -21,6 +21,7 @@ LLMAgent(
     termination_markers: Optional[List[str]] = None,
     max_interactions_per_conversation: Optional[int] = None,
     on_conversation_end: Optional[Callable[[str, str], None]] = None,
+    output_schema: Optional[Type[BaseModel]] = None,
     verify_security: bool = False
 )
 ```
@@ -37,6 +38,7 @@ LLMAgent(
 - `termination_markers` - Conversation end markers
 - `max_interactions_per_conversation` - Conversation length limit
 - `on_conversation_end` - Callback when conversation ends
+- `output_schema` - Optional Pydantic `BaseModel` class for [structured output](../../guides/structured-output.md). The agent will generate responses conforming to this schema.
 - `verify_security` - Enable SSL verification
 
 ### Methods
