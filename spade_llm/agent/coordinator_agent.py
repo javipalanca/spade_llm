@@ -11,15 +11,17 @@ Architecture:
 - All coordination happens in a shared session ID for the coordinator's visibility
 """
 
-from typing import List, Optional, Dict, Set, Union, Any
 import asyncio
 import logging
+from typing import Any, Dict, List, Optional, Set, Union
+
 from spade.message import Message
+
 from spade_llm.agent.llm_agent import LLMAgent
+from spade_llm.context._types import _sanitize_jid_for_name
 from spade_llm.context.context_manager import ContextManager
 from spade_llm.routing.types import RoutingFunction, RoutingResponse
 from spade_llm.tools.llm_tool import LLMTool
-from spade_llm.context._types import _sanitize_jid_for_name
 from spade_llm.utils import generate_conversation_id, generate_unique_id
 
 logger = logging.getLogger("spade_llm.agent.coordinator")
@@ -33,12 +35,7 @@ class CoordinationContextManager(ContextManager):
     enabling shared context across multiple agent interactions.
     """
 
-    def __init__(
-        self,
-        coordination_session: str,
-        subagent_ids: Set[str],
-        **kwargs
-    ):
+    def __init__(self, coordination_session: str, subagent_ids: Set[str], **kwargs):
         super().__init__(**kwargs)
         self.coordination_session = coordination_session
         self._sanitize_jid_for_name = _sanitize_jid_for_name
@@ -52,12 +49,10 @@ class CoordinationContextManager(ContextManager):
         For external messages, use standard logic.
         """
         sender_str = str(msg.sender)
-        to_str = str(msg.to) if hasattr(msg, 'to') else ""
+        to_str = str(msg.to) if hasattr(msg, "to") else ""
 
         # Check if subagent
-        if (sender_str in self.subagent_ids or
-            to_str in self.subagent_ids or
-            msg.thread == self.coordination_session):
+        if sender_str in self.subagent_ids or to_str in self.subagent_ids or msg.thread == self.coordination_session:
             return self.coordination_session
 
         # External conversation
@@ -90,7 +85,7 @@ class CoordinatorAgent(LLMAgent):
         coordination_session: Optional[str] = None,
         routing_function: Optional[RoutingFunction] = None,
         subagent_response_timeout: float = 120.0,
-        **kwargs
+        **kwargs,
     ):
         """
         Initialize the CoordinatorAgent.
@@ -116,36 +111,29 @@ class CoordinatorAgent(LLMAgent):
         if routing_function is None:
             routing_function = self._create_coordination_routing()
 
-        if 'system_prompt' not in kwargs:
-            kwargs['system_prompt'] = self._default_coordination_prompt()
+        if "system_prompt" not in kwargs:
+            kwargs["system_prompt"] = self._default_coordination_prompt()
 
         coordination_context = CoordinationContextManager(
             coordination_session=self.coordination_session,
             subagent_ids=self.subagent_ids,
-            system_prompt=kwargs.get('system_prompt'),
-            context_management=kwargs.get('context_management', None)
+            system_prompt=kwargs.get("system_prompt"),
+            context_management=kwargs.get("context_management", None),
         )
 
-        kwargs['_context_override'] = coordination_context
+        kwargs["_context_override"] = coordination_context
 
         # Initialize tracking before calling super().__init__
-        self.agent_status: Dict[str, str] = {
-            agent_id: "idle" for agent_id in self.subagent_ids
-        }
+        self.agent_status: Dict[str, str] = {agent_id: "idle" for agent_id in self.subagent_ids}
         self._original_requester: Optional[str] = None
 
         # Call parent init
-        super().__init__(
-            jid=jid,
-            password=password,
-            routing_function=routing_function,
-            **kwargs
-        )
+        super().__init__(jid=jid, password=password, routing_function=routing_function, **kwargs)
 
     def _default_coordination_prompt(self) -> str:
         """Default system prompt for coordination"""
         agent_list = ", ".join(self.subagent_ids)
-        
+
         return f"""You are a coordinator agent managing the following subagents: {agent_list}
 
 COORDINATION RULES:
@@ -179,11 +167,8 @@ Parallel (independent tasks):
 
     def _create_coordination_routing(self) -> RoutingFunction:
         """Create routing function for coordination responses"""
-        def coordination_routing(
-            msg: Message,
-            response: str,
-            context: Dict[str, Any]
-        ) -> Union[str, RoutingResponse]:
+
+        def coordination_routing(msg: Message, response: str, context: Dict[str, Any]) -> Union[str, RoutingResponse]:
 
             sender_str = str(msg.sender)
 
@@ -214,7 +199,7 @@ Parallel (independent tasks):
             self._create_send_to_agent_tool(),
             self._create_send_to_agents_parallel_tool(),
             self._create_list_subagents_tool(),
-            self._create_complete_task_tool()
+            self._create_complete_task_tool(),
         ]
 
         for tool in coordination_tools:
@@ -248,13 +233,15 @@ Parallel (independent tasks):
 
             # Wait for response by directly receiving from the agent's mailbox
             # This allows us to get the message before LLMBehaviour processes it
-            start_time = asyncio.get_event_loop().time()
+            start_time = asyncio.get_running_loop().time()
 
             while True:
-                elapsed = asyncio.get_event_loop().time() - start_time
+                elapsed = asyncio.get_running_loop().time() - start_time
 
                 if elapsed > agent.subagent_response_timeout:
-                    logger.warning(f"Timeout waiting for response from {agent_id} (>{agent.subagent_response_timeout}s)")
+                    logger.warning(
+                        f"Timeout waiting for response from {agent_id} (>{agent.subagent_response_timeout}s)"
+                    )
                     agent.agent_status[agent_id] = "timeout"
                     return f"Error: {agent_id} did not respond within {agent.subagent_response_timeout} seconds"
 
@@ -277,7 +264,9 @@ Parallel (independent tasks):
                     else:
                         # Not from our target agent, this message needs to be processed normally
                         # We can't put it back easily, so we'll process it through the context
-                        logger.debug(f"Received message from {sender_str} while waiting for {agent_id}, adding to context")
+                        logger.debug(
+                            f"Received message from {sender_str} while waiting for {agent_id}, adding to context"
+                        )
                         agent.context.add_message(response_msg, response_msg.thread or agent.coordination_session)
 
                 # Small sleep to avoid busy waiting
@@ -289,18 +278,15 @@ Parallel (independent tasks):
             parameters={
                 "type": "object",
                 "properties": {
-                    "agent_id": {
-                        "type": "string",
-                        "description": "The JID of the target subagent"
-                    },
+                    "agent_id": {"type": "string", "description": "The JID of the target subagent"},
                     "message": {
                         "type": "string",
-                        "description": "The task, question, or request to send to the subagent"
-                    }
+                        "description": "The task, question, or request to send to the subagent",
+                    },
                 },
-                "required": ["agent_id", "message"]
+                "required": ["agent_id", "message"],
             },
-            func=send_to_agent
+            func=send_to_agent,
         )
 
     def _create_send_to_agents_parallel_tool(self) -> LLMTool:
@@ -315,7 +301,7 @@ Parallel (independent tasks):
                 tasks: List of dicts with 'agent_id' and 'message' keys
             """
             # Validate all agent_ids first
-            invalid_agents = [task['agent_id'] for task in tasks if task['agent_id'] not in agent.subagent_ids]
+            invalid_agents = [task["agent_id"] for task in tasks if task["agent_id"] not in agent.subagent_ids]
             if invalid_agents:
                 return f"Error: {', '.join(invalid_agents)} are not registered subagents"
 
@@ -323,31 +309,31 @@ Parallel (independent tasks):
 
             # Send all messages at once and track per-agent start times
             pending_agents: Dict[str, float] = {}  # agent_id -> start_time
-            current_time = asyncio.get_event_loop().time()
-            
+            current_time = asyncio.get_running_loop().time()
+
             for task in tasks:
-                msg = Message(to=task['agent_id'])
+                msg = Message(to=task["agent_id"])
                 msg.set_metadata("message_type", "llm")
                 msg.set_metadata("coordination_session", agent.coordination_session)
                 msg.thread = agent.coordination_session
-                msg.body = task['message']
+                msg.body = task["message"]
 
                 await agent.llm_behaviour.send(msg)
-                agent.agent_status[task['agent_id']] = "working"
-                pending_agents[task['agent_id']] = current_time
+                agent.agent_status[task["agent_id"]] = "working"
+                pending_agents[task["agent_id"]] = current_time
 
             # Collect all responses with per-agent timeout tracking
             responses: Dict[str, str] = {}
 
             while pending_agents:
-                current_time = asyncio.get_event_loop().time()
-                
+                current_time = asyncio.get_running_loop().time()
+
                 # Check for per-agent timeouts
                 timed_out_agents = []
                 for agent_id, start_time in pending_agents.items():
                     if current_time - start_time > agent.subagent_response_timeout:
                         timed_out_agents.append(agent_id)
-                
+
                 for agent_id in timed_out_agents:
                     agent.agent_status[agent_id] = "timeout"
                     responses[agent_id] = f"Error: did not respond within {agent.subagent_response_timeout} seconds"
@@ -378,7 +364,7 @@ Parallel (independent tasks):
             # Format responses in order of original tasks
             result_parts = []
             for task in tasks:
-                agent_id = task['agent_id']
+                agent_id = task["agent_id"]
                 result_parts.append(f"Response from {agent_id}: {responses.get(agent_id, 'No response')}")
 
             return "\n\n".join(result_parts)
@@ -395,16 +381,16 @@ Parallel (independent tasks):
                             "type": "object",
                             "properties": {
                                 "agent_id": {"type": "string", "description": "The JID of the target subagent"},
-                                "message": {"type": "string", "description": "The task, question, or request to send"}
+                                "message": {"type": "string", "description": "The task, question, or request to send"},
                             },
-                            "required": ["agent_id", "message"]
+                            "required": ["agent_id", "message"],
                         },
-                        "description": "List of tasks to delegate in parallel, each with agent_id and message"
+                        "description": "List of tasks to delegate in parallel, each with agent_id and message",
                     }
                 },
-                "required": ["tasks"]
+                "required": ["tasks"],
             },
-            func=send_to_agents_parallel
+            func=send_to_agents_parallel,
         )
 
     def _create_list_subagents_tool(self) -> LLMTool:
@@ -423,12 +409,8 @@ Parallel (independent tasks):
         return LLMTool(
             name="list_subagents",
             description="List all registered subagents and their current status (idle, working, timeout)",
-            parameters={
-                "type": "object",
-                "properties": {},
-                "required": []
-            },
-            func=list_subagents
+            parameters={"type": "object", "properties": {}, "required": []},
+            func=list_subagents,
         )
 
     def _create_complete_task_tool(self) -> LLMTool:
@@ -447,11 +429,6 @@ Parallel (independent tasks):
         return LLMTool(
             name="complete_task",
             description="Signal that all coordination work is finished. Call this with your final summary to send the result back to the original requester.",
-            parameters={
-                "type": "object",
-                "properties": {},
-                "required": []
-            },
-            func=complete_task
+            parameters={"type": "object", "properties": {}, "required": []},
+            func=complete_task,
         )
-
