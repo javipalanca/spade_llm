@@ -74,7 +74,7 @@ async def main():
     load_env_vars()
     model = os.environ.get("LLM_MODEL")
     if not model:
-        raise SystemExit("LLM_MODEL is not set — copy examples/.env.example to .env and configure it.")
+        raise SystemExit("LLM_MODEL is not set — copy .env.example to .env and configure it.")
     XMPP_SERVER = os.environ.get("XMPP_SERVER", "localhost")
 
     agents_config = {

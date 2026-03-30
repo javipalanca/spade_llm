@@ -6,7 +6,7 @@ Runs standalone (no SPADE server required).
 
 Setup:
   1. pip install 'spade_llm[chroma]'
-  2. cp examples/.env.example .env  (fill in EMBEDDING_MODEL)
+  2. cp .env.example .env  (fill in EMBEDDING_MODEL)
   3. python examples/rag_system_ollama_chroma.py
 """
 
@@ -30,7 +30,7 @@ load_env_vars()
 
 EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL")
 if not EMBEDDING_MODEL:
-    raise SystemExit("EMBEDDING_MODEL is not set — copy examples/.env.example to .env and configure it.")
+    raise SystemExit("EMBEDDING_MODEL is not set — copy .env.example to .env and configure it.")
 
 console = Console()
 

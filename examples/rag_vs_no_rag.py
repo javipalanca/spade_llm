@@ -6,7 +6,7 @@ Knowledge base: classic literature + Anthropic news.
 
 Setup:
   1. pip install 'spade_llm[chroma]'
-  2. cp examples/.env.example .env  (fill in LLM_MODEL and EMBEDDING_MODEL)
+  2. cp .env.example .env  (fill in LLM_MODEL and EMBEDDING_MODEL)
   3. spade run  (in a separate terminal)
   4. python examples/rag_vs_no_rag_demo.py
 """
@@ -53,7 +53,7 @@ LLM_MODEL = os.environ.get("LLM_MODEL")
 EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL")
 if not LLM_MODEL or not EMBEDDING_MODEL:
     raise SystemExit(
-        "LLM_MODEL and EMBEDDING_MODEL must be set — copy examples/.env.example to .env and configure them."
+        "LLM_MODEL and EMBEDDING_MODEL must be set — copy .env.example to .env and configure them."
     )
 
 VECTOR_DB_DIR = Path(__file__).parent / ".vector_db/retrieval_vs_no_retrieval_demo"

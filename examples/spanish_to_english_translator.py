@@ -4,7 +4,7 @@ Spanish to English Translator
 An LLM agent that translates Spanish text to English. Terminates on non-Spanish input.
 
 Setup:
-  1. cp examples/.env.example .env  (fill in LLM_MODEL)
+  1. cp .env.example .env  (fill in LLM_MODEL)
   2. spade run
   3. python examples/spanish_to_english_translator.py
 """
@@ -29,7 +29,7 @@ async def main():
     load_env_vars()
     model = os.environ.get("LLM_MODEL")
     if not model:
-        raise SystemExit("LLM_MODEL is not set — copy examples/.env.example to .env and configure it.")
+        raise SystemExit("LLM_MODEL is not set — copy .env.example to .env and configure it.")
     xmpp_server = os.environ.get("XMPP_SERVER", "localhost")
 
     translator_jid = f"translator@{xmpp_server}"

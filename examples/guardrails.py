@@ -7,7 +7,7 @@ Input guardrails:  keyword filter, profanity filter
 Output guardrails: LLM-based safety validator
 
 Setup:
-  1. cp examples/.env.example .env  (fill in LLM_MODEL)
+  1. cp .env.example .env  (fill in LLM_MODEL)
   2. spade run  (in a separate terminal)
   3. python examples/guardrails.py
 """
@@ -84,7 +84,7 @@ async def main():
     load_env_vars()
     model = os.environ.get("LLM_MODEL")
     if not model:
-        raise SystemExit("LLM_MODEL is not set — copy examples/.env.example to .env and configure it.")
+        raise SystemExit("LLM_MODEL is not set — copy .env.example to .env and configure it.")
     print("=== Guardrails Example ===")
 
     xmpp_server = os.environ.get("XMPP_SERVER", "localhost")

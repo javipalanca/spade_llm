@@ -8,7 +8,7 @@ A 4-agent workflow that:
 4. Sends the summary via Gmail MCP
 
 Setup:
-  1. cp examples/.env.example .env  (fill in LLM_MODEL, GITHUB_MCP_URL, NOTION_MCP_URL, GMAIL_MCP_URL)
+  1. cp .env.example .env  (fill in LLM_MODEL, GITHUB_MCP_URL, NOTION_MCP_URL, GMAIL_MCP_URL)
   2. Start the human expert interface: python -m spade_llm.human_interface.web_server
   3. spade run             (in a separate terminal)
   4. python examples/github_issues_monitor_complex.py
@@ -263,9 +263,9 @@ async def main():
 
     model = os.environ.get("LLM_MODEL")
     if not model:
-        raise SystemExit("LLM_MODEL is not set — copy examples/.env.example to .env and configure it.")
+        raise SystemExit("LLM_MODEL is not set — copy .env.example to .env and configure it.")
 
-    # MCP server URLs - configure in .env (see examples/.env.example)
+    # MCP server URLs - configure in .env (see .env.example)
     github_mcp_url = os.environ.get("GITHUB_MCP_URL")
     notion_mcp_url = os.environ.get("NOTION_MCP_URL")
     gmail_mcp_url = os.environ.get("GMAIL_MCP_URL")

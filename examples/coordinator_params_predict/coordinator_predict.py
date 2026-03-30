@@ -6,7 +6,7 @@ Multi-agent workflow for tuning 3D printing parameters:
 Tuner (ML model) → Validator (range checks) → Saver (results storage)
 
 SETUP:
-  1. cp examples/.env.example .env  (fill in LLM_MODEL)
+  1. cp .env.example .env  (fill in LLM_MODEL)
   2. Ensure regresion3d_simple.joblib exists in the models/ directory
   3. spade run             (in a separate terminal)
   4. python examples/coordinator_params_predict/coordinator_predict.py
@@ -239,7 +239,7 @@ async def main():
 
     model = os.environ.get("LLM_MODEL")
     if not model:
-        raise SystemExit("LLM_MODEL is not set — copy examples/.env.example to .env and configure it.")
+        raise SystemExit("LLM_MODEL is not set — copy .env.example to .env and configure it.")
 
     print("Configuration:")
     print(f"  XMPP Server: {xmpp_server}")
