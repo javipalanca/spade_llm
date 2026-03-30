@@ -4,7 +4,7 @@ Simple Coordinator Example
 Minimal test of CoordinatorAgent: Calculator -> Reporter -> Saver.
 
 Setup:
-  1. cp examples/.env.example .env  (fill in LLM_MODEL)
+  1. cp .env.example .env  (fill in LLM_MODEL)
   2. spade run             (in a separate terminal)
   3. python examples/simple_coordinator.py
 """
@@ -104,7 +104,7 @@ async def main():
 
     model = os.environ.get("LLM_MODEL")
     if not model:
-        raise SystemExit("LLM_MODEL is not set — copy examples/.env.example to .env and configure it.")
+        raise SystemExit("LLM_MODEL is not set — copy .env.example to .env and configure it.")
 
     if os.path.exists(REPORT_SAVE_PATH):
         os.remove(REPORT_SAVE_PATH)

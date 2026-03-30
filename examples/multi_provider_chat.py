@@ -5,7 +5,7 @@ Shows how to configure different LLM providers with SPADE agents.
 Uncomment the provider block you want, or use LLM_MODEL from .env.
 
 Setup:
-  1. cp examples/.env.example .env  (configure provider)
+  1. cp .env.example .env  (configure provider)
   2. spade run             (in a separate terminal)
   3. python examples/multi_provider_chat.py
 """
@@ -28,7 +28,7 @@ async def main():
 
     model = os.environ.get("LLM_MODEL")
     if not model:
-        raise SystemExit("LLM_MODEL is not set — copy examples/.env.example to .env and configure it.")
+        raise SystemExit("LLM_MODEL is not set — copy .env.example to .env and configure it.")
 
     # Uses LLM_MODEL from .env; LiteLLM reads OPENAI_API_KEY and OPENAI_API_BASE automatically.
     provider = LLMProvider(model=model, temperature=0.7)

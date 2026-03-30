@@ -9,7 +9,7 @@ An LLM agent with access to real-time Valencia city data via MCP:
 
 Setup:
   1. Install uv: https://docs.astral.sh/uv/getting-started/installation/
-  2. cp examples/.env.example .env  (fill in LLM_MODEL and VALENCIA_MCP_PATH)
+  2. cp .env.example .env  (fill in LLM_MODEL and VALENCIA_MCP_PATH)
   3. spade run             (in a separate terminal)
   4. python examples/valencia_smartCity_mcp.py
 
@@ -34,7 +34,7 @@ load_env_vars()
 
 LLM_MODEL = os.environ.get("LLM_MODEL")
 if not LLM_MODEL:
-    raise SystemExit("LLM_MODEL is not set — copy examples/.env.example to .env and configure it.")
+    raise SystemExit("LLM_MODEL is not set — copy .env.example to .env and configure it.")
 LOCAL_MCP_PATH = os.environ.get("VALENCIA_MCP_PATH")
 
 console = Console()

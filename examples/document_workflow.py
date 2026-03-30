@@ -4,7 +4,7 @@ Document Creation Workflow
 Multi-agent pipeline: Researcher -> Editor -> Reviewer -> Publisher.
 
 Setup:
-  1. cp examples/.env.example .env  (fill in LLM_MODEL)
+  1. cp .env.example .env  (fill in LLM_MODEL)
   2. spade run             (in a separate terminal)
   3. python examples/document_workflow.py
 """
@@ -49,7 +49,7 @@ async def main():
     load_env_vars()
     model = os.environ.get("LLM_MODEL")
     if not model:
-        raise SystemExit("LLM_MODEL is not set — copy examples/.env.example to .env and configure it.")
+        raise SystemExit("LLM_MODEL is not set — copy .env.example to .env and configure it.")
     XMPP_SERVER = os.environ.get("XMPP_SERVER", "localhost")
     agents_config = {
         "researcher": (f"researcher@{XMPP_SERVER}", "Research Agent"),
