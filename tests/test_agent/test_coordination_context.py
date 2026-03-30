@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 from spade.message import Message
 from spade_llm.agent.coordinator_agent import CoordinationContextManager
-from spade_llm.context._types import create_user_message, create_assistant_message
+from spade_llm.context._types import create_user_message
 
 
 class TestCoordinationContextManagerInitialization:
@@ -244,14 +244,18 @@ class TestMessageAdditionAndContextUpdates:
         assert custom_conv_id in coordination_context_manager._conversations
         assert len(coordination_context_manager._conversations[custom_conv_id]) == 1
 
-    def test_add_coordination_command(
+    def test_add_coordination_message_dict(
         self, coordination_context_manager, coordination_session_id
     ):
-        """Test specialized method for coordination commands."""
+        """Test coordination-style commands via the current message-dict API."""
         target_agent = "subagent1@localhost"
         command = "do task"
+        message = create_user_message(
+            f"[TO: {target_agent}] {command}",
+            name=coordination_context_manager._sanitize_jid_for_name(target_agent),
+        )
 
-        coordination_context_manager.add_coordination_command(target_agent, command)
+        coordination_context_manager.add_message_dict(message, coordination_session_id)
 
         # Check message added to coordination_session
         assert coordination_session_id in coordination_context_manager._conversations
@@ -263,22 +267,26 @@ class TestMessageAdditionAndContextUpdates:
         assert msg["role"] == "user"
         assert f"[TO: {target_agent}]" in msg["content"]
         assert command in msg["content"]
-        assert "name" in msg
+        assert msg["name"] == "subagent1@localhost"
 
-    def test_add_coordination_command_custom_conversation(
+    def test_add_message_dict_custom_conversation(
         self, coordination_context_manager
     ):
-        """Test override conversation_id in coordination command."""
+        """Test override conversation_id when adding a message dict."""
         custom_conv_id = "custom_coordination"
-        coordination_context_manager.add_coordination_command(
-            "subagent1@localhost",
+        message = create_user_message(
             "test command",
-            conversation_id=custom_conv_id
+            name=coordination_context_manager._sanitize_jid_for_name(
+                "subagent1@localhost"
+            ),
         )
+
+        coordination_context_manager.add_message_dict(message, custom_conv_id)
 
         # Should be added to specified conversation
         assert custom_conv_id in coordination_context_manager._conversations
         assert len(coordination_context_manager._conversations[custom_conv_id]) == 1
+        assert coordination_context_manager._conversations[custom_conv_id][0] == message
 
     def test_multiple_subagent_messages_same_conversation(
         self, coordination_context_manager, coordination_session_id
@@ -492,15 +500,22 @@ class TestEdgeCasesAndErrorHandling:
         conv_id = coordination_context_manager._get_coordination_conversation_id(msg)
         assert conv_id == "test_thread"
 
-    def test_coordination_command_with_special_characters(
+    def test_add_message_dict_with_special_characters(
         self, coordination_context_manager
     ):
-        """Test coordination command with special characters in agent ID."""
+        """Test message dict content and sanitized names with special characters."""
         agent_id = "agent.with_special-chars@domain.com"
         command = "Do task with 'quotes' and \"double quotes\""
+        message = create_user_message(
+            command,
+            name=coordination_context_manager._sanitize_jid_for_name(agent_id),
+        )
 
-        coordination_context_manager.add_coordination_command(agent_id, command)
+        coordination_context_manager.add_message_dict(
+            message, coordination_context_manager.coordination_session
+        )
 
         messages = list(coordination_context_manager._conversations.values())[0]
         assert len(messages) == 1
         assert command in messages[0]["content"]
+        assert messages[0]["name"] == agent_id

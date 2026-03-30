@@ -30,7 +30,7 @@ class TestCoordinatorAgentInitialization:
         assert agent.routing_function is not None
         assert isinstance(agent.context, CoordinationContextManager)
         assert len(agent.agent_status) == 3
-        assert all(status == "unknown" for status in agent.agent_status.values())
+        assert all(status == "idle" for status in agent.agent_status.values())
         assert agent._original_requester is None
         assert agent.termination_markers == ["<TASK_COMPLETE>", "<END>", "<DONE>"]
 
@@ -190,7 +190,7 @@ class TestCoordinationTools:
         send_tool = next(t for t in agent.tools if t.name == "send_to_agent")
         result = await send_tool.execute(
             agent_id="subagent1@localhost",
-            command="test command"
+            message="test command"
         )
 
         # Verify message was sent
@@ -202,8 +202,8 @@ class TestCoordinationTools:
         assert sent_msg.metadata.get("message_type") == "llm"
         assert sent_msg.metadata.get("coordination_session") == "test_session"
 
-        # Verify status updated after response handled
-        assert agent.agent_status["subagent1@localhost"] == "responded"
+        # Verify status returns to idle after response handled
+        assert agent.agent_status["subagent1@localhost"] == "idle"
 
         # Verify return message contains response information
         assert "Response from subagent1@localhost" in result
@@ -227,7 +227,7 @@ class TestCoordinationTools:
         send_tool = next(t for t in agent.tools if t.name == "send_to_agent")
         result = await send_tool.execute(
             agent_id="unknown@localhost",
-            command="test command"
+            message="test command"
         )
 
         # Should return error message
@@ -257,7 +257,7 @@ class TestCoordinationTools:
         assert "test_session" in result
         for subagent_id in subagent_ids:
             assert subagent_id in result
-            assert "unknown" in result  # Initial status
+            assert "idle" in result  # Initial status
 
     @pytest.mark.asyncio
     async def test_list_subagents_tool_with_status_updates(self, mock_llm_provider, subagent_ids):
@@ -273,16 +273,16 @@ class TestCoordinationTools:
             await agent.setup()
 
         # Update status
-        agent.agent_status["subagent1@localhost"] = "sent_command"
-        agent.agent_status["subagent2@localhost"] = "responded"
+        agent.agent_status["subagent1@localhost"] = "working"
+        agent.agent_status["subagent2@localhost"] = "timeout"
 
         list_tool = next(t for t in agent.tools if t.name == "list_subagents")
         result = await list_tool.execute()
 
         assert "subagent1@localhost" in result
-        assert "sent_command" in result
+        assert "working" in result
         assert "subagent2@localhost" in result
-        assert "responded" in result
+        assert "timeout" in result
 
     @pytest.mark.asyncio
     async def test_coordination_tools_parameter_validation(self, mock_llm_provider, subagent_ids):
@@ -299,7 +299,7 @@ class TestCoordinationTools:
 
         send_tool = next(t for t in agent.tools if t.name == "send_to_agent")
         assert "agent_id" in send_tool.parameters["required"]
-        assert "command" in send_tool.parameters["required"]
+        assert "message" in send_tool.parameters["required"]
 
         list_tool = next(t for t in agent.tools if t.name == "list_subagents")
         assert list_tool.parameters["required"] == []
@@ -348,8 +348,8 @@ class TestRoutingAndMessageFlow:
 
         assert result == "user@localhost"
 
-    def test_default_routing_function_completion_detection(self, mock_llm_provider, subagent_ids):
-        """Test completion marker triggers routing to original requester."""
+    def test_default_routing_function_completion_requires_complete_task(self, mock_llm_provider, subagent_ids):
+        """Test response markers alone do not trigger completion routing."""
         agent = CoordinatorAgent(
             jid="coordinator@localhost",
             password="password",
@@ -368,7 +368,7 @@ class TestRoutingAndMessageFlow:
 
         result = agent.routing_function(msg, response, context)
 
-        assert result == "user@localhost"
+        assert result == str(agent.jid)
 
     def test_default_routing_function_original_requester_tracking(self, mock_llm_provider, subagent_ids):
         """Test that first external message sets original requester."""
@@ -420,8 +420,8 @@ class TestRoutingAndMessageFlow:
         assert result == str(agent.jid)
         assert result != "user@localhost"
 
-    def test_routing_with_multiple_termination_markers(self, mock_llm_provider, subagent_ids):
-        """Test that any termination marker triggers completion."""
+    def test_routing_with_complete_task_flag(self, mock_llm_provider, subagent_ids):
+        """Test completion routing is driven by the complete-task flag."""
         agent = CoordinatorAgent(
             jid="coordinator@localhost",
             password="password",
@@ -434,11 +434,13 @@ class TestRoutingAndMessageFlow:
         msg = Mock(spec=Message)
         msg.sender = "subagent1@localhost"
         context = {}
+        agent._task_completed = True
 
-        for marker in ["<TASK_COMPLETE>", "<END>", "<DONE>"]:
-            response = f"Work finished {marker}"
-            result = agent.routing_function(msg, response, context)
-            assert result == "user@localhost"
+        result = agent.routing_function(msg, "Work finished <TASK_COMPLETE>", context)
+
+        assert result == "user@localhost"
+        assert agent._task_completed is False
+        assert agent._original_requester is None
 
     def test_routing_function_context_parameter(self, mock_llm_provider, subagent_ids):
         """Test that context dict is passed to routing function."""
@@ -463,7 +465,7 @@ class TestAgentStatusTracking:
     """Test agent status tracking functionality."""
 
     def test_agent_status_initialization(self, mock_llm_provider, subagent_ids):
-        """Test that initial status is 'unknown'."""
+        """Test that initial status is 'idle'."""
         agent = CoordinatorAgent(
             jid="coordinator@localhost",
             password="password",
@@ -473,7 +475,7 @@ class TestAgentStatusTracking:
 
         assert len(agent.agent_status) == len(subagent_ids)
         for subagent_id in subagent_ids:
-            assert agent.agent_status[subagent_id] == "unknown"
+            assert agent.agent_status[subagent_id] == "idle"
 
     @pytest.mark.asyncio
     async def test_agent_status_update_on_send(self, mock_llm_provider, subagent_ids):
@@ -497,9 +499,9 @@ class TestAgentStatusTracking:
         agent.llm_behaviour.receive = AsyncMock(return_value=response_msg)
 
         send_tool = next(t for t in agent.tools if t.name == "send_to_agent")
-        await send_tool.execute(agent_id="subagent1@localhost", command="test")
+        await send_tool.execute(agent_id="subagent1@localhost", message="test")
 
-        assert agent.agent_status["subagent1@localhost"] == "responded"
+        assert agent.agent_status["subagent1@localhost"] == "idle"
 
     @pytest.mark.asyncio
     async def test_agent_status_update_on_response(self, mock_llm_provider, subagent_ids):
@@ -524,9 +526,9 @@ class TestAgentStatusTracking:
         agent.llm_behaviour.send = AsyncMock()
         agent.llm_behaviour.receive = AsyncMock(return_value=msg)
 
-        await send_tool.execute(agent_id="subagent1@localhost", command="do work")
+        await send_tool.execute(agent_id="subagent1@localhost", message="do work")
 
-        assert agent.agent_status["subagent1@localhost"] == "responded"
+        assert agent.agent_status["subagent1@localhost"] == "idle"
         conversation = agent.context._conversations.get(agent.coordination_session, [])
         assert any(entry.get("content") == "Response" for entry in conversation)
 
@@ -570,14 +572,14 @@ class TestAgentStatusTracking:
         send_tool = next(t for t in agent.tools if t.name == "send_to_agent")
 
         task = asyncio.create_task(
-            send_tool.execute(agent_id="subagent1@localhost", command="test")
+            send_tool.execute(agent_id="subagent1@localhost", message="test")
         )
 
         await event.wait()
-        assert agent.agent_status["subagent1@localhost"] == "sent_command"
+        assert agent.agent_status["subagent1@localhost"] == "working"
 
         await task
-        assert agent.agent_status["subagent1@localhost"] == "responded"
+        assert agent.agent_status["subagent1@localhost"] == "idle"
 
 
 class TestIntegration:
@@ -845,7 +847,7 @@ class TestEdgeCasesAndErrorHandling:
         # Execute tool
         result = await send_tool.execute(
             agent_id="subagent1@localhost",
-            command="test command"
+            message="test command"
         )
 
         assert "Response from subagent1@localhost" in result
