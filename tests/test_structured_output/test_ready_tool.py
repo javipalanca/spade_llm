@@ -1,7 +1,6 @@
 """Tests for the ReadyForStructuredOutputTool."""
 
 import pytest
-
 from pydantic import BaseModel
 
 from spade_llm.structured_output import ReadyForStructuredOutputTool
@@ -9,6 +8,7 @@ from spade_llm.structured_output import ReadyForStructuredOutputTool
 
 class SampleSchema(BaseModel):
     """Sample schema for testing."""
+
     name: str
     age: int
     active: bool = True
@@ -96,6 +96,7 @@ class TestReadyForStructuredOutputToolExecution:
     @pytest.mark.asyncio
     async def test_execute_with_different_schema(self):
         """Test execution with a different schema."""
+
         class TripPlan(BaseModel):
             destination: str
             days: int

@@ -13,22 +13,18 @@ from .core.document import Document
 
 # Document loaders
 from .document_loaders.base import BaseDocumentLoader
-from .document_loaders.text import (
-    TextLoader,
-    DirectoryLoader
-)
+from .document_loaders.text import DirectoryLoader, TextLoader
 
 # Text splitters
 from .text_splitters.base import TextSplitter
-from .text_splitters.character import (
-    CharacterTextSplitter,
-    RecursiveCharacterTextSplitter
-)
+from .text_splitters.character import CharacterTextSplitter, RecursiveCharacterTextSplitter
 
 # Vector stores
 from .vector_stores.base import VectorStore
+
 try:
     from .vector_stores.chroma import Chroma
+
     _chroma_available = True
 except ImportError:
     Chroma = None
@@ -41,20 +37,16 @@ from .retrievers.vector_store import VectorStoreRetriever
 __all__ = [
     # Core
     "Document",
-    
     # Document loaders
     "BaseDocumentLoader",
-    "TextLoader", 
+    "TextLoader",
     "DirectoryLoader",
-    
     # Text splitters
     "TextSplitter",
     "CharacterTextSplitter",
     "RecursiveCharacterTextSplitter",
-    
     # Vector stores
     "VectorStore",
-    
     # Retrievers
     "BaseRetriever",
     "VectorStoreRetriever",

@@ -1,6 +1,7 @@
 """Utilities for managing conversation identifiers."""
 
 import uuid
+
 from spade.message import Message
 
 
@@ -22,11 +23,11 @@ def generate_conversation_id(msg: Message) -> str:
     """
     if msg.thread:
         return msg.thread
-    
+
     sender_name = _extract_name(msg.sender)
     receiver_name = _extract_name(msg.to)
     base_id = f"{sender_name}_{receiver_name}"
     unique_id = generate_unique_id(base_id)
-    
+
     msg.thread = unique_id
     return unique_id

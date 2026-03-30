@@ -10,15 +10,15 @@ Setup:
 """
 
 import os
-import spade
 
-from spade_llm.agent import LLMAgent, ChatAgent
+import spade
+from langchain_community.tools import DuckDuckGoSearchRun, WikipediaQueryRun
+from langchain_community.utilities import WikipediaAPIWrapper
+
+from spade_llm.agent import ChatAgent, LLMAgent
 from spade_llm.providers import LLMProvider
 from spade_llm.tools import LangChainToolAdapter
 from spade_llm.utils import load_env_vars
-
-from langchain_community.tools import DuckDuckGoSearchRun, WikipediaQueryRun
-from langchain_community.utilities import WikipediaAPIWrapper
 
 
 async def main():

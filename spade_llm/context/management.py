@@ -80,7 +80,7 @@ class WindowSizeContext(ContextManagement):
         if len(messages) <= self.max_messages:
             return messages
 
-        return messages[-self.max_messages:]
+        return messages[-self.max_messages :]
 
     def get_stats(self, total_messages: int) -> Dict[str, Any]:
         """Return statistics for window size strategy."""
@@ -142,9 +142,7 @@ class SmartWindowSizeContext(ContextManagement):
 
         return self._smart_combination(messages)
 
-    def _sliding_window_with_pairs(
-        self, messages: List[ContextMessage]
-    ) -> List[ContextMessage]:
+    def _sliding_window_with_pairs(self, messages: List[ContextMessage]) -> List[ContextMessage]:
         """Simple sliding window that preserves tool pairs."""
         tool_pairs = self._find_tool_pairs(messages)
         selected_indices = set()
@@ -174,9 +172,7 @@ class SmartWindowSizeContext(ContextManagement):
         # Return messages in original order
         return [messages[i] for i in sorted(selected_indices)]
 
-    def _preserve_initial_only(
-        self, messages: List[ContextMessage]
-    ) -> List[ContextMessage]:
+    def _preserve_initial_only(self, messages: List[ContextMessage]) -> List[ContextMessage]:
         """Preserve initial N messages plus recent messages to fill window, respecting tool pairs."""
         initial = messages[: self.preserve_initial]
         remaining_space = self.max_messages - len(initial)
@@ -207,12 +203,12 @@ class SmartWindowSizeContext(ContextManagement):
 
             if pair_for_msg:
                 # Only add if all messages in pair fit and are after initial messages
-                pair_after_initial = [
-                    idx for idx in pair_for_msg if idx >= self.preserve_initial
-                ]
-                if (len(pair_after_initial) == len(pair_for_msg)
-                        and remaining_space >= len(pair_for_msg)
-                        and not any(idx in selected_indices for idx in pair_for_msg)):
+                pair_after_initial = [idx for idx in pair_for_msg if idx >= self.preserve_initial]
+                if (
+                    len(pair_after_initial) == len(pair_for_msg)
+                    and remaining_space >= len(pair_for_msg)
+                    and not any(idx in selected_indices for idx in pair_for_msg)
+                ):
                     selected_indices.update(pair_for_msg)
                     remaining_space -= len(pair_for_msg)
                 current_pos = min(pair_for_msg) - 1
@@ -262,9 +258,7 @@ class SmartWindowSizeContext(ContextManagement):
                 i += 1
         return pairs
 
-    def _prioritize_tools_only(
-        self, messages: List[ContextMessage]
-    ) -> List[ContextMessage]:
+    def _prioritize_tools_only(self, messages: List[ContextMessage]) -> List[ContextMessage]:
         """Prioritize tool results while preserving tool call/result pairs."""
         tool_pairs = self._find_tool_pairs(messages)
         selected_indices = set()
@@ -288,9 +282,7 @@ class SmartWindowSizeContext(ContextManagement):
 
         return [messages[i] for i in sorted(selected_indices)]
 
-    def _smart_combination(
-        self, messages: List[ContextMessage]
-    ) -> List[ContextMessage]:
+    def _smart_combination(self, messages: List[ContextMessage]) -> List[ContextMessage]:
         """Combine initial preservation with tool prioritization while preserving tool pairs."""
         initial = messages[: self.preserve_initial]
         available_space = self.max_messages - len(initial)
@@ -303,9 +295,7 @@ class SmartWindowSizeContext(ContextManagement):
 
         # Filter pairs to only those after initial messages
         relevant_pairs = [
-            pair_indices
-            for pair_indices in tool_pairs
-            if all(idx >= self.preserve_initial for idx in pair_indices)
+            pair_indices for pair_indices in tool_pairs if all(idx >= self.preserve_initial for idx in pair_indices)
         ]
 
         selected_indices = set(range(len(initial)))
@@ -320,9 +310,7 @@ class SmartWindowSizeContext(ContextManagement):
         current_pos = len(messages) - 1
         while available_space > 0 and current_pos >= self.preserve_initial:
             # Skip messages that are part of tool pairs or already selected
-            is_in_pair = any(
-                current_pos in pair_indices for pair_indices in relevant_pairs
-            )
+            is_in_pair = any(current_pos in pair_indices for pair_indices in relevant_pairs)
             if current_pos not in selected_indices and not is_in_pair:
                 selected_indices.add(current_pos)
                 available_space -= 1

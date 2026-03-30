@@ -53,7 +53,7 @@ class LLMAgent(Agent):
         agent_base_memory: Union[bool, Tuple[bool, str]] = False,
         output_schema: Optional[Any] = None,
         verify_security: bool = False,
-        **kwargs
+        **kwargs,
     ):
         """
         Initialize an LLM-capable agent.
@@ -87,12 +87,10 @@ class LLMAgent(Agent):
         super().__init__(jid, password, verify_security=verify_security)
 
         # Allow subclasses to inject custom context managers
-        if '_context_override' in kwargs:
-            self.context = kwargs.pop('_context_override')
+        if "_context_override" in kwargs:
+            self.context = kwargs.pop("_context_override")
         else:
-            self.context = ContextManager(
-                system_prompt=system_prompt, context_management=context_management
-            )
+            self.context = ContextManager(system_prompt=system_prompt, context_management=context_management)
         self.provider = provider
         self.context_management = context_management
         self.reply_to = reply_to
@@ -107,22 +105,16 @@ class LLMAgent(Agent):
 
         # Setup interaction memory if enabled
         self.interaction_memory = None
-        interaction_enabled, interaction_path = self._parse_memory_config(
-            interaction_memory
-        )
+        interaction_enabled, interaction_path = self._parse_memory_config(interaction_memory)
         if interaction_enabled:
             self.interaction_memory = AgentInteractionMemory(jid, interaction_path)
             memory_tool = AgentMemoryTool(self.interaction_memory)
             self._register_tool(memory_tool)
-            logger.info(
-                f"Enabled interaction memory for agent {jid} with path: {interaction_path or 'default'}"
-            )
+            logger.info(f"Enabled interaction memory for agent {jid} with path: {interaction_path or 'default'}")
 
         # Setup agent base memory if enabled
         self.agent_base_memory = None
-        base_memory_enabled, base_memory_path = self._parse_memory_config(
-            agent_base_memory
-        )
+        base_memory_enabled, base_memory_path = self._parse_memory_config(agent_base_memory)
         if base_memory_enabled:
             from ..memory.agent_base_memory import AgentBaseMemory
             from ..memory.agent_base_memory_tools import create_base_memory_tools
@@ -133,9 +125,7 @@ class LLMAgent(Agent):
             for tool in base_memory_tools:
                 self._register_tool(tool)
 
-            logger.info(
-                f"Enabled agent base memory for agent {jid} with path: {base_memory_path or 'default'}"
-            )
+            logger.info(f"Enabled agent base memory for agent {jid} with path: {base_memory_path or 'default'}")
 
         self.termination_markers = termination_markers or [
             "<TASK_COMPLETE>",
@@ -193,15 +183,11 @@ class LLMAgent(Agent):
             for tool in mcp_tools:
                 self.add_tool(tool)
 
-            logger.info(
-                f"Registered {len(mcp_tools)} MCP tools from {len(self.mcp_servers)} servers"
-            )
+            logger.info(f"Registered {len(mcp_tools)} MCP tools from {len(self.mcp_servers)} servers")
         except Exception as e:
             logger.error(f"Error setting up MCP tools: {e}")
 
-    def _parse_memory_config(
-        self, memory_config: Union[bool, Tuple[bool, str]]
-    ) -> Tuple[bool, Optional[str]]:
+    def _parse_memory_config(self, memory_config: Union[bool, Tuple[bool, str]]) -> Tuple[bool, Optional[str]]:
         """
         Parse memory configuration parameter.
 
@@ -220,14 +206,10 @@ class LLMAgent(Agent):
             if isinstance(enabled, bool) and isinstance(path, str):
                 return enabled, path
             else:
-                logger.warning(
-                    f"Invalid memory config tuple format: {memory_config}. Using default."
-                )
+                logger.warning(f"Invalid memory config tuple format: {memory_config}. Using default.")
                 return False, None
         else:
-            logger.warning(
-                f"Invalid memory config type: {type(memory_config)}. Expected bool or tuple."
-            )
+            logger.warning(f"Invalid memory config type: {type(memory_config)}. Expected bool or tuple.")
             return False, None
 
     def _register_tool(self, tool: LLMTool):
@@ -307,9 +289,7 @@ class LLMAgent(Agent):
         self.output_guardrails.append(guardrail)
         self.llm_behaviour.add_output_guardrail(guardrail)
 
-    def get_context_stats(
-        self, conversation_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    def get_context_stats(self, conversation_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Get context management statistics for a conversation.
 
@@ -321,9 +301,7 @@ class LLMAgent(Agent):
         """
         return self.context.get_context_stats(conversation_id)
 
-    def update_context_management(
-        self, new_context_management: ContextManagement
-    ) -> None:
+    def update_context_management(self, new_context_management: ContextManagement) -> None:
         """
         Update the context management strategy.
 

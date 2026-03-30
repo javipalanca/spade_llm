@@ -3,12 +3,12 @@
 import inspect
 import logging
 from pathlib import Path
-from typing import List, Dict, Any, Optional, AsyncGenerator, Union, Set, Type
+from typing import Any, AsyncGenerator, Dict, List, Optional, Set, Type, Union
 
 import aiofiles
 
-from .base import BaseDocumentLoader
 from ..core.document import Document
+from .base import BaseDocumentLoader
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class TextLoader(BaseDocumentLoader):
     Supports common text formats like .txt, .md, and .rst.
     """
 
-    SUPPORTED_EXTENSIONS: Set[str] = {'.txt', '.md', '.rst'}
+    SUPPORTED_EXTENSIONS: Set[str] = {".txt", ".md", ".rst"}
 
     def __init__(
         self,
@@ -44,14 +44,12 @@ class TextLoader(BaseDocumentLoader):
 
     async def load_stream(self) -> AsyncGenerator[Document, None]:
         """Reads the file and yields a single Document.
-        
+
         Yields:
             Document object containing the file's content
         """
         try:
-            async with aiofiles.open(
-                self.file_path, mode="r", encoding=self.encoding
-            ) as f:
+            async with aiofiles.open(self.file_path, mode="r", encoding=self.encoding) as f:
                 content = await f.read()
 
             metadata = {
@@ -105,13 +103,13 @@ class DirectoryLoader(BaseDocumentLoader):
         self.loader_map = loader_map or self.DEFAULT_LOADER_MAP.copy()
 
         if suffixes is not None:
-            self.suffixes = {s if s.startswith('.') else f'.{s}' for s in suffixes}
+            self.suffixes = {s if s.startswith(".") else f".{s}" for s in suffixes}
         else:
             self.suffixes = set(self.loader_map.keys())
 
     def _get_loader_for_file(self, file_path: Path) -> Optional[BaseDocumentLoader]:
         """Instantiates the appropriate loader for a given file path.
-        
+
         Args:
             file_path: The path to the file to find a loader for
 
@@ -122,7 +120,7 @@ class DirectoryLoader(BaseDocumentLoader):
         extension = file_path.suffix.lower()
         if extension not in self.suffixes:
             return None
-        
+
         loader_class = self.loader_map.get(extension)
         if loader_class is None:
             return None
@@ -132,22 +130,16 @@ class DirectoryLoader(BaseDocumentLoader):
         accepted_params = set(init_signature.parameters.keys())
 
         # Define all arguments this DirectoryLoader could potentially pass
-        potential_kwargs = {
-            'file_path': file_path,
-            'encoding': self.encoding,
-            'metadata': self.metadata
-        }
-        
+        potential_kwargs = {"file_path": file_path, "encoding": self.encoding, "metadata": self.metadata}
+
         # Filter for arguments that the specific loader class actually accepts
-        kwargs_to_pass = {
-            k: v for k, v in potential_kwargs.items() if k in accepted_params
-        }
-        
+        kwargs_to_pass = {k: v for k, v in potential_kwargs.items() if k in accepted_params}
+
         return loader_class(**kwargs_to_pass)
 
     async def load_stream(self) -> AsyncGenerator[Document, None]:
         """Finds and streams all supported files in the directory.
-        
+
         Yields:
             Document object loaded from a file in the directory
         """
@@ -156,12 +148,11 @@ class DirectoryLoader(BaseDocumentLoader):
             if not self.path.exists():
                 raise FileNotFoundError(f"Directory not found: {self.path}")
             raise NotADirectoryError(f"Path is not a directory: {self.path}")
-        
+
         try:
             # Generator expression to process file paths lazily
             file_paths = (
-                p for p in self.path.glob(self.glob_pattern)
-                if p.is_file() and p.suffix.lower() in self.suffixes
+                p for p in self.path.glob(self.glob_pattern) if p.is_file() and p.suffix.lower() in self.suffixes
             )
         except Exception as e:
             logger.error(f"Error accessing directory {self.path}: {e}")

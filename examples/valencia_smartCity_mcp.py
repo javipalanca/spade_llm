@@ -18,17 +18,17 @@ Set VALENCIA_MCP_PATH in .env to use a local clone instead.
 """
 
 import os
+
 import spade
-
-from spade_llm.agent import LLMAgent, ChatAgent
-from spade_llm.providers import LLMProvider
-from spade_llm.mcp import StdioServerConfig
-from spade_llm.utils import load_env_vars
-
-from rich.console import Console
-from rich.panel import Panel
-from rich.markdown import Markdown
 from rich import box
+from rich.console import Console
+from rich.markdown import Markdown
+from rich.panel import Panel
+
+from spade_llm.agent import ChatAgent, LLMAgent
+from spade_llm.mcp import StdioServerConfig
+from spade_llm.providers import LLMProvider
+from spade_llm.utils import load_env_vars
 
 load_env_vars()
 
@@ -39,14 +39,16 @@ LOCAL_MCP_PATH = os.environ.get("VALENCIA_MCP_PATH")
 
 console = Console()
 
+
 async def main():
     console.print("\n")
-    console.print(Panel(
-        "[bold cyan]Valencia Smart City Assistant[/bold cyan]\n"
-        "[bold]Powered by MCP & SPADE[/bold]",
-        box=box.DOUBLE,
-        border_style="cyan"
-    ))
+    console.print(
+        Panel(
+            "[bold cyan]Valencia Smart City Assistant[/bold cyan]\n[bold]Powered by MCP & SPADE[/bold]",
+            box=box.DOUBLE,
+            border_style="cyan",
+        )
+    )
 
     xmpp_server = os.environ.get("XMPP_SERVER", "localhost")
 
@@ -63,9 +65,9 @@ async def main():
             command="uv",
             args=[
                 "run",
-                "https://raw.githubusercontent.com/olafmeneses/SmartCityMCP/refs/heads/master/valencia_smart_city_mcp.py"
+                "https://raw.githubusercontent.com/olafmeneses/SmartCityMCP/refs/heads/master/valencia_smart_city_mcp.py",
             ],
-            cache_tools=True
+            cache_tools=True,
         )
         console.print("   [green]✓[/green] Valencia Smart City MCP configured (running from GitHub)")
         console.print("   [dim]Note: First run downloads dependencies automatically[/dim]")
@@ -74,10 +76,7 @@ async def main():
         # For users who prefer to clone the repository manually:
         # git clone https://github.com/olafmeneses/SmartCityMCP.git
         valencia_mcp = StdioServerConfig(
-            name="ValenciaSmart",
-            command="uv",
-            args=["run", LOCAL_MCP_PATH],
-            cache_tools=True
+            name="ValenciaSmart", command="uv", args=["run", LOCAL_MCP_PATH], cache_tools=True
         )
         console.print(f"   [green]✓[/green] Valencia Smart City MCP configured (running from {LOCAL_MCP_PATH})")
 
@@ -93,7 +92,7 @@ async def main():
         password=llm_password,
         provider=provider,
         system_prompt="You are a helpful assistant with access to Valencia city data tools. Provide weather, traffic, bike availability, air quality, and city info.",
-        mcp_servers=[valencia_mcp]
+        mcp_servers=[valencia_mcp],
     )
 
     await llm_agent.start()
@@ -106,36 +105,37 @@ async def main():
     # Rich console display callback with markdown support
     def display_response(message: str, sender: str):
         console.print("\n")
-        console.print(Panel(
-            Markdown(message),
-            title="[bold green]Valencia Smart Assistant[/bold green]",
-            border_style="green",
-            box=box.ROUNDED,
-        ))
+        console.print(
+            Panel(
+                Markdown(message),
+                title="[bold green]Valencia Smart Assistant[/bold green]",
+                border_style="green",
+                box=box.ROUNDED,
+            )
+        )
 
     chat = ChatAgent(
-        jid=human_jid,
-        password=human_password,
-        target_agent_jid=llm_jid,
-        display_callback=display_response
+        jid=human_jid, password=human_password, target_agent_jid=llm_jid, display_callback=display_response
     )
 
     await chat.start()
     console.print(f"   [green]✓[/green] Chat agent started: {human_jid}")
 
     console.print("\n")
-    console.print(Panel(
-        "[bold green]System Ready[/bold green]\n\n"
-        "[yellow]Ask about:[/yellow]\n"
-        "  • Valencia weather conditions\n"
-        "  • Traffic information\n"
-        "  • Bike station availability\n"
-        "  • Air quality monitoring\n"
-        "  • City data and services\n\n"
-        "[dim]Type 'exit' to quit[/dim]",
-        border_style="green",
-        box=box.ROUNDED,
-    ))
+    console.print(
+        Panel(
+            "[bold green]System Ready[/bold green]\n\n"
+            "[yellow]Ask about:[/yellow]\n"
+            "  • Valencia weather conditions\n"
+            "  • Traffic information\n"
+            "  • Bike station availability\n"
+            "  • Air quality monitoring\n"
+            "  • City data and services\n\n"
+            "[dim]Type 'exit' to quit[/dim]",
+            border_style="green",
+            box=box.ROUNDED,
+        )
+    )
 
     # Run interactive chat with custom prompt
     try:
@@ -154,7 +154,6 @@ async def main():
         await llm_agent.stop()
         console.print("   [green]✓[/green] LLM agent stopped")
         console.print("\n[bold green]Demo completed[/bold green]\n")
-
 
 
 if __name__ == "__main__":

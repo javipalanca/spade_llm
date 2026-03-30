@@ -1,7 +1,8 @@
 """Tests for vector store retriever."""
 
+from unittest.mock import AsyncMock, Mock
+
 import pytest
-from unittest.mock import Mock, AsyncMock
 
 from spade_llm.rag import (
     Document,
@@ -42,27 +43,17 @@ class TestVectorStoreRetriever:
         results = await retriever.retrieve("test query", k=2, search_type="similarity")
 
         assert results == expected_docs
-        mock_vector_store.similarity_search.assert_called_once_with(
-            query="test query",
-            k=2
-        )
+        mock_vector_store.similarity_search.assert_called_once_with(query="test query", k=2)
 
     @pytest.mark.asyncio
     async def test_retrieve_with_kwargs(self, retriever, mock_vector_store):
         """Test retrieval with additional kwargs."""
         mock_vector_store.similarity_search.return_value = []
 
-        await retriever.retrieve(
-            "test query",
-            k=5,
-            search_type="similarity",
-            filters={"category": "science"}
-        )
+        await retriever.retrieve("test query", k=5, search_type="similarity", filters={"category": "science"})
 
         mock_vector_store.similarity_search.assert_called_once_with(
-            query="test query",
-            k=5,
-            filters={"category": "science"}
+            query="test query", k=5, filters={"category": "science"}
         )
 
     @pytest.mark.asyncio
@@ -97,10 +88,7 @@ class TestVectorStoreRetriever:
 
         assert len(results) == 1
         assert results[0].content == "Result 1"
-        mock_vector_store.similarity_search_with_score.assert_called_once_with(
-            query="test query",
-            k=3
-        )
+        mock_vector_store.similarity_search_with_score.assert_called_once_with(query="test query", k=3)
 
     @pytest.mark.asyncio
     async def test_retrieve_default_k_value(self, retriever, mock_vector_store):
@@ -110,10 +98,7 @@ class TestVectorStoreRetriever:
         await retriever.retrieve("test query", search_type="similarity")
 
         # Default k should be 4
-        mock_vector_store.similarity_search.assert_called_once_with(
-            query="test query",
-            k=4
-        )
+        mock_vector_store.similarity_search.assert_called_once_with(query="test query", k=4)
 
     @pytest.mark.asyncio
     async def test_retrieve_default_search_type(self, retriever, mock_vector_store):
@@ -123,10 +108,7 @@ class TestVectorStoreRetriever:
         await retriever.retrieve("test query")
 
         # Default search_type should be "similarity"
-        mock_vector_store.similarity_search.assert_called_once_with(
-            query="test query",
-            k=4
-        )
+        mock_vector_store.similarity_search.assert_called_once_with(query="test query", k=4)
 
     @pytest.mark.asyncio
     async def test_retrieve_mmr_search(self, retriever, mock_vector_store):
@@ -137,33 +119,25 @@ class TestVectorStoreRetriever:
         ]
         mock_vector_store.max_marginal_relevance_search = AsyncMock(return_value=expected_docs)
 
-        results = await retriever.retrieve(
-            "test query",
-            k=2,
-            search_type="mmr",
-            fetch_k=10,
-            lambda_mult=0.7
-        )
+        results = await retriever.retrieve("test query", k=2, search_type="mmr", fetch_k=10, lambda_mult=0.7)
 
         assert results == expected_docs
         mock_vector_store.max_marginal_relevance_search.assert_called_once_with(
-            query="test query",
-            k=2,
-            fetch_k=10,
-            lambda_mult=0.7
+            query="test query", k=2, fetch_k=10, lambda_mult=0.7
         )
 
     @pytest.mark.asyncio
     async def test_retrieve_mmr_not_supported_raises_error(self, mock_vector_store):
         """Test MMR raises NotImplementedError when not supported by vector store."""
+
         # Create a mock that doesn't have the max_marginal_relevance_search attribute
         class LimitedVectorStore:
             async def similarity_search(self, query, k, **kwargs):
                 return [Document(content="Result 1", metadata={"id": 1})]
-        
+
         limited_store = LimitedVectorStore()
         retriever = VectorStoreRetriever(vector_store=limited_store)  # type: ignore
-        
+
         with pytest.raises(NotImplementedError, match="MMR search is not supported"):
             await retriever.retrieve("test query", k=2, search_type="mmr")
 
@@ -181,17 +155,11 @@ class TestVectorStoreRetriever:
         ]
         mock_vector_store.similarity_search.return_value = expected_results
 
-        results = await retriever.retrieve_similarity(
-            "test query",
-            k=1,
-            filters={"category": "science"}
-        )
+        results = await retriever.retrieve_similarity("test query", k=1, filters={"category": "science"})
 
         assert results == expected_results
         mock_vector_store.similarity_search.assert_called_once_with(
-            query="test query",
-            k=1,
-            filters={"category": "science"}
+            query="test query", k=1, filters={"category": "science"}
         )
 
     @pytest.mark.asyncio
@@ -203,20 +171,12 @@ class TestVectorStoreRetriever:
         mock_vector_store.max_marginal_relevance_search = AsyncMock(return_value=expected_docs)
 
         results = await retriever.retrieve_mmr(
-            "test query",
-            k=1,
-            fetch_k=15,
-            lambda_mult=0.8,
-            filters={"type": "article"}
+            "test query", k=1, fetch_k=15, lambda_mult=0.8, filters={"type": "article"}
         )
 
         assert results == expected_docs
         mock_vector_store.max_marginal_relevance_search.assert_called_once_with(
-            query="test query",
-            k=1,
-            fetch_k=15,
-            lambda_mult=0.8,
-            filters={"type": "article"}
+            query="test query", k=1, fetch_k=15, lambda_mult=0.8, filters={"type": "article"}
         )
 
     @pytest.mark.asyncio
@@ -228,8 +188,4 @@ class TestVectorStoreRetriever:
         results = await retriever.retrieve_similarity("test query", k=2)
 
         assert results == expected_results
-        mock_vector_store.similarity_search.assert_called_once_with(
-            query="test query",
-            k=2
-        )
-
+        mock_vector_store.similarity_search.assert_called_once_with(query="test query", k=2)

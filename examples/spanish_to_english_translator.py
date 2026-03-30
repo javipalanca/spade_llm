@@ -10,8 +10,10 @@ Setup:
 """
 
 import os
+
 import spade
-from spade_llm.agent import LLMAgent, ChatAgent
+
+from spade_llm.agent import ChatAgent, LLMAgent
 from spade_llm.providers import LLMProvider
 from spade_llm.utils import load_env_vars
 
@@ -41,7 +43,7 @@ async def main():
             temperature=0.3,
         ),
         system_prompt=TRANSLATOR_PROMPT,
-        termination_markers=["[DONE]"]
+        termination_markers=["[DONE]"],
     )
 
     await translator.start()
@@ -58,10 +60,7 @@ async def main():
             print("\nNon-Spanish detected. Shutting down...")
 
     chat = ChatAgent(
-        jid=human_jid,
-        password="human_pass",
-        target_agent_jid=translator_jid,
-        display_callback=check_response
+        jid=human_jid, password="human_pass", target_agent_jid=translator_jid, display_callback=check_response
     )
 
     await chat.start()

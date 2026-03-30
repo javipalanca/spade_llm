@@ -12,7 +12,6 @@ from ..context import (
     ContextManager,
     create_assistant_tool_call_message,
 )
-from ..utils import generate_conversation_id
 from ..guardrails import (
     GuardrailResult,
     InputGuardrail,
@@ -22,8 +21,9 @@ from ..guardrails import (
 )
 from ..providers.base_provider import BaseLLMProvider
 from ..routing import RoutingFunction, RoutingResponse
-from ..tools import LLMTool
 from ..structured_output import ReadyForStructuredOutputTool
+from ..tools import LLMTool
+from ..utils import generate_conversation_id
 
 logger = logging.getLogger("spade_llm.behaviour")
 
@@ -95,9 +95,7 @@ class LLMBehaviour(CyclicBehaviour):
         self.routing_function = routing_function
 
         if self.routing_function and self.reply_to:
-            logger.info(
-                "Both routing_function and reply_to provided. routing_function will take precedence."
-            )
+            logger.info("Both routing_function and reply_to provided. routing_function will take precedence.")
 
         # Conversation lifecycle management
         self.termination_markers = termination_markers or [
@@ -177,9 +175,7 @@ class LLMBehaviour(CyclicBehaviour):
             self.max_interactions_per_conversation
             and conversation["interaction_count"] > self.max_interactions_per_conversation
         ):
-            await self._end_conversation(
-                conversation_id, ConversationState.MAX_INTERACTIONS_REACHED
-            )
+            await self._end_conversation(conversation_id, ConversationState.MAX_INTERACTIONS_REACHED)
 
             reply = msg.make_reply()
             reply.body = f"This conversation has reached the maximum limit of {self.max_interactions_per_conversation} interactions."
@@ -199,9 +195,7 @@ class LLMBehaviour(CyclicBehaviour):
             return
 
         # Create a copy of the message with processed content
-        processed_msg = Message(
-            to=str(msg.to), sender=str(msg.sender), thread=msg.thread
-        )
+        processed_msg = Message(to=str(msg.to), sender=str(msg.sender), thread=msg.thread)
         processed_msg.body = processed_content
 
         # Update context with processed message
@@ -232,16 +226,12 @@ class LLMBehaviour(CyclicBehaviour):
         """
         final_response = None
         structured_response = None
-        max_tool_iterations = (
-            20  # Limit to prevent infinite loops -- should be parametrized
-        )
+        max_tool_iterations = 20  # Limit to prevent infinite loops -- should be parametrized
         current_iteration = 0
 
         try:
             # Prepare tools with conversation context
-            prepared_tools = self._prepare_tools_with_conversation_context(
-                conversation_id
-            )
+            prepared_tools = self._prepare_tools_with_conversation_context(conversation_id)
             # Get output schema for this conversation (can be set per-conversation or use default)
             output_schema = self.context.get_output_schema(conversation_id) or self.output_schema
 
@@ -251,19 +241,15 @@ class LLMBehaviour(CyclicBehaviour):
                 # When both output_schema and tools are specified, inject ready signal tool
                 ready_signal_tool = ReadyForStructuredOutputTool(output_schema)
                 prepared_tools = list(prepared_tools) + [ready_signal_tool]
-                logger.info(
-                    f"Injected {ReadyForStructuredOutputTool.TOOL_NAME} tool for structured output with tools"
-                )
-            
+                logger.info(f"Injected {ReadyForStructuredOutputTool.TOOL_NAME} tool for structured output with tools")
+
             # Track if we're ready to generate structured output
             structured_output_ready = False
 
             # Tool processing loop until a final response is obtained
             while final_response is None and current_iteration < max_tool_iterations:
                 current_iteration += 1
-                logger.info(
-                    f"Tool processing iteration {current_iteration}/{max_tool_iterations}"
-                )
+                logger.info(f"Tool processing iteration {current_iteration}/{max_tool_iterations}")
 
                 # Pass prepared tools to provider for this specific call
                 llm_response = await self.provider.get_llm_response(
@@ -281,9 +267,7 @@ class LLMBehaviour(CyclicBehaviour):
                     )
                     break
 
-                logger.info(
-                    f"LLM requested {len(tool_calls)} tool calls in iteration {current_iteration}"
-                )
+                logger.info(f"LLM requested {len(tool_calls)} tool calls in iteration {current_iteration}")
 
                 # Use our helper function to create the assistant message with tool calls
                 assistant_msg = create_assistant_tool_call_message(tool_calls)
@@ -292,49 +276,36 @@ class LLMBehaviour(CyclicBehaviour):
                 self.context.add_message_dict(assistant_msg, conversation_id)
 
                 # Reorder tool_calls so that if there are many, ready_for_structured output is always processed last
-                tool_calls = sorted(
-                    tool_calls,
-                    key=lambda tc: tc.get("name") == ReadyForStructuredOutputTool.TOOL_NAME
-                )
-                
+                tool_calls = sorted(tool_calls, key=lambda tc: tc.get("name") == ReadyForStructuredOutputTool.TOOL_NAME)
+
                 # Process each tool call
                 for tool_call in tool_calls:
                     tool_name = tool_call.get("name")
                     tool_args = tool_call.get("arguments", {})
-                    tool_id = tool_call.get(
-                        "id", f"call_{tool_name}_{current_iteration}"
-                    )
+                    tool_id = tool_call.get("id", f"call_{tool_name}_{current_iteration}")
 
-                    logger.info(
-                        f"Processing tool call: {tool_name} with args: {tool_args}"
-                    )
+                    logger.info(f"Processing tool call: {tool_name} with args: {tool_args}")
 
                     # Check if this is the ready signal for structured output
                     if tool_name == ReadyForStructuredOutputTool.TOOL_NAME and ready_signal_tool:
                         logger.info("LLM signaled readiness for structured output, switching to parsing API")
                         structured_output_ready = True
-                        
+
                         # Add the tool result to context
                         result = await ready_signal_tool.execute(**tool_args)
-                        self.context.add_tool_result(
-                            tool_name, result, tool_id, conversation_id
-                        )
-                        
+                        self.context.add_tool_result(tool_name, result, tool_id, conversation_id)
+
                         # Break the tool loop and trigger structured generation
                         break
 
                     # Find the tool by name in the prepared tools
-                    tool = next(
-                        (t for t in prepared_tools if t.name == tool_name), None
-                    )
+                    tool = next((t for t in prepared_tools if t.name == tool_name), None)
 
                     if tool:
                         try:
                             result = await tool.execute(**tool_args)
 
-                            self.context.add_tool_result(
-                                tool_name, result, tool_id, conversation_id
-                            )
+                            self.context.add_tool_result(tool_name, result, tool_id, conversation_id)
 
                             logger.info(f"Tool {tool_name} executed successfully")
                         except Exception as e:
@@ -349,10 +320,8 @@ class LLMBehaviour(CyclicBehaviour):
                     else:
                         error_msg = f"Tool {tool_name} not found"
                         logger.error(error_msg)
-                        self.context.add_tool_result(
-                            tool_name, {"error": error_msg}, tool_id, conversation_id
-                        )
-                
+                        self.context.add_tool_result(tool_name, {"error": error_msg}, tool_id, conversation_id)
+
                 # If the ready signal was detected, generate structured output
                 if structured_output_ready:
                     logger.info("Generating structured output with parsing API")
@@ -370,9 +339,7 @@ class LLMBehaviour(CyclicBehaviour):
 
             # Handle case where max iterations was reached
             if final_response is None and structured_response is None and current_iteration >= max_tool_iterations:
-                logger.warning(
-                    f"Reached maximum tool iterations ({max_tool_iterations}), forcing final response"
-                )
+                logger.warning(f"Reached maximum tool iterations ({max_tool_iterations}), forcing final response")
                 output_schema = self.context.get_output_schema(conversation_id) or self.output_schema
                 force_response = await self.provider.get_llm_response(
                     self.context, tools=None, conversation_id=conversation_id, output_schema=output_schema
@@ -389,16 +356,18 @@ class LLMBehaviour(CyclicBehaviour):
         if structured_response:
             logger.info(f"Received structured response: {type(structured_response).__name__}")
             # Convert structured response to JSON string for transmission
-            if hasattr(structured_response, 'model_dump_json'):
+            if hasattr(structured_response, "model_dump_json"):
                 final_response = structured_response.model_dump_json()
-            elif hasattr(structured_response, 'json'):
+            elif hasattr(structured_response, "json"):
                 final_response = structured_response.json()
             else:
                 final_response = json.dumps(structured_response)
             logger.debug(f"Structured response as JSON: {final_response}")
 
         if not final_response:
-            final_response = "I'm sorry, I couldn't complete this request properly. Please try again or rephrase your query."
+            final_response = (
+                "I'm sorry, I couldn't complete this request properly. Please try again or rephrase your query."
+            )
 
         # Apply output guardrails before sending (skip for structured responses)
         if not structured_response:
@@ -413,8 +382,10 @@ class LLMBehaviour(CyclicBehaviour):
         self.context.add_assistant_message(final_response, conversation_id)
 
         # Check for termination markers (only for text responses)
-        if not structured_response and final_response and any(
-            marker in final_response for marker in self.termination_markers
+        if (
+            not structured_response
+            and final_response
+            and any(marker in final_response for marker in self.termination_markers)
         ):
             await self._end_conversation(conversation_id, ConversationState.COMPLETED)
 
@@ -594,14 +565,11 @@ class LLMBehaviour(CyclicBehaviour):
         if memory_summary:
             # Check if we've already injected memory for this conversation
             # to avoid duplicating it on every message
-            conversation_history = self.context.get_conversation_history(
-                conversation_id
-            )
+            conversation_history = self.context.get_conversation_history(conversation_id)
 
             # Check if any existing message contains this memory summary
             memory_already_injected = any(
-                msg.get("role") == "system"
-                and "Previous interaction notes:" in msg.get("content", "")
+                msg.get("role") == "system" and "Previous interaction notes:" in msg.get("content", "")
                 for msg in conversation_history
             )
 
@@ -611,9 +579,7 @@ class LLMBehaviour(CyclicBehaviour):
 
                 memory_message = create_system_message(memory_summary)
                 self.context.add_message_dict(memory_message, conversation_id)
-                logger.info(
-                    f"Injected interaction memory for conversation {conversation_id}"
-                )
+                logger.info(f"Injected interaction memory for conversation {conversation_id}")
 
     def _prepare_tools_with_conversation_context(self, conversation_id: str):
         """

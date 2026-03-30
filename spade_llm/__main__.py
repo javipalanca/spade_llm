@@ -2,30 +2,37 @@
 
 import argparse
 import pathlib
+
 from .version import __version__
+
 
 def has_examples(path):
     if path.is_file():
         return path.suffix == ".py" and path.name != "__init__.py"
     return any(has_examples(child) for child in path.iterdir())
 
+
 def print_tree(directory, prefix=""):
     # Filter: must be .py OR a dir with .py files
-    items = sorted([
-        f for f in directory.iterdir()
-        if (f.is_file() and f.suffix == ".py" and f.name != "__init__.py")
-        or (f.is_dir() and not f.name.startswith("__") and has_examples(f))
-    ])
+    items = sorted(
+        [
+            f
+            for f in directory.iterdir()
+            if (f.is_file() and f.suffix == ".py" and f.name != "__init__.py")
+            or (f.is_dir() and not f.name.startswith("__") and has_examples(f))
+        ]
+    )
 
     for i, path in enumerate(items):
-        is_last = (i == len(items) - 1)
+        is_last = i == len(items) - 1
         connector = "└── " if is_last else "├── "
-        
+
         print(f"{prefix}{connector}{path.name}")
-        
+
         if path.is_dir():
             extension = "    " if is_last else "│   "
             print_tree(path, prefix + extension)
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -33,9 +40,7 @@ def main():
         prog="spade-llm",
     )
 
-    parser.add_argument(
-        "--version", action="version", version=f"SPADE_LLM {__version__}"
-    )
+    parser.add_argument("--version", action="version", version=f"SPADE_LLM {__version__}")
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 

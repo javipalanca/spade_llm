@@ -1,18 +1,18 @@
 """Tests for structured output integration in LLMBehaviour."""
 
-import pytest
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
+import pytest
 from pydantic import BaseModel
 
 from spade_llm.behaviour import LLMBehaviour
-from spade_llm.structured_output import ReadyForStructuredOutputTool
 from spade_llm.context import ContextManager
 from tests.conftest import MockLLMProvider
 
 
 class WeatherReport(BaseModel):
     """Sample structured output schema."""
+
     city: str
     temperature: float
     summary: str
@@ -20,6 +20,7 @@ class WeatherReport(BaseModel):
 
 class TripPlan(BaseModel):
     """Another sample schema."""
+
     destination: str
     days: int
     budget: float
@@ -52,10 +53,7 @@ class TestStructuredOutputWithoutTools:
         report = WeatherReport(city="Valencia", temperature=25.0, summary="Sunny")
         provider = MockLLMProvider(structured_responses=[report])
 
-        behaviour = LLMBehaviour(
-            llm_provider=provider,
-            output_schema=WeatherReport
-        )
+        behaviour = LLMBehaviour(llm_provider=provider, output_schema=WeatherReport)
         behaviour.receive = AsyncMock(return_value=mock_message)
         behaviour.send = AsyncMock()
 
@@ -82,19 +80,11 @@ class TestStructuredOutputWithTools:
         # Phase 1: LLM calls ready_for_structured_output tool
         # Phase 2: LLM generates structured output (no tools, with schema)
         provider = MockLLMProvider(
-            tool_calls=[[{
-                "id": "call_ready",
-                "name": "ready_for_structured_output",
-                "arguments": {}
-            }]],
-            structured_responses=[report]
+            tool_calls=[[{"id": "call_ready", "name": "ready_for_structured_output", "arguments": {}}]],
+            structured_responses=[report],
         )
 
-        behaviour = LLMBehaviour(
-            llm_provider=provider,
-            tools=[mock_simple_tool],
-            output_schema=WeatherReport
-        )
+        behaviour = LLMBehaviour(llm_provider=provider, tools=[mock_simple_tool], output_schema=WeatherReport)
         behaviour.receive = AsyncMock(return_value=mock_message)
         behaviour.send = AsyncMock()
 
@@ -127,26 +117,14 @@ class TestStructuredOutputWithTools:
         provider = MockLLMProvider(
             tool_calls=[
                 # First iteration: use a regular tool
-                [{
-                    "id": "call_tool1",
-                    "name": "simple_tool",
-                    "arguments": {"text": "get weather data"}
-                }],
+                [{"id": "call_tool1", "name": "simple_tool", "arguments": {"text": "get weather data"}}],
                 # Second iteration: signal ready for structured output
-                [{
-                    "id": "call_ready",
-                    "name": "ready_for_structured_output",
-                    "arguments": {}
-                }],
+                [{"id": "call_ready", "name": "ready_for_structured_output", "arguments": {}}],
             ],
-            structured_responses=[report]
+            structured_responses=[report],
         )
 
-        behaviour = LLMBehaviour(
-            llm_provider=provider,
-            tools=[mock_simple_tool],
-            output_schema=WeatherReport
-        )
+        behaviour = LLMBehaviour(llm_provider=provider, tools=[mock_simple_tool], output_schema=WeatherReport)
         behaviour.receive = AsyncMock(return_value=mock_message)
         behaviour.send = AsyncMock()
 
@@ -172,26 +150,14 @@ class TestStructuredOutputWithTools:
             tool_calls=[
                 # Both a regular tool and the ready signal in the same batch
                 [
-                    {
-                        "id": "call_ready",
-                        "name": "ready_for_structured_output",
-                        "arguments": {}
-                    },
-                    {
-                        "id": "call_tool1",
-                        "name": "simple_tool",
-                        "arguments": {"text": "some data"}
-                    },
+                    {"id": "call_ready", "name": "ready_for_structured_output", "arguments": {}},
+                    {"id": "call_tool1", "name": "simple_tool", "arguments": {"text": "some data"}},
                 ],
             ],
-            structured_responses=[report]
+            structured_responses=[report],
         )
 
-        behaviour = LLMBehaviour(
-            llm_provider=provider,
-            tools=[mock_simple_tool],
-            output_schema=WeatherReport
-        )
+        behaviour = LLMBehaviour(llm_provider=provider, tools=[mock_simple_tool], output_schema=WeatherReport)
         behaviour.receive = AsyncMock(return_value=mock_message)
         behaviour.send = AsyncMock()
 
@@ -222,20 +188,12 @@ class TestStructuredOutputFallbackAndErrors:
         """Test that when structured output fails after ready signal, text response is used."""
         # Provider returns ready signal tool call, then fails structured output (returns text instead)
         provider = MockLLMProvider(
-            tool_calls=[[{
-                "id": "call_ready",
-                "name": "ready_for_structured_output",
-                "arguments": {}
-            }]],
+            tool_calls=[[{"id": "call_ready", "name": "ready_for_structured_output", "arguments": {}}]],
             responses=["Fallback text response"],
-            structured_responses=[]  # No structured responses available
+            structured_responses=[],  # No structured responses available
         )
 
-        behaviour = LLMBehaviour(
-            llm_provider=provider,
-            tools=[mock_simple_tool],
-            output_schema=WeatherReport
-        )
+        behaviour = LLMBehaviour(llm_provider=provider, tools=[mock_simple_tool], output_schema=WeatherReport)
         behaviour.receive = AsyncMock(return_value=mock_message)
         behaviour.send = AsyncMock()
 
@@ -249,10 +207,7 @@ class TestStructuredOutputFallbackAndErrors:
         """Test that provider errors propagate correctly with structured output."""
         provider = MockLLMProvider(should_error=True)
 
-        behaviour = LLMBehaviour(
-            llm_provider=provider,
-            output_schema=WeatherReport
-        )
+        behaviour = LLMBehaviour(llm_provider=provider, output_schema=WeatherReport)
         behaviour.receive = AsyncMock(return_value=mock_message)
         behaviour.send = AsyncMock()
 

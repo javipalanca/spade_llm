@@ -7,7 +7,7 @@ Airbnb Search → Route Planning → Plan Creation → Price Review → Final Pl
 PREREQUISITES:
 1. Start SPADE built-in server in another terminal:
    spade run
-   
+
    (Advanced server configuration available but not needed)
 
 2. Install dependencies:
@@ -22,28 +22,26 @@ Uses:
 """
 
 import asyncio
+import logging
 import os
 from datetime import datetime
-import spade
-import logging
 
-from spade_llm.agent import LLMAgent, ChatAgent
-from spade_llm.routing import RoutingResponse
-from spade_llm.providers import LLMProvider
+import spade
+
+from spade_llm.agent import ChatAgent, LLMAgent
 from spade_llm.mcp import StdioServerConfig
+from spade_llm.providers import LLMProvider
+from spade_llm.routing import RoutingResponse
 from spade_llm.utils import load_env_vars
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logging.getLogger("spade_llm").setLevel(logging.INFO)
 
 
 def price_routing_function(msg, response, context):
     """Routes price reviewer decisions based on budget analysis."""
-    domain = str(msg.sender).split('@')[1]
+    domain = str(msg.sender).split("@")[1]
     response_lower = response.lower()
 
     if "<plan_approved>" in response_lower:
@@ -118,7 +116,7 @@ async def main():
         name="AirbnbSearch",
         command="npx",
         args=["-y", "@openbnb/mcp-server-airbnb", "--ignore-robots-txt"],
-        cache_tools=True
+        cache_tools=True,
     )
 
     # Create agents dictionary
@@ -178,7 +176,7 @@ async def main():
                     Public transport options from this exact location
                                         
                     Include EVERY detail. The route planner needs complete location information to create optimal plans.""",
-        mcp_servers=[airbnb_mcp]
+        mcp_servers=[airbnb_mcp],
     )
 
     # 2. Route Planner Agent
@@ -293,7 +291,6 @@ async def main():
         mcp_servers=[valencia_mcp],
     )
 
-
     # 4. Price Reviewer Agent
     agents["pricereviewer"] = LLMAgent(
         jid=agents_config["pricereviewer"][0],
@@ -402,10 +399,8 @@ async def main():
                    DETAILED REASONING:
                    [Explain your decision with specific issues and recommendations]
 
-                   Make decisive routing decisions to ensure the final plan is both practical and excellent value."""
-    ,
-
-    termination_markers=["<PLAN_APPROVED>"]
+                   Make decisive routing decisions to ensure the final plan is both practical and excellent value.""",
+        termination_markers=["<PLAN_APPROVED>"],
     )
 
     # 5. Output Agent (for final plan storage)
@@ -419,7 +414,7 @@ async def main():
                         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                         filename = f"valencia_trip_plan_{timestamp}.txt"
 
-                        with open(filename, 'w', encoding='utf-8') as f:
+                        with open(filename, "w", encoding="utf-8") as f:
                             f.write("VALENCIA TRIP PLAN\n")
                             f.write("=" * 50 + "\n\n")
                             f.write(msg.body)
@@ -434,14 +429,11 @@ async def main():
 
             self.add_behaviour(OutputBehaviour())
 
-    agents["output"] = OutputAgent(
-        agents_config["output"][0],
-        passwords["output"]
-    )
+    agents["output"] = OutputAgent(agents_config["output"][0], passwords["output"])
 
     # 6. Human Agent (ChatAgent for user interaction)
     def display_callback(message, sender):
-        agent_name = sender.split('@')[0].upper()
+        agent_name = sender.split("@")[0].upper()
         print(f"\n[{agent_name}]")
         print(message)
         if "VALENCIA TRIP PLAN APPROVED" in message:
@@ -451,7 +443,7 @@ async def main():
         jid=agents_config["human"][0],
         password=passwords["human"],
         target_agent_jid=agents_config["airbnb"][0],
-        display_callback=display_callback
+        display_callback=display_callback,
     )
 
     # Start all agents

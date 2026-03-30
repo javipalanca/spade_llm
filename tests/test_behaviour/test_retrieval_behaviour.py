@@ -1,14 +1,15 @@
 """Tests for RetrievalBehaviour class."""
 
 import json
-import pytest
-from unittest.mock import Mock, AsyncMock, patch, call
 import time
+from unittest.mock import AsyncMock, Mock, call, patch
 
+import pytest
 from spade.message import Message
+
 from spade_llm.behaviour.retrieval_behaviour import RetrievalBehaviour
-from spade_llm.rag.retrievers.base import BaseRetriever
 from spade_llm.rag.core.document import Document
+from spade_llm.rag.retrievers.base import BaseRetriever
 
 
 class MockRetriever(BaseRetriever):
@@ -22,20 +23,17 @@ class MockRetriever(BaseRetriever):
     async def retrieve(self, query: str, k: int = 4, **kwargs):
         """Mock retrieve method."""
         self.retrieve_calls.append({"query": query, "k": k, "kwargs": kwargs})
-        
+
         if self.should_error:
             raise ValueError("Mock retrieval error")
-        
+
         return self.documents[:k]
 
 
 @pytest.fixture
 def mock_retriever():
     """Create a mock retriever with sample documents."""
-    docs = [
-        Document(content=f"Document {i}", metadata={"id": i, "source": f"file{i}.txt"})
-        for i in range(10)
-    ]
+    docs = [Document(content=f"Document {i}", metadata={"id": i, "source": f"file{i}.txt"}) for i in range(10)]
     return MockRetriever(documents=docs)
 
 
@@ -56,7 +54,7 @@ class TestRetrievalBehaviourInitialization:
     def test_init_minimal(self, mock_retriever):
         """Test initialization with minimal parameters."""
         from collections import deque
-        
+
         behaviour = RetrievalBehaviour(retriever=mock_retriever)
 
         assert behaviour.retriever == mock_retriever
@@ -70,12 +68,9 @@ class TestRetrievalBehaviourInitialization:
     def test_init_full_parameters(self, mock_retriever):
         """Test initialization with all parameters."""
         callback = Mock()
-        
+
         behaviour = RetrievalBehaviour(
-            retriever=mock_retriever,
-            reply_to="llm@localhost",
-            default_k=10,
-            on_retrieval_complete=callback
+            retriever=mock_retriever, reply_to="llm@localhost", default_k=10, on_retrieval_complete=callback
         )
 
         assert behaviour.retriever == mock_retriever
@@ -99,26 +94,29 @@ class TestRetrievalBehaviourInitialization:
 class TestRetrievalBehaviourParseQuery:
     """Test _parse_query_message method."""
 
-    @pytest.mark.parametrize("message_body, expected_query", [
-        # Test case 1: Plain text
-        ("plain text query", {"query": "plain text query"}),
-        # Test case 2: Empty body
-        ("", {"query": ""}),
-        # Test case 3: None body
-        (None, {"query": ""}),
-        # Test case 4: Malformed JSON falls back to text
-        ('{"invalid json}', {"query": '{"invalid json}'}),
-        # Test case 5: Full JSON query
-        (
-            json.dumps({"query": "test", "k": 5, "filters": {"type": "doc"}}),
-            {"query": "test", "k": 5, "filters": {"type": "doc"}}
-        )
-    ])
+    @pytest.mark.parametrize(
+        "message_body, expected_query",
+        [
+            # Test case 1: Plain text
+            ("plain text query", {"query": "plain text query"}),
+            # Test case 2: Empty body
+            ("", {"query": ""}),
+            # Test case 3: None body
+            (None, {"query": ""}),
+            # Test case 4: Malformed JSON falls back to text
+            ('{"invalid json}', {"query": '{"invalid json}'}),
+            # Test case 5: Full JSON query
+            (
+                json.dumps({"query": "test", "k": 5, "filters": {"type": "doc"}}),
+                {"query": "test", "k": 5, "filters": {"type": "doc"}},
+            ),
+        ],
+    )
     def test_parse_queries(self, mock_retriever, message_body, expected_query):
         """Test parsing various query formats."""
         behaviour = RetrievalBehaviour(retriever=mock_retriever)
         msg = Mock(spec=Message, body=message_body)
-        
+
         query_data = behaviour._parse_query_message(msg)
 
         assert query_data == expected_query
@@ -131,7 +129,7 @@ class TestRetrievalBehaviourPerformRetrieval:
     async def test_perform_retrieval_basic(self, mock_retriever):
         """Test basic retrieval operation."""
         behaviour = RetrievalBehaviour(retriever=mock_retriever)
-        
+
         results = await behaviour._perform_retrieval("test query", 4, None)
 
         assert len(results) == 4
@@ -144,7 +142,7 @@ class TestRetrievalBehaviourPerformRetrieval:
     async def test_perform_retrieval_with_filters(self, mock_retriever):
         """Test retrieval with metadata filters."""
         behaviour = RetrievalBehaviour(retriever=mock_retriever)
-        
+
         filters = {"source": "file1.txt"}
         await behaviour._perform_retrieval("test", 3, filters)
 
@@ -157,7 +155,7 @@ class TestRetrievalBehaviourPerformRetrieval:
     async def test_perform_retrieval_mmr_search(self, mock_retriever):
         """Test retrieval with MMR search type."""
         behaviour = RetrievalBehaviour(retriever=mock_retriever)
-        
+
         await behaviour._perform_retrieval("test", 4, None, "mmr")
 
         call_kwargs = mock_retriever.retrieve_calls[0]["kwargs"]
@@ -207,7 +205,7 @@ class TestRetrievalBehaviourRun:
 
         # Should have retrieved documents
         assert len(mock_retriever.retrieve_calls) == 1
-        
+
         # Should have sent response
         behaviour.send.assert_called_once()
 
@@ -215,13 +213,13 @@ class TestRetrievalBehaviourRun:
     async def test_run_without_query_field(self, mock_retriever):
         """Test handling of message without query field."""
         behaviour = RetrievalBehaviour(retriever=mock_retriever)
-        
+
         msg = Mock(spec=Message)
         msg.body = json.dumps({"k": 5})  # No query field
         msg.sender = "requester@localhost"
         msg.thread = "test-thread"
         msg.id = "msg_456"
-        
+
         behaviour.receive = AsyncMock(return_value=msg)
         behaviour.send = AsyncMock()
 
@@ -236,13 +234,13 @@ class TestRetrievalBehaviourRun:
     async def test_run_with_empty_query(self, mock_retriever):
         """Test handling of message with empty query string."""
         behaviour = RetrievalBehaviour(retriever=mock_retriever)
-        
+
         msg = Mock(spec=Message)
         msg.body = json.dumps({"query": ""})  # Empty query
         msg.sender = "requester@localhost"
         msg.thread = "test-thread"
         msg.id = "msg_empty_query"
-        
+
         behaviour.receive = AsyncMock(return_value=msg)
         behaviour.send = AsyncMock()
 
@@ -258,13 +256,13 @@ class TestRetrievalBehaviourRun:
     async def test_run_with_whitespace_only_query(self, mock_retriever):
         """Test handling of message with whitespace-only query."""
         behaviour = RetrievalBehaviour(retriever=mock_retriever)
-        
+
         msg = Mock(spec=Message)
         msg.body = json.dumps({"query": "   "})  # Whitespace only
         msg.sender = "requester@localhost"
         msg.thread = "test-thread"
         msg.id = "msg_whitespace_query"
-        
+
         behaviour.receive = AsyncMock(return_value=msg)
         behaviour.send = AsyncMock()
 
@@ -279,13 +277,13 @@ class TestRetrievalBehaviourRun:
     async def test_run_with_none_query(self, mock_retriever):
         """Test handling of message with None query."""
         behaviour = RetrievalBehaviour(retriever=mock_retriever)
-        
+
         msg = Mock(spec=Message)
         msg.body = json.dumps({"query": None})  # None query
         msg.sender = "requester@localhost"
         msg.thread = "test-thread"
         msg.id = "msg_none_query"
-        
+
         behaviour.receive = AsyncMock(return_value=msg)
         behaviour.send = AsyncMock()
 
@@ -300,10 +298,7 @@ class TestRetrievalBehaviourRun:
     async def test_run_with_callback(self, mock_retriever, mock_message):
         """Test that callback is called after successful retrieval."""
         callback = Mock()
-        behaviour = RetrievalBehaviour(
-            retriever=mock_retriever,
-            on_retrieval_complete=callback
-        )
+        behaviour = RetrievalBehaviour(retriever=mock_retriever, on_retrieval_complete=callback)
         behaviour.receive = AsyncMock(return_value=mock_message)
         behaviour.send = AsyncMock()
 
@@ -339,7 +334,7 @@ class TestRetrievalBehaviourSendResponse:
         """Test sending response to original sender."""
         behaviour = RetrievalBehaviour(retriever=mock_retriever)
         behaviour.send = AsyncMock()
-        
+
         docs = [Document(content="Test", metadata={})]
         await behaviour._send_retrieval_response(mock_message, "query", docs, 0.5)
 
@@ -350,12 +345,9 @@ class TestRetrievalBehaviourSendResponse:
     @pytest.mark.asyncio
     async def test_send_response_to_reply_to(self, mock_retriever, mock_message):
         """Test sending response to reply_to address."""
-        behaviour = RetrievalBehaviour(
-            retriever=mock_retriever,
-            reply_to="custom@localhost"
-        )
+        behaviour = RetrievalBehaviour(retriever=mock_retriever, reply_to="custom@localhost")
         behaviour.send = AsyncMock()
-        
+
         docs = [Document(content="Test", metadata={})]
         await behaviour._send_retrieval_response(mock_message, "query", docs, 0.5)
 
@@ -368,16 +360,13 @@ class TestRetrievalBehaviourSendResponse:
         """Test that response includes retrieved documents."""
         behaviour = RetrievalBehaviour(retriever=mock_retriever)
         behaviour.send = AsyncMock()
-        
-        docs = [
-            Document(content="Doc 1", metadata={"id": 1}),
-            Document(content="Doc 2", metadata={"id": 2})
-        ]
+
+        docs = [Document(content="Doc 1", metadata={"id": 1}), Document(content="Doc 2", metadata={"id": 2})]
         await behaviour._send_retrieval_response(mock_message, "query", docs, 0.5)
 
         sent_msg = behaviour.send.call_args[0][0]
         response_data = json.loads(sent_msg.body)
-        
+
         assert "documents" in response_data
         assert len(response_data["documents"]) == 2
 
@@ -404,9 +393,11 @@ class TestRetrievalBehaviourSendResponse:
                 call("retrieval_time", "1.234"),
             ]
             mock_reply.set_metadata.assert_has_calls(expected_calls, any_order=True)
-            
+
             # You can still check other properties
             assert mock_reply.thread == mock_message.thread
+
+
 class TestRetrievalBehaviourSendError:
     """Test _send_error_response method."""
 
@@ -420,7 +411,7 @@ class TestRetrievalBehaviourSendError:
 
         behaviour.send.assert_called_once()
         sent_msg = behaviour.send.call_args[0][0]
-        
+
         error_data = json.loads(sent_msg.body)
         assert "error" in error_data
         assert error_data["error"] == "Test error"
@@ -435,7 +426,7 @@ class TestRetrievalBehaviourSendError:
 
         sent_msg = behaviour.send.call_args[0][0]
         error_data = json.loads(sent_msg.body)
-        
+
         assert "query" in error_data
         assert error_data["query"] == mock_message.body
 
@@ -446,7 +437,7 @@ class TestRetrievalBehaviourUpdateStats:
     def test_update_stats_increments_counters(self, mock_retriever):
         """Test that stats counters are incremented."""
         behaviour = RetrievalBehaviour(retriever=mock_retriever)
-        
+
         docs = [Document(content="Test", metadata={})] * 3
         behaviour._update_stats(docs, 0.5)
 
@@ -458,19 +449,19 @@ class TestRetrievalBehaviourUpdateStats:
     def test_update_stats_average_time(self, mock_retriever):
         """Test that average retrieval time is calculated correctly."""
         behaviour = RetrievalBehaviour(retriever=mock_retriever)
-        
+
         docs = [Document(content="Test", metadata={})]
-        
+
         behaviour._update_stats(docs, 1.0)
         assert behaviour.get_stats()["average_retrieval_time"] == 1.0
-        
+
         behaviour._update_stats(docs, 3.0)
         assert behaviour.get_stats()["average_retrieval_time"] == 2.0
 
     def test_update_stats_last_query_time(self, mock_retriever):
         """Test that last_query_time is updated."""
         behaviour = RetrievalBehaviour(retriever=mock_retriever)
-        
+
         before_time = time.time()
         docs = [Document(content="Test", metadata={})]
         behaviour._update_stats(docs, 0.5)
@@ -487,7 +478,7 @@ class TestRetrievalBehaviourUpdateRetriever:
     def test_update_retriever(self, mock_retriever):
         """Test updating the retriever."""
         behaviour = RetrievalBehaviour(retriever=mock_retriever)
-        
+
         new_retriever = MockRetriever([Document(content="New", metadata={})])
         behaviour.update_retriever(new_retriever)
 
@@ -509,7 +500,7 @@ class TestRetrievalBehaviourSetDefaultK:
     def test_set_default_k(self, mock_retriever):
         """Test setting default k value."""
         behaviour = RetrievalBehaviour(retriever=mock_retriever, default_k=4)
-        
+
         behaviour.set_default_k(10)
         assert behaviour.default_k == 10
 
@@ -528,10 +519,10 @@ class TestRetrievalBehaviourGetStats:
     def test_get_stats_returns_copy(self, mock_retriever):
         """Test that get_stats returns a copy of stats."""
         behaviour = RetrievalBehaviour(retriever=mock_retriever)
-        
+
         stats1 = behaviour.get_stats()
         stats1["total_queries"] = 999
-        
+
         stats2 = behaviour.get_stats()
         assert stats2["total_queries"] == 0  # Original unchanged
 
@@ -571,7 +562,7 @@ class TestRetrievalBehaviourErrorHandling:
     async def test_run_logs_retrieval_error(self, mock_message, caplog):
         """Test that retrieval errors are logged."""
         import logging
-        
+
         error_retriever = MockRetriever(should_error=True)
         behaviour = RetrievalBehaviour(retriever=error_retriever)
         behaviour.receive = AsyncMock(return_value=mock_message)
@@ -592,7 +583,7 @@ class TestRetrievalBehaviourEdgeCases:
         """Test that processed messages deque prevents memory leak."""
         behaviour = RetrievalBehaviour(retriever=mock_retriever)
         behaviour.send = AsyncMock()
-        
+
         # Process more than maxlen (1000) messages
         for i in range(1500):
             msg = Mock(spec=Message)
@@ -600,7 +591,7 @@ class TestRetrievalBehaviourEdgeCases:
             msg.sender = "requester@localhost"
             msg.thread = f"thread-{i}"
             msg.id = f"msg_{i}"
-            
+
             behaviour.receive = AsyncMock(return_value=msg)
             await behaviour.run()
 
@@ -632,7 +623,7 @@ class TestRetrievalBehaviourEdgeCases:
         msg.sender = "requester@localhost"
         msg.thread = "test-thread"
         msg.id = "msg_large_k"
-        
+
         behaviour = RetrievalBehaviour(retriever=mock_retriever)
         behaviour.receive = AsyncMock(return_value=msg)
         behaviour.send = AsyncMock()
@@ -650,7 +641,7 @@ class TestRetrievalBehaviourEdgeCases:
         msg.sender = "requester@localhost"
         msg.thread = "test-thread"
         msg.id = "msg_unicode"
-        
+
         behaviour = RetrievalBehaviour(retriever=mock_retriever)
         behaviour.receive = AsyncMock(return_value=msg)
         behaviour.send = AsyncMock()
@@ -666,17 +657,14 @@ class TestRetrievalBehaviourIntegration:
     @pytest.mark.asyncio
     async def test_full_retrieval_flow(self, mock_retriever):
         """Test complete retrieval workflow."""
-        behaviour = RetrievalBehaviour(
-            retriever=mock_retriever,
-            default_k=5
-        )
-        
+        behaviour = RetrievalBehaviour(retriever=mock_retriever, default_k=5)
+
         msg = Mock(spec=Message)
         msg.body = json.dumps({"query": "integration test", "k": 3})
         msg.sender = "requester@localhost"
         msg.thread = "integration-thread"
         msg.id = "msg_integration"
-        
+
         behaviour.receive = AsyncMock(return_value=msg)
         behaviour.send = AsyncMock()
 
@@ -685,7 +673,7 @@ class TestRetrievalBehaviourIntegration:
         # Verify full flow
         assert len(mock_retriever.retrieve_calls) == 1
         behaviour.send.assert_called_once()
-        
+
         stats = behaviour.get_stats()
         assert stats["total_queries"] == 1
         assert stats["successful_retrievals"] == 1
@@ -702,7 +690,7 @@ class TestRetrievalBehaviourIntegration:
             msg.sender = "requester@localhost"
             msg.thread = f"thread-{i}"
             msg.id = f"msg_{i}"
-            
+
             behaviour.receive = AsyncMock(return_value=msg)
             await behaviour.run()
 

@@ -27,8 +27,11 @@ class BaseLLMProvider(ABC):
 
     @abstractmethod
     async def get_llm_response(
-        self, context: ContextManager, tools: Optional[List[LLMTool]] = None,
-        conversation_id: Optional[str] = None, output_schema: Optional[Any] = None
+        self,
+        context: ContextManager,
+        tools: Optional[List[LLMTool]] = None,
+        conversation_id: Optional[str] = None,
+        output_schema: Optional[Any] = None,
     ) -> Dict[str, Any]:
         """
         Get complete response from the LLM including both text and tool calls.
@@ -48,9 +51,7 @@ class BaseLLMProvider(ABC):
         pass
 
     # Legacy methods that delegate to the new unified method
-    async def get_response(
-        self, context: ContextManager, tools: Optional[List[LLMTool]] = None
-    ) -> Optional[str]:
+    async def get_response(self, context: ContextManager, tools: Optional[List[LLMTool]] = None) -> Optional[str]:
         """
         Get a response from the LLM based on the current context.
 

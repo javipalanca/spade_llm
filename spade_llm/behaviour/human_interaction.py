@@ -75,16 +75,12 @@ class HumanInteractionBehaviour(OneShotBehaviour):
             logger.warning(f"Send error (message likely delivered): {e}")
             # Don't return here - continue waiting for response as message may still be delivered
 
-        logger.debug(
-            f"Waiting for response to query {self.query_id} (timeout: {self.timeout}s)"
-        )
+        logger.debug(f"Waiting for response to query {self.query_id} (timeout: {self.timeout}s)")
         response_msg = await self.receive(timeout=self.timeout)
 
         if response_msg:
             self.response = response_msg.body
-            logger.info(
-                f"Received response for query {self.query_id}: {self.response[:50]}..."
-            )
+            logger.info(f"Received response for query {self.query_id}: {self.response[:50]}...")
         else:
             # This should not happen if join() is used with timeout
             # The timeout is handled at the join() level

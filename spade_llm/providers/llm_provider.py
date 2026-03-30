@@ -2,14 +2,16 @@
 
 import json
 import logging
-import litellm
 from typing import Any, Dict, List, Optional, Sequence
+
+import litellm
 
 from ..context import ContextManager
 from ..tools import LLMTool
 from .base_provider import BaseLLMProvider
 
 logger = logging.getLogger("spade_llm.providers")
+
 
 class LLMProvider(BaseLLMProvider):
     """
@@ -38,7 +40,7 @@ class LLMProvider(BaseLLMProvider):
             timeout: Request timeout in seconds
             max_tokens: Maximum tokens to generate
             num_retries: Number of retries on failure
-            **kwargs: Additional parameters passed to LiteLLM (e.g., fallbacks, 
+            **kwargs: Additional parameters passed to LiteLLM (e.g., fallbacks,
                              cache, custom_llm_provider, etc.)
         """
         self.model = model
@@ -55,10 +57,7 @@ class LLMProvider(BaseLLMProvider):
             logger.info(f"Using custom base URL: {self.base_url}")
 
     def _build_completion_kwargs(
-        self,
-        context: ContextManager,
-        messages: Sequence[Any], 
-        tools: Optional[List[Dict[str, Any]]] = None
+        self, context: ContextManager, messages: Sequence[Any], tools: Optional[List[Dict[str, Any]]] = None
     ) -> Dict[str, Any]:
         """Build kwargs for LiteLLM completion call."""
         kwargs = {
@@ -72,7 +71,7 @@ class LLMProvider(BaseLLMProvider):
 
         if self.api_key:
             kwargs["api_key"] = self.api_key
-        
+
         if self.base_url:
             kwargs["api_base"] = self.base_url
 
@@ -82,20 +81,20 @@ class LLMProvider(BaseLLMProvider):
         if tools:
             kwargs["tools"] = tools
             kwargs["tool_choice"] = "auto"
-        
+
         metadata = context.get_tracing_metadata()
         kwargs["metadata"] = {
             "session_id": metadata.get("conversation_id"),
-            "tags": [x for x in [metadata.get("sender_id"), metadata.get("receiver_id")] if x]
+            "tags": [x for x in [metadata.get("sender_id"), metadata.get("receiver_id")] if x],
         }
         return kwargs
 
     async def get_llm_response(
-        self, 
-        context: ContextManager, 
+        self,
+        context: ContextManager,
         tools: Optional[List[LLMTool]] = None,
         conversation_id: Optional[str] = None,
-        output_schema: Optional[Any] = None
+        output_schema: Optional[Any] = None,
     ) -> Dict[str, Any]:
         """
         Get complete response from the LLM including both text and tool calls.
@@ -120,20 +119,16 @@ class LLMProvider(BaseLLMProvider):
         formatted_tools = None
         if tools:
             formatted_tools = [tool.to_openai_tool() for tool in tools]
-            logger.debug(
-                f"Available tools: {[tool['function']['name'] for tool in formatted_tools]}"
-            )
+            logger.debug(f"Available tools: {[tool['function']['name'] for tool in formatted_tools]}")
 
         try:
             # Build base completion kwargs
             completion_kwargs = self._build_completion_kwargs(context, prompt, formatted_tools)
-            
+
             # Add response_format for structured output if provided and no tools
             use_parse_api = output_schema is not None and not formatted_tools
             if use_parse_api:
-                logger.info(
-                    f"Using structured output with response_format: {output_schema.__name__}"
-                )
+                logger.info(f"Using structured output with response_format: {output_schema.__name__}")
                 completion_kwargs["response_format"] = output_schema
 
             # Call LiteLLM async completion
@@ -168,9 +163,7 @@ class LLMProvider(BaseLLMProvider):
 
             # Process tool calls if present
             if hasattr(message, "tool_calls") and message.tool_calls:
-                logger.info(
-                    f"LLM suggested {len(message.tool_calls)} tool calls"
-                )
+                logger.info(f"LLM suggested {len(message.tool_calls)} tool calls")
 
                 tool_calls = []
                 for tc in message.tool_calls:
@@ -180,9 +173,7 @@ class LLMProvider(BaseLLMProvider):
                         else:
                             args = tc.function.arguments
                     except json.JSONDecodeError as e:
-                        logger.error(
-                            f"Failed to parse tool arguments: {tc.function.arguments}, error: {e}"
-                        )
+                        logger.error(f"Failed to parse tool arguments: {tc.function.arguments}, error: {e}")
                         args = {}
 
                     tool_call = {
@@ -197,9 +188,7 @@ class LLMProvider(BaseLLMProvider):
             else:
                 content = message.content or ""
                 if content:
-                    logger.info(
-                        f"Received text response: {content[:100]}..."
-                    )
+                    logger.info(f"Received text response: {content[:100]}...")
                 else:
                     logger.warning("Received empty response from LLM")
                 result["text"] = content
@@ -211,9 +200,7 @@ class LLMProvider(BaseLLMProvider):
             raise
 
     # Legacy methods that delegate to the main method (for backwards compatibility)
-    async def get_response(
-        self, context: ContextManager, tools: Optional[List[LLMTool]] = None
-    ) -> Optional[str]:
+    async def get_response(self, context: ContextManager, tools: Optional[List[LLMTool]] = None) -> Optional[str]:
         """
         Get a response from the LLM based on the current context.
 
@@ -267,7 +254,7 @@ class LLMProvider(BaseLLMProvider):
 
             if self.api_key:
                 embedding_kwargs["api_key"] = self.api_key
-            
+
             if self.base_url:
                 embedding_kwargs["api_base"] = self.base_url
 

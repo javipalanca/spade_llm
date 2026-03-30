@@ -5,13 +5,6 @@ documents into smaller chunks suitable for embedding and vector storage.
 """
 
 from .base import TextSplitter
-from .character import (
-    CharacterTextSplitter,
-    RecursiveCharacterTextSplitter
-)
+from .character import CharacterTextSplitter, RecursiveCharacterTextSplitter
 
-__all__ = [
-    "TextSplitter",
-    "CharacterTextSplitter",
-    "RecursiveCharacterTextSplitter"
-]
+__all__ = ["TextSplitter", "CharacterTextSplitter", "RecursiveCharacterTextSplitter"]

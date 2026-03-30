@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from spade.behaviour import OneShotBehaviour
 from spade.message import Message
 from spade.template import Template
+
 from .llm_tool import LLMTool
 
 if TYPE_CHECKING:
@@ -20,11 +21,11 @@ class RetrievalTool(LLMTool):
 
     class _WaitForResponseBehaviour(OneShotBehaviour):
         """Private behaviour for handling retrieval responses."""
-        
+
         def __init__(self, query_msg: Message, response_timeout: int):
             """
             Initialize the retrieval response behaviour.
-            
+
             Args:
                 query_msg: The query message to send
                 response_timeout: Timeout for waiting for response
@@ -33,12 +34,12 @@ class RetrievalTool(LLMTool):
             self.response: Optional[Message] = None
             self.query_msg = query_msg
             self.response_timeout = response_timeout
-        
+
         async def run(self):
             """Send query and wait for response."""
             # Send the query
             await self.send(self.query_msg)
-            
+
             # Wait for response
             response = await self.receive(timeout=self.response_timeout)
             if response:
@@ -77,11 +78,11 @@ class RetrievalTool(LLMTool):
 
         if description is None:
             description = """Retrieve relevant documents from the knowledge base by querying the Retrieval Agent.
-            
+
             Use this tool to:
             - Find information needed to answer user questions
             - Get context about specific topics
-            
+
             The retrieval agent will return the most relevant documents matching your query.
             Results include document content and metadata."""
 
@@ -160,7 +161,7 @@ class RetrievalTool(LLMTool):
                 "query": query,
                 "k": k_value,
             }
-            
+
             if filters:
                 query_data["filters"] = filters
 
@@ -198,18 +199,18 @@ class RetrievalTool(LLMTool):
         """
         if self.agent_instance is None:
             raise ValueError("Agent instance is not set. Please call 'set_agent' to initialize the agent instance.")
-        
+
         # Create template to match retrieval responses
         template = Template()
         template.sender = str(self.retrieval_agent_jid)
         template.set_metadata("message_type", "retrieval_response")
-        
+
         response_behaviour = self._WaitForResponseBehaviour(msg, self.timeout)
         self.agent_instance.add_behaviour(response_behaviour, template)
-        
+
         # Wait for behaviour to complete
         await response_behaviour.join()
-        
+
         return response_behaviour.response
 
     def _format_response(self, response_body: str) -> str:
@@ -233,9 +234,11 @@ class RetrievalTool(LLMTool):
             documents = data.get("documents", [])
 
             if len(documents) == 0:
-                return json.dumps({
-                    "message": "No documents found matching your query.",
-                })
+                return json.dumps(
+                    {
+                        "message": "No documents found matching your query.",
+                    }
+                )
 
             # Add rank for clarity
             for i, doc in enumerate(documents, 1):
@@ -245,7 +248,9 @@ class RetrievalTool(LLMTool):
 
         except json.JSONDecodeError:
             logger.error(f"Failed to parse retrieval response: {response_body}")
-            return json.dumps({
-                "error": "Failed to parse retrieval response",
-                "raw_response": response_body,
-            })
+            return json.dumps(
+                {
+                    "error": "Failed to parse retrieval response",
+                    "raw_response": response_body,
+                }
+            )

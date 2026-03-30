@@ -1,7 +1,7 @@
 """Core document representation for the RAG system."""
 
 from dataclasses import dataclass, field
-from typing import Dict, Any, TypeVar
+from typing import Any, Dict, TypeVar
 from uuid import uuid4
 
 # A generic type for the class itself, used in from_dict
@@ -18,6 +18,7 @@ class Document:
             about the document (e.g., source, page number)
         id: Unique identifier for the document (auto-generated UUID)
     """
+
     content: str
     metadata: Dict[str, Any] = field(default_factory=dict)
     id: str = field(default_factory=lambda: str(uuid4()))
@@ -44,11 +45,7 @@ class Document:
         Returns:
             A dictionary representation of the document
         """
-        return {
-            "id": self.id,
-            "content": self.content,
-            "metadata": self.metadata.copy()
-        }
+        return {"id": self.id, "content": self.content, "metadata": self.metadata.copy()}
 
     @classmethod
     def from_dict(cls: type[TDocument], data: Dict[str, Any]) -> TDocument:
@@ -64,8 +61,4 @@ class Document:
         if "content" not in data:
             raise KeyError("The 'content' key is required to create a Document.")
 
-        return cls(
-            content=data["content"],
-            id=data.get("id", str(uuid4())),
-            metadata=data.get("metadata", {})
-        )
+        return cls(content=data["content"], id=data.get("id", str(uuid4())), metadata=data.get("metadata", {}))

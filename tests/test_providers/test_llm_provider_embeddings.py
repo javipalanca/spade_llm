@@ -1,7 +1,8 @@
 """Tests for LLMProvider embeddings functionality using LiteLLM."""
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
 
 from spade_llm.providers.llm_provider import LLMProvider
 
@@ -144,9 +145,7 @@ class TestGetEmbeddings:
     async def test_get_embeddings_batch_processing(self, mock_aembedding):
         """Test getting embeddings for a large batch of texts."""
         num_texts = 100
-        mock_embedding_items = [
-            {"embedding": [float(i % 10) / 10] * 384} for i in range(num_texts)
-        ]
+        mock_embedding_items = [{"embedding": [float(i % 10) / 10] * 384} for i in range(num_texts)]
         mock_response = Mock()
         mock_response.data = mock_embedding_items
         mock_aembedding.return_value = mock_response

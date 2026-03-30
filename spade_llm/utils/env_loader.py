@@ -26,8 +26,7 @@ def load_env_vars(env_file: str = ".env") -> Dict[str, str]:
         env_paths = [
             Path(env_file),  # Current directory
             Path.cwd() / env_file,  # Explicit cwd
-            (Path(__file__).parents[2]
-             / env_file),  # Project root (2 levels up from utils)
+            (Path(__file__).parents[2] / env_file),  # Project root (2 levels up from utils)
         ]
 
         # Try each path
@@ -35,15 +34,9 @@ def load_env_vars(env_file: str = ".env") -> Dict[str, str]:
             if env_path.exists():
                 load_dotenv(dotenv_path=env_path)
                 logger.info(f"Loaded environment variables from {env_path}")
-                return {
-                    key: value
-                    for key, value in os.environ.items()
-                    if key in _get_env_file_variables(env_path)
-                }
+                return {key: value for key, value in os.environ.items() if key in _get_env_file_variables(env_path)}
     except ImportError:
-        logger.warning(
-            "python-dotenv not installed, falling back to manual .env parsing"
-        )
+        logger.warning("python-dotenv not installed, falling back to manual .env parsing")
         # Fall back to manual parsing
         return _manual_load_env(env_file)
 

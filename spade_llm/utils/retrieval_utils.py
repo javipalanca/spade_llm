@@ -2,7 +2,9 @@
 
 import json
 from typing import Any, Dict, List
+
 from ..rag.core.document import Document
+
 
 def format_documents_for_response(results: List[Document]) -> List[Dict[str, Any]]:
     """
@@ -15,15 +17,15 @@ def format_documents_for_response(results: List[Document]) -> List[Dict[str, Any
         List of formatted document dictionaries with content and metadata
     """
     formatted = []
-    
+
     for doc in results:
         if not isinstance(doc, Document):
             raise TypeError(f"Expected Document, got {type(doc).__name__}")
 
         entry = {"content": doc.content, "metadata": doc.metadata}
-        
+
         formatted.append(entry)
-    
+
     return formatted
 
 

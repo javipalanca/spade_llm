@@ -1,13 +1,14 @@
 """Tests for retrieval utility functions."""
 
 import json
+
 import pytest
 
-from spade_llm.utils.retrieval_utils import (
-    format_documents_for_response,
-    create_retrieval_response_body,
-)
 from spade_llm.rag.core.document import Document
+from spade_llm.utils.retrieval_utils import (
+    create_retrieval_response_body,
+    format_documents_for_response,
+)
 
 
 # Fixtures
@@ -79,7 +80,7 @@ class TestFormatDocumentsForResponse:
         assert formatted[0]["metadata"]["author"] == "John Doe"
         assert formatted[0]["metadata"]["tags"] == ["tag1", "tag2"]
         assert formatted[0]["metadata"]["nested"] == {"key": "value"}
-    
+
     def test_format_documents_raises_on_malformed_input(self):
         """Test that format_documents_for_response raises errors on malformed input."""
         # Non-Document item

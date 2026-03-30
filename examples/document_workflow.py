@@ -10,20 +10,21 @@ Setup:
 """
 
 import asyncio
+import logging
 import os
 from datetime import datetime
-import spade
 
-from spade_llm.agent import LLMAgent, ChatAgent
-from spade_llm.routing import RoutingResponse
+import spade
+from langchain_community.tools import WikipediaQueryRun
+from langchain_community.utilities import WikipediaAPIWrapper
+
+from spade_llm.agent import ChatAgent, LLMAgent
 from spade_llm.providers import LLMProvider
+from spade_llm.routing import RoutingResponse
 from spade_llm.tools import LangChainToolAdapter
 from spade_llm.utils import load_env_vars
 
-from langchain_community.tools import WikipediaQueryRun
-from langchain_community.utilities import WikipediaAPIWrapper
-import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logging.getLogger("spade_llm").setLevel(logging.INFO)
 
 
@@ -31,12 +32,11 @@ def review_router(msg, response, context):
     """Routes reviewer decisions to publisher, researcher, or editor."""
     response_lower = response.lower()
 
-    domain = str(msg.sender).split('@')[1]
+    domain = str(msg.sender).split("@")[1]
 
     if "<task_complete>" in response_lower:
         return RoutingResponse(
-            recipients=f"publisher@{domain}",
-            transform=lambda x: x.replace("<TASK_COMPLETE>", "").strip()
+            recipients=f"publisher@{domain}", transform=lambda x: x.replace("<TASK_COMPLETE>", "").strip()
         )
     elif "<major_revision>" in response_lower:
         return RoutingResponse(recipients=[f"researcher@{domain}"])
@@ -56,7 +56,7 @@ async def main():
         "editor": (f"editor@{XMPP_SERVER}", "Editor Agent"),
         "reviewer": (f"reviewer@{XMPP_SERVER}", "Reviewer Agent"),
         "publisher": (f"publisher@{XMPP_SERVER}", "Publisher Agent"),
-        "human": (f"human@{XMPP_SERVER}", "Human Agent")
+        "human": (f"human@{XMPP_SERVER}", "Human Agent"),
     }
 
     passwords = {role: f"{role}_pass" for role in agents_config}
@@ -65,7 +65,6 @@ async def main():
     provider = LLMProvider(
         model=model,
     )
-
 
     tools = [
         LangChainToolAdapter(WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())),
@@ -81,7 +80,7 @@ async def main():
         provider=provider,
         reply_to=agents_config["editor"][0],
         system_prompt="Research topics and create initial document drafts with title, sections, and conclusion.",
-        tools=tools
+        tools=tools,
     )
 
     # Editor Agent
@@ -90,7 +89,7 @@ async def main():
         password=passwords["editor"],
         provider=provider,
         reply_to=agents_config["reviewer"][0],
-        system_prompt="Improve drafts for clarity, structure, and style. Return complete documents."
+        system_prompt="Improve drafts for clarity, structure, and style. Return complete documents.",
     )
 
     # Reviewer Agent
@@ -115,7 +114,7 @@ async def main():
            - Do NOT include the full document
 
         """,
-        termination_markers=["<TASK_COMPLETE>"]
+        termination_markers=["<TASK_COMPLETE>"],
     )
 
     # Publisher Agent (simple agent that saves files)
@@ -127,17 +126,14 @@ async def main():
                     if msg:
                         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                         filename = f"published_document_{timestamp}.txt"
-                        with open(filename, 'w') as f:
+                        with open(filename, "w") as f:
                             f.write(msg.body)
                         print(f"Document saved to: {filename}")
                     await asyncio.sleep(0.1)
 
             self.add_behaviour(PublishBehaviour())
 
-    agents["publisher"] = PublisherAgent(
-        agents_config["publisher"][0],
-        passwords["publisher"]
-    )
+    agents["publisher"] = PublisherAgent(agents_config["publisher"][0], passwords["publisher"])
 
     # Human Agent (using ChatAgent)
     def display_callback(message, sender):
@@ -149,7 +145,7 @@ async def main():
         jid=agents_config["human"][0],
         password=passwords["human"],
         target_agent_jid=agents_config["researcher"][0],
-        display_callback=display_callback
+        display_callback=display_callback,
     )
 
     # Start all agents
@@ -161,10 +157,7 @@ async def main():
     print("\nType document topics, 'exit' to quit\n")
 
     # Run interactive chat
-    await agents["human"].run_interactive(
-        input_prompt="Topic> ",
-        exit_command="exit"
-    )
+    await agents["human"].run_interactive(input_prompt="Topic> ", exit_command="exit")
 
     # Stop all agents
     for agent in agents.values():

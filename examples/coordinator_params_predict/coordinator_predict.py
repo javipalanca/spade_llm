@@ -1,4 +1,3 @@
-
 """
 3D Printing Parameters Coordinator
 
@@ -30,16 +29,14 @@ import pandas as pd
 import spade
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
+
 from spade_llm.agent import ChatAgent
 from spade_llm.agent.coordinator_agent import CoordinatorAgent
 from spade_llm.providers import LLMProvider
 from spade_llm.tools import LLMTool
 from spade_llm.utils import load_env_vars
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logging.getLogger("spade_llm").setLevel(logging.INFO)
 
 # Configuration
@@ -50,7 +47,6 @@ SIMULATE_VALIDATION_ERRORS = True
 # Tuner Agent: predicts parameters with a model
 class TunerAgent(Agent):
     class PredictTuningBehaviour(CyclicBehaviour):
-
         def predict(self, hardness: float, material: str):
             """Returns a dict with model predictions for the target columns.
 
@@ -60,8 +56,8 @@ class TunerAgent(Agent):
             """
             model = self.agent.bundle["model"]
             cols = self.agent.bundle["feature_columns"]
-            hardness_col = self.agent.bundle["hardness_col"]          # "tension_strenght"
-            mat_prefix = self.agent.bundle["material_prefix"]         # "material_"
+            hardness_col = self.agent.bundle["hardness_col"]  # "tension_strenght"
+            mat_prefix = self.agent.bundle["material_prefix"]  # "material_"
             targets = self.agent.bundle["targets"]
 
             # Build input vector with the exact training columns
@@ -75,7 +71,7 @@ class TunerAgent(Agent):
 
             y_pred = model.predict(X)[0]
             return {targets[i]: float(y_pred[i]) for i in range(len(targets))}
-        
+
         async def run(self):
             """Waits for a JSON message {"hardness": num, "material": str} and responds
             with a JSON array: [speed, layer_height, extruder_temperature, bed_temperature]."""
@@ -177,13 +173,21 @@ class ValidatorAgent(Agent):
 
 def _get_results_save_path() -> str:
     """Generate a timestamped path for saving results."""
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     return os.path.join(os.path.dirname(__file__), f"tuning_result_{timestamp}.json")
 
 
 def _create_save_settings_tool(path: str) -> LLMTool:
     """Creates a tool invokable by the coordinator to save parameters to JSON."""
-    def save_settings(hardness: float, material: str, speed: float, layer_height: float, extruder_temperature: float, bed_temperature: float) -> str:
+
+    def save_settings(
+        hardness: float,
+        material: str,
+        speed: float,
+        layer_height: float,
+        extruder_temperature: float,
+        bed_temperature: float,
+    ) -> str:
         """Saves the 6 parameters to a JSON in 'path' and returns a short message."""
         payload = {
             "hardness": hardness,
@@ -198,6 +202,7 @@ def _create_save_settings_tool(path: str) -> LLMTool:
             json.dump(payload, f, ensure_ascii=False, indent=2)
         print(f"Saved settings to {path}")
         return f"Saved to {path}"
+
     return LLMTool(
         name="save_settings",
         description="Saves the 6 printing parameters (hardness, material, speed, layer_height, extruder_temperature, bed_temperature) to a JSON file",
@@ -216,6 +221,7 @@ def _create_save_settings_tool(path: str) -> LLMTool:
         func=save_settings,
     )
 
+
 COORDINATOR_PROMPT = """You are a strict coordinator for 3D printing parameters.
 
 Mandatory sequence:
@@ -226,6 +232,7 @@ Mandatory sequence:
 
 Do not repeat steps outside of the above or call more tools than indicated.
 """
+
 
 async def main():
     """Demo entry point: configure LLM/provider, create agents and execute the flow."""
@@ -349,6 +356,7 @@ Please generate suitable parameters, validate that they are correct, and save th
     except Exception as e:
         print(f"\nError: {e}")
         import traceback
+
         traceback.print_exc()
     finally:
         print("\nStopping agents...")
@@ -369,4 +377,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n\nFatal error: {e}")
         import traceback
+
         traceback.print_exc()

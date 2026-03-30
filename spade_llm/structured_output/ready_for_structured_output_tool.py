@@ -13,7 +13,7 @@ logger = logging.getLogger("spade_llm.structured_output")
 class ReadyForStructuredOutputTool(LLMTool):
     """
     A signal tool that indicates the LLM has gathered enough context.
-    
+
     When this tool is called, the system switches to the structured output
     parsing API for constrained generation of the required schema.
     """
@@ -33,11 +33,11 @@ class ReadyForStructuredOutputTool(LLMTool):
         # Create a simple signaling function
         async def ready_for_structured_output() -> str:
             """Signal that you have gathered enough context to provide a structured response.
-            
+
             Call this tool when you have all the information needed to generate
             the final structured output. You MUST call this before attempting to
             produce the structured response.
-            
+
             Do NOT include the actual response data - just call this to signal readiness.
             """
             return f"Ready to generate {schema_name} structured output"
@@ -46,13 +46,9 @@ class ReadyForStructuredOutputTool(LLMTool):
         super().__init__(
             name=self.TOOL_NAME,
             description=ready_for_structured_output.__doc__.strip(),
-            parameters={
-                "type": "object",
-                "properties": {},
-                "required": []
-            },
+            parameters={"type": "object", "properties": {}, "required": []},
             func=ready_for_structured_output,
-            strict=False
+            strict=False,
         )
         logger.info(f"Initialized ReadyForStructuredOutputTool for schema: {schema_name}")
 
@@ -65,7 +61,4 @@ class ReadyForStructuredOutputTool(LLMTool):
         """
         schema_name = self.output_schema.__name__
         logger.info(f"LLM signaled readiness for structured output: {schema_name}")
-        return {
-            "status": "ready",
-            "message": f"System will now generate {schema_name} structured output"
-        }
+        return {"status": "ready", "message": f"System will now generate {schema_name} structured output"}

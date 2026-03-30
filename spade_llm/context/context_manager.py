@@ -58,13 +58,11 @@ class ContextManager:
 
         # Context management strategy
         self.context_management = context_management or NoContextManagement()
-        
+
         # Structured output schemas per conversation
         self._output_schemas: Dict[str, Optional[Any]] = {}
 
-    def add_message_dict(
-        self, message_dict: ContextMessage, conversation_id: str
-    ) -> None:
+    def add_message_dict(self, message_dict: ContextMessage, conversation_id: str) -> None:
         """
         Add a message from a dictionary format (useful for testing and direct API usage).
 
@@ -101,7 +99,7 @@ class ContextManager:
             # Initialize metadata for this conversation
             self._conversation_metadata[conversation_id] = {
                 "sender_id": str(message.sender),
-                "receiver_id": str(message.to)
+                "receiver_id": str(message.to),
             }
 
         # Convert SPADE message to a format suitable for LLM context using our helper function
@@ -149,9 +147,7 @@ class ContextManager:
         conversation_messages = self._conversations[conv_id]
 
         # Apply context management strategy
-        managed_messages = self.context_management.apply_context_strategy(
-            conversation_messages, self._system_prompt
-        )
+        managed_messages = self.context_management.apply_context_strategy(conversation_messages, self._system_prompt)
 
         # Clean and add messages to prompt
         for msg in managed_messages:
@@ -160,9 +156,7 @@ class ContextManager:
 
         return prompt
 
-    def add_assistant_message(
-        self, content: str, conversation_id: Optional[str] = None
-    ) -> None:
+    def add_assistant_message(self, content: str, conversation_id: Optional[str] = None) -> None:
         """
         Add an assistant (LLM) response to the context.
 
@@ -174,9 +168,7 @@ class ContextManager:
         conv_id = conversation_id or self._current_conversation_id
 
         if not conv_id:
-            logger.warning(
-                "No conversation ID provided and no current conversation set"
-            )
+            logger.warning("No conversation ID provided and no current conversation set")
             return
 
         # Initialize conversation if needed
@@ -187,9 +179,7 @@ class ContextManager:
         assistant_message = create_assistant_message(content)
 
         self._conversations[conv_id].append(assistant_message)
-        logger.debug(
-            f"Added assistant response to conversation {conv_id}: {content[:100]}..."
-        )
+        logger.debug(f"Added assistant response to conversation {conv_id}: {content[:100]}...")
 
     def add_tool_result(
         self,
@@ -212,9 +202,7 @@ class ContextManager:
 
         # If no conversation is found, log a warning and return
         if not conv_id or conv_id not in self._conversations:
-            logger.warning(
-                f"No active conversation found to add tool result for: {tool_name}"
-            )
+            logger.warning(f"No active conversation found to add tool result for: {tool_name}")
             return
 
         # Use our helper function to create the tool result message
@@ -274,9 +262,7 @@ class ContextManager:
             return True
         return False
 
-    def get_conversation_history(
-        self, conversation_id: Optional[str] = None
-    ) -> List[ContextMessage]:
+    def get_conversation_history(self, conversation_id: Optional[str] = None) -> List[ContextMessage]:
         """
         Get the raw conversation history for a specific conversation.
 
@@ -320,9 +306,7 @@ class ContextManager:
 
         return message_entry
 
-    def get_context_stats(
-        self, conversation_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    def get_context_stats(self, conversation_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Get context management statistics for a conversation.
 
@@ -367,9 +351,7 @@ class ContextManager:
         conv_id = conversation_id or self._current_conversation_id
         return self._output_schemas.get(conv_id) if conv_id else None
 
-    def update_context_management(
-        self, new_context_management: ContextManagement
-    ) -> None:
+    def update_context_management(self, new_context_management: ContextManagement) -> None:
         """
         Update the context management strategy.
 
@@ -390,10 +372,10 @@ class ContextManager:
             Dictionary with conversation metadata (conversation_id, sender_id, receiver_id)
         """
         conv_id = conversation_id or self._current_conversation_id
-        
+
         metadata = {"conversation_id": conv_id}
-        
+
         if conv_id and conv_id in self._conversation_metadata:
             metadata.update(self._conversation_metadata[conv_id])
-        
+
         return metadata

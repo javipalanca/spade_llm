@@ -37,8 +37,7 @@ async def apply_input_guardrails(
 
             if send_reply:
                 reply = message.make_reply()
-                reply.body = (result.custom_message
-                              or "Your message was blocked by security filters.")
+                reply.body = result.custom_message or "Your message was blocked by security filters."
                 await send_reply(reply)
 
             return None
@@ -66,8 +65,7 @@ async def apply_output_guardrails(
     """Apply output guardrails and return processed content."""
     context = {
         "original_message": original_message,
-        "conversation_id": (original_message.thread
-                            or f"{original_message.sender}_{original_message.to}"),
+        "conversation_id": (original_message.thread or f"{original_message.sender}_{original_message.to}"),
         "llm_response": content,
     }
 
@@ -81,8 +79,7 @@ async def apply_output_guardrails(
             if on_trigger:
                 on_trigger(result)
 
-            return (result.custom_message
-                    or "I apologize, but I cannot provide that response.")
+            return result.custom_message or "I apologize, but I cannot provide that response."
 
         elif result.action == GuardrailAction.MODIFY:
             logger.info(f"Output modified by {guardrail.name}: {result.reason}")

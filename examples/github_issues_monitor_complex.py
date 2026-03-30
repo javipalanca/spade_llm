@@ -17,23 +17,21 @@ Obtain MCP URLs from composio.dev after connecting your GitHub, Notion, and Gmai
 """
 
 import asyncio
-import os
-import spade
 import logging
-from typing import Dict, Any
+import os
+from typing import Any, Dict
 
-from spade_llm.agent import LLMAgent, ChatAgent
-from spade_llm.providers import LLMProvider
+import spade
+
+from spade_llm.agent import ChatAgent, LLMAgent
+from spade_llm.guardrails.base import Guardrail, GuardrailAction, GuardrailResult
 from spade_llm.mcp import StreamableHttpServerConfig
-from spade_llm.guardrails.base import Guardrail, GuardrailResult, GuardrailAction
+from spade_llm.providers import LLMProvider
 from spade_llm.tools import HumanInTheLoopTool
 from spade_llm.utils import load_env_vars
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 # 1. AGENT PROMPTS
@@ -223,38 +221,56 @@ IMPORTANT:
 
 class GitHubOnlyGuardrail(Guardrail):
     """Custom guardrail that only allows GitHub-related requests."""
-    
+
     def __init__(self, name: str = "github_only_filter", enabled: bool = True):
-        super().__init__(name, enabled, "I only help with GitHub-related requests. Please ask about issues, pull requests, or repository monitoring.")
+        super().__init__(
+            name,
+            enabled,
+            "I only help with GitHub-related requests. Please ask about issues, pull requests, or repository monitoring.",
+        )
         self.github_keywords = [
-            "github", "issue", "issues", "pull request", "pr", "prs", 
-            "repository", "repo", "commit", "branch", "merge", "review",
-            "bug", "feature", "enhancement", "milestone", "project",
-            "analyze", "monitor", "check", "status", "activity"
+            "github",
+            "issue",
+            "issues",
+            "pull request",
+            "pr",
+            "prs",
+            "repository",
+            "repo",
+            "commit",
+            "branch",
+            "merge",
+            "review",
+            "bug",
+            "feature",
+            "enhancement",
+            "milestone",
+            "project",
+            "analyze",
+            "monitor",
+            "check",
+            "status",
+            "activity",
         ]
-    
+
     async def check(self, content: str, context: Dict[str, Any]) -> GuardrailResult:
         """Check if content is GitHub-related."""
         content_lower = content.lower()
-        
+
         # Check if any GitHub keyword is present
         if any(keyword in content_lower for keyword in self.github_keywords):
             return GuardrailResult(
-                action=GuardrailAction.PASS,
-                content=content,
-                reason="GitHub-related request detected"
+                action=GuardrailAction.PASS, content=content, reason="GitHub-related request detected"
             )
         else:
             return GuardrailResult(
-                action=GuardrailAction.BLOCK,
-                content=self.blocked_message,
-                reason="Non-GitHub request blocked"
+                action=GuardrailAction.BLOCK, content=self.blocked_message, reason="Non-GitHub request blocked"
             )
 
 
 async def main():
     """Main function of the GitHub Issues Monitor example."""
-    
+
     load_env_vars()
 
     print("=== GitHub Issues/PRs Monitor ===")
@@ -270,11 +286,8 @@ async def main():
     notion_mcp_url = os.environ.get("NOTION_MCP_URL")
     gmail_mcp_url = os.environ.get("GMAIL_MCP_URL")
     if not all([github_mcp_url, notion_mcp_url, gmail_mcp_url]):
-        raise ValueError(
-            "GITHUB_MCP_URL, NOTION_MCP_URL, and GMAIL_MCP_URL must be set. "
-            "See .env.example for details."
-        )
-    
+        raise ValueError("GITHUB_MCP_URL, NOTION_MCP_URL, and GMAIL_MCP_URL must be set. See .env.example for details.")
+
     # 3. DECLARE THE PROVIDER
     provider = LLMProvider(
         model=model,
@@ -285,82 +298,73 @@ async def main():
     github_mcp = StreamableHttpServerConfig(
         name="GitHubMCP",
         url=github_mcp_url,
-        headers={
-            "Content-Type": "application/json",
-            "User-Agent": "SPADE_LLM/1.0"
-        },
+        headers={"Content-Type": "application/json", "User-Agent": "SPADE_LLM/1.0"},
         timeout=30.0,
         sse_read_timeout=300.0,
         terminate_on_close=True,
-        cache_tools=True
+        cache_tools=True,
     )
-    
+
     notion_mcp = StreamableHttpServerConfig(
         name="NotionMCP",
         url=notion_mcp_url,
-        headers={
-            "Content-Type": "application/json",
-            "User-Agent": "SPADE_LLM/1.0"
-        },
+        headers={"Content-Type": "application/json", "User-Agent": "SPADE_LLM/1.0"},
         timeout=30.0,
         sse_read_timeout=300.0,
         terminate_on_close=True,
-        cache_tools=True
+        cache_tools=True,
     )
-    
+
     gmail_mcp = StreamableHttpServerConfig(
         name="GmailMCP",
         url=gmail_mcp_url,
-        headers={
-            "Content-Type": "application/json",
-            "User-Agent": "SPADE_LLM/1.0"
-        },
+        headers={"Content-Type": "application/json", "User-Agent": "SPADE_LLM/1.0"},
         timeout=30.0,
         sse_read_timeout=300.0,
         terminate_on_close=True,
-        cache_tools=True
+        cache_tools=True,
     )
-    
+
     # 4. AGENT CONFIGURATION (no hardcoded JIDs)
     chat_jid = f"github_chat@{xmpp_server}"
     analyzer_jid = f"github_analyzer@{xmpp_server}"
     notion_jid = f"notion_manager@{xmpp_server}"
     email_jid = f"email_manager@{xmpp_server}"
     human_jid = f"human_expert@{xmpp_server}"
-    
+
     # Simple passwords (auto-registration with SPADE server)
     chat_password = "chat_pass"
     analyzer_password = "analyzer_pass"
     notion_password = "notion_pass"
     email_password = "email_pass"
     print("✓ Using auto-registration with built-in server")
-    
+
     # Create guardrails and tools
     input_guardrails = [GitHubOnlyGuardrail()]
-    
+
     human_tool = HumanInTheLoopTool(
         human_expert_jid=human_jid,
         timeout=300.0,  # 5 minutes
         name="ask_human_expert",
-        description="Ask human expert for email sending confirmation and recipient details"
+        description="Ask human expert for email sending confirmation and recipient details",
     )
-    
+
     def display_response(message: str, sender: str):
         print(f"\nGitHub Monitor: {message}")
         print("-" * 50)
-    
+
     # 5. INITIALIZE AGENTS WITH LLMAgent()
     # WORKFLOW: User → Chat → Analyzer → Notion → Email → Human Expert
-    
+
     # Chat Agent with Guardrails (Entry Point)
     chat_agent = ChatAgent(
         jid=chat_jid,
         password=chat_password,
         target_agent_jid=analyzer_jid,
         display_callback=display_response,
-        verify_security=False
+        verify_security=False,
     )
-    
+
     # GitHub Analyzer Agent (Data Collection & Analysis)
     analyzer_agent = LLMAgent(
         jid=analyzer_jid,
@@ -370,9 +374,9 @@ async def main():
         input_guardrails=input_guardrails,
         mcp_servers=[github_mcp],
         reply_to=notion_jid,
-        verify_security=False
+        verify_security=False,
     )
-    
+
     # Notion Manager Agent (Storage & Forwarding)
     notion_agent = LLMAgent(
         jid=notion_jid,
@@ -381,9 +385,9 @@ async def main():
         system_prompt=NOTION_MANAGER_PROMPT,
         mcp_servers=[notion_mcp],
         reply_to=email_jid,
-        verify_security=False
+        verify_security=False,
     )
-    
+
     # Email Manager Agent (HITL & Email Sending)
     email_agent = LLMAgent(
         jid=email_jid,
@@ -393,9 +397,9 @@ async def main():
         tools=[human_tool],
         mcp_servers=[gmail_mcp],
         termination_markers=["<EMAIL_PROCESS_COMPLETE>"],
-        verify_security=False
+        verify_security=False,
     )
-    
+
     try:
         print("Starting agents...")
         agents = {
@@ -430,7 +434,7 @@ async def main():
             exit_command="exit",
             response_timeout=120.0,
         )
-        
+
     except KeyboardInterrupt:
         print("\nShutting down...")
 

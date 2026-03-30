@@ -20,7 +20,7 @@ class RetrievalAgent(Agent):
     - Built-in retriever integration
     - SPADE message-based query processing
     - Integration with RAG (Retrieval-Augmented Generation) components
-    
+
     The RetrievalAgent can work standalone or as part of a MAS,
     communicating with SPADE agents.
     """
@@ -33,7 +33,7 @@ class RetrievalAgent(Agent):
         reply_to: Optional[str] = None,
         default_k: int = 4,
         on_retrieval_complete: Optional[Callable[[str, List[Any]], None]] = None,
-        verify_security: bool = False
+        verify_security: bool = False,
     ):
         """
         Initialize agent.
@@ -44,12 +44,12 @@ class RetrievalAgent(Agent):
             retriever: The retriever to use for document search
             reply_to: JID to send responses to. If None, replies to the original sender
             default_k: Default number of documents to retrieve
-            on_retrieval_complete: Callback function when retrieval completes 
+            on_retrieval_complete: Callback function when retrieval completes
                                   (receives query and results)
             verify_security: Whether to verify security certificates
         """
         super().__init__(jid, password, verify_security=verify_security)
-        
+
         self.retriever = retriever
         self.reply_to = reply_to
         self.default_k = default_k

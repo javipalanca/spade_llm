@@ -1,10 +1,11 @@
 """Tests for the unified LLM provider implementation using LiteLLM."""
 
-import pytest
 from unittest.mock import Mock, patch
 
-from spade_llm.providers.llm_provider import LLMProvider
+import pytest
+
 from spade_llm.context import ContextManager
+from spade_llm.providers.llm_provider import LLMProvider
 from spade_llm.tools import LLMTool
 
 
@@ -13,9 +14,9 @@ class TestLLMProviderInit:
 
     def test_init_with_required_params(self):
         """Test initialization with required model parameter."""
-        provider = LLMProvider(model="gpt-4o-mini")
+        provider = LLMProvider(model="gpt-5-nano")
 
-        assert provider.model == "gpt-4o-mini"
+        assert provider.model == "gpt-5-nano"
         assert provider.api_key is None
         assert provider.base_url is None
         assert provider.temperature == 1.0
@@ -26,7 +27,7 @@ class TestLLMProviderInit:
     def test_init_with_custom_values(self):
         """Test initialization with custom values."""
         provider = LLMProvider(
-            model="gpt-4",
+            model="gpt-5-nano",
             api_key="test-key",
             temperature=0.5,
             base_url="http://localhost:8000",
@@ -35,7 +36,7 @@ class TestLLMProviderInit:
             num_retries=3,
         )
 
-        assert provider.model == "gpt-4"
+        assert provider.model == "gpt-5-nano"
         assert provider.api_key == "test-key"
         assert provider.temperature == 0.5
         assert provider.base_url == "http://localhost:8000"
@@ -46,7 +47,7 @@ class TestLLMProviderInit:
     def test_init_with_litellm_kwargs(self):
         """Test initialization with extra kwargs passed through to LiteLLM."""
         provider = LLMProvider(
-            model="gpt-4o-mini",
+            model="gpt-5-nano",
             api_key="test-key",
             custom_llm_provider="openai",
         )
@@ -70,14 +71,14 @@ class TestBuildCompletionKwargs:
 
     def test_build_kwargs_basic(self):
         """Test building kwargs with basic parameters."""
-        provider = LLMProvider(model="gpt-4o-mini", api_key="test-key")
+        provider = LLMProvider(model="gpt-5-nano", api_key="test-key")
         mock_context = Mock(spec=ContextManager)
         mock_context.get_tracing_metadata.return_value = {}
 
         messages = [{"role": "user", "content": "hello"}]
         kwargs = provider._build_completion_kwargs(mock_context, messages)
 
-        assert kwargs["model"] == "gpt-4o-mini"
+        assert kwargs["model"] == "gpt-5-nano"
         assert kwargs["messages"] == messages
         assert kwargs["temperature"] == 1.0
         assert kwargs["timeout"] == 600.0
@@ -86,7 +87,7 @@ class TestBuildCompletionKwargs:
 
     def test_build_kwargs_with_tools(self):
         """Test building kwargs includes tools when provided."""
-        provider = LLMProvider(model="gpt-4o-mini")
+        provider = LLMProvider(model="gpt-5-nano")
         mock_context = Mock(spec=ContextManager)
         mock_context.get_tracing_metadata.return_value = {}
 
@@ -110,7 +111,7 @@ class TestBuildCompletionKwargs:
 
     def test_build_kwargs_with_max_tokens(self):
         """Test building kwargs includes max_tokens when set."""
-        provider = LLMProvider(model="gpt-4o-mini", max_tokens=1000)
+        provider = LLMProvider(model="gpt-5-nano", max_tokens=1000)
         mock_context = Mock(spec=ContextManager)
         mock_context.get_tracing_metadata.return_value = {}
 
@@ -121,7 +122,7 @@ class TestBuildCompletionKwargs:
 
     def test_build_kwargs_without_max_tokens(self):
         """Test building kwargs excludes max_tokens when not set."""
-        provider = LLMProvider(model="gpt-4o-mini")
+        provider = LLMProvider(model="gpt-5-nano")
         mock_context = Mock(spec=ContextManager)
         mock_context.get_tracing_metadata.return_value = {}
 
@@ -132,7 +133,7 @@ class TestBuildCompletionKwargs:
 
     def test_build_kwargs_includes_tracing_metadata(self):
         """Test building kwargs includes tracing metadata."""
-        provider = LLMProvider(model="gpt-4o-mini")
+        provider = LLMProvider(model="gpt-5-nano")
         mock_context = Mock(spec=ContextManager)
         mock_context.get_tracing_metadata.return_value = {
             "conversation_id": "conv-123",
@@ -149,7 +150,7 @@ class TestBuildCompletionKwargs:
 
     def test_build_kwargs_extra_kwargs_passed(self):
         """Test that extra kwargs from __init__ are included."""
-        provider = LLMProvider(model="gpt-4o-mini", custom_llm_provider="openai")
+        provider = LLMProvider(model="gpt-5-nano", custom_llm_provider="openai")
         mock_context = Mock(spec=ContextManager)
         mock_context.get_tracing_metadata.return_value = {}
 
@@ -180,7 +181,7 @@ class TestGetLLMResponse:
         mock_response.choices = [Mock(message=mock_message)]
         mock_acompletion.return_value = mock_response
 
-        provider = LLMProvider(model="gpt-4o-mini")
+        provider = LLMProvider(model="gpt-5-nano")
         result = await provider.get_llm_response(self.mock_context)
 
         assert result["text"] == "Test response"
@@ -188,7 +189,7 @@ class TestGetLLMResponse:
 
         mock_acompletion.assert_called_once()
         call_kwargs = mock_acompletion.call_args[1]
-        assert call_kwargs["model"] == "gpt-4o-mini"
+        assert call_kwargs["model"] == "gpt-5-nano"
         assert call_kwargs["temperature"] == 1.0
 
     @patch("spade_llm.providers.llm_provider.litellm.acompletion")
@@ -214,7 +215,7 @@ class TestGetLLMResponse:
             "type": "function",
         }
 
-        provider = LLMProvider(model="gpt-4o-mini")
+        provider = LLMProvider(model="gpt-5-nano")
         result = await provider.get_llm_response(self.mock_context, tools=[mock_tool])
 
         assert result["text"] is None
@@ -235,7 +236,7 @@ class TestGetLLMResponse:
         mock_response.choices = [Mock(message=mock_message)]
         mock_acompletion.return_value = mock_response
 
-        provider = LLMProvider(model="gpt-4o-mini", max_tokens=1000)
+        provider = LLMProvider(model="gpt-5-nano", max_tokens=1000)
         await provider.get_llm_response(self.mock_context)
 
         call_kwargs = mock_acompletion.call_args[1]
@@ -258,7 +259,7 @@ class TestGetLLMResponse:
         mock_response.choices = [Mock(message=mock_message)]
         mock_acompletion.return_value = mock_response
 
-        provider = LLMProvider(model="gpt-4o-mini")
+        provider = LLMProvider(model="gpt-5-nano")
         result = await provider.get_llm_response(self.mock_context)
 
         assert len(result["tool_calls"]) == 1
@@ -270,7 +271,7 @@ class TestGetLLMResponse:
         """Test handling of API errors."""
         mock_acompletion.side_effect = Exception("API Error")
 
-        provider = LLMProvider(model="gpt-4o-mini")
+        provider = LLMProvider(model="gpt-5-nano")
 
         with pytest.raises(Exception, match="API Error"):
             await provider.get_llm_response(self.mock_context)
@@ -287,7 +288,7 @@ class TestGetLLMResponse:
         mock_response.choices = [Mock(message=mock_message)]
         mock_acompletion.return_value = mock_response
 
-        provider = LLMProvider(model="gpt-4o-mini")
+        provider = LLMProvider(model="gpt-5-nano")
         result = await provider.get_llm_response(self.mock_context)
 
         assert result["text"] == ""
@@ -305,7 +306,7 @@ class TestGetLLMResponse:
         mock_response.choices = [Mock(message=mock_message)]
         mock_acompletion.return_value = mock_response
 
-        provider = LLMProvider(model="gpt-4o-mini")
+        provider = LLMProvider(model="gpt-5-nano")
         result = await provider.get_llm_response(self.mock_context)
 
         assert result["text"] == ""
@@ -333,7 +334,7 @@ class TestGetLLMResponse:
         mock_response.choices = [Mock(message=mock_message)]
         mock_acompletion.return_value = mock_response
 
-        provider = LLMProvider(model="gpt-4o-mini")
+        provider = LLMProvider(model="gpt-5-nano")
         result = await provider.get_llm_response(self.mock_context)
 
         assert len(result["tool_calls"]) == 2
@@ -357,7 +358,7 @@ class TestGetLLMResponse:
         mock_response.choices = [Mock(message=mock_message)]
         mock_acompletion.return_value = mock_response
 
-        provider = LLMProvider(model="gpt-4o-mini")
+        provider = LLMProvider(model="gpt-5-nano")
         result = await provider.get_llm_response(self.mock_context)
 
         assert result["tool_calls"][0]["arguments"] == {"param": "value"}
@@ -374,7 +375,7 @@ class TestGetLLMResponse:
         mock_response.choices = [Mock(message=mock_message)]
         mock_acompletion.return_value = mock_response
 
-        provider = LLMProvider(model="gpt-4o-mini")
+        provider = LLMProvider(model="gpt-5-nano")
         await provider.get_llm_response(self.mock_context, conversation_id="conv-123")
 
         self.mock_context.get_prompt.assert_called_once_with("conv-123")
@@ -421,7 +422,7 @@ class TestLegacyMethods:
             "tool_calls": [],
         }
 
-        provider = LLMProvider(model="gpt-4o-mini")
+        provider = LLMProvider(model="gpt-5-nano")
         result = await provider.get_response(self.mock_context)
 
         assert result == "Test response"
@@ -434,7 +435,7 @@ class TestLegacyMethods:
         mock_get_llm_response.return_value = {"text": "Response", "tool_calls": []}
 
         mock_tools = [Mock()]
-        provider = LLMProvider(model="gpt-4o-mini")
+        provider = LLMProvider(model="gpt-5-nano")
         await provider.get_response(self.mock_context, tools=mock_tools)
 
         mock_get_llm_response.assert_called_once_with(self.mock_context, mock_tools)
@@ -449,7 +450,7 @@ class TestLegacyMethods:
             "tool_calls": expected_calls,
         }
 
-        provider = LLMProvider(model="gpt-4o-mini")
+        provider = LLMProvider(model="gpt-5-nano")
         result = await provider.get_tool_calls(self.mock_context)
 
         assert result == expected_calls
@@ -464,7 +465,7 @@ class TestLegacyMethods:
             "tool_calls": [],
         }
 
-        provider = LLMProvider(model="gpt-4o-mini")
+        provider = LLMProvider(model="gpt-5-nano")
         result = await provider.get_tool_calls(self.mock_context)
 
         assert result == []
@@ -485,7 +486,7 @@ class TestIntegration:
             mock_response.choices = [Mock(message=mock_message)]
             mock_acompletion.return_value = mock_response
 
-            provider = LLMProvider(model="gpt-4o-mini", api_key="test-key")
+            provider = LLMProvider(model="gpt-5-nano", api_key="test-key")
 
             llm_response = await provider.get_llm_response(context_manager)
             text_response = await provider.get_response(context_manager)
@@ -519,17 +520,11 @@ class TestIntegration:
                 "function": {"name": "get_weather"},
             }
 
-            provider = LLMProvider(model="gpt-4o-mini", api_key="test-key")
+            provider = LLMProvider(model="gpt-5-nano", api_key="test-key")
 
-            llm_response = await provider.get_llm_response(
-                context_manager, tools=[mock_tool]
-            )
-            text_response = await provider.get_response(
-                context_manager, tools=[mock_tool]
-            )
-            tool_calls = await provider.get_tool_calls(
-                context_manager, tools=[mock_tool]
-            )
+            llm_response = await provider.get_llm_response(context_manager, tools=[mock_tool])
+            text_response = await provider.get_response(context_manager, tools=[mock_tool])
+            tool_calls = await provider.get_tool_calls(context_manager, tools=[mock_tool])
 
             assert llm_response["text"] is None
             assert len(llm_response["tool_calls"]) == 1

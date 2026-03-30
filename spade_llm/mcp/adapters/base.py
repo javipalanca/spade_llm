@@ -41,8 +41,7 @@ class MCPToolAdapter(LLMTool, abc.ABC):
         # Initialize the LLMTool with the processed metadata
         super().__init__(
             name=f"{server_config.name}_{tool.name}",
-            description=(tool.description
-                         or f"Tool '{tool.name}' from server '{server_config.name}'"),
+            description=(tool.description or f"Tool '{tool.name}' from server '{server_config.name}'"),
             parameters=parameters,
             func=self._execute_tool,
         )
@@ -81,9 +80,7 @@ class MCPToolAdapter(LLMTool, abc.ABC):
             RuntimeError: If tool execution fails.
         """
         try:
-            logger.debug(
-                f"Executing MCP tool {self.tool.name} with arguments: {kwargs}"
-            )
+            logger.debug(f"Executing MCP tool {self.tool.name} with arguments: {kwargs}")
 
             # Call the tool via the MCP session
             result = await self.session.call_tool(self.tool.name, kwargs)
@@ -92,9 +89,7 @@ class MCPToolAdapter(LLMTool, abc.ABC):
             return self._process_result(result)
         except Exception as e:
             logger.error(f"Error executing MCP tool {self.tool.name}: {e}")
-            raise RuntimeError(
-                f"Failed to execute MCP tool {self.tool.name}: {e}"
-            ) from e
+            raise RuntimeError(f"Failed to execute MCP tool {self.tool.name}: {e}") from e
 
     def _process_result(self, result: CallToolResult) -> Any:
         """Process an MCP tool result into a suitable format for SPADE_LLM.

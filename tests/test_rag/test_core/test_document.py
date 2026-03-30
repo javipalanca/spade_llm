@@ -1,6 +1,7 @@
 """Tests for the core Document class."""
 
 import pytest
+
 from spade_llm.rag.core.document import Document
 
 
@@ -48,7 +49,7 @@ class TestDocument:
             Document(content="Test", id=123)
         with pytest.raises(TypeError, match="id must be a string"):
             Document(content="Test", id=None)
-    
+
     def test_empty_id(self):
         """Test that empty id raises ValueError."""
         with pytest.raises(ValueError, match="id must be a non-empty string"):
@@ -84,11 +85,7 @@ class TestDocument:
 
     def test_from_dict(self):
         """Test creating document from dictionary."""
-        data = {
-            "id": "test_doc_6",
-            "content": "Test content",
-            "metadata": {"source": "test.txt", "id": 1}
-        }
+        data = {"id": "test_doc_6", "content": "Test content", "metadata": {"source": "test.txt", "id": 1}}
         doc = Document.from_dict(data)
         assert isinstance(doc, Document)
         assert doc.id == "test_doc_6"
@@ -114,9 +111,7 @@ class TestDocument:
     def test_round_trip_serialization(self):
         """Test that to_dict and from_dict are inverse operations."""
         original = Document(
-            content="Test content",
-            id="test_doc_8",
-            metadata={"source": "test.txt", "author": "tester"}
+            content="Test content", id="test_doc_8", metadata={"source": "test.txt", "author": "tester"}
         )
         doc_dict = original.to_dict()
         reconstructed = Document.from_dict(doc_dict)
@@ -153,7 +148,7 @@ class TestDocument:
             "source": "test.txt",
             "tags": ["test", "document"],
             "stats": {"lines": 10, "words": 100},
-            "nested": {"key": {"deep": "value"}}
+            "nested": {"key": {"deep": "value"}},
         }
         doc = Document(content="Test", id="test_doc_12", metadata=metadata)
         assert doc.id == "test_doc_12"

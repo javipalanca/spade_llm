@@ -1,12 +1,13 @@
 """Tests for RetrievalTool class."""
 
 import json
-import pytest
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
 from spade.message import Message
-from spade_llm.tools.retrieval_tool import RetrievalTool
+
 from spade_llm.tools.llm_tool import LLMTool
+from spade_llm.tools.retrieval_tool import RetrievalTool
 
 
 @pytest.fixture
@@ -40,7 +41,7 @@ class TestRetrievalToolInitialization:
             default_k=10,
             timeout=60,
             name="custom_retrieval",
-            description="Custom description"
+            description="Custom description",
         )
 
         assert tool.retrieval_agent_jid == "retrieval@localhost"
@@ -74,7 +75,7 @@ class TestRetrievalToolInitialization:
         """Test that initialization raises ValueError for invalid default_k."""
         with pytest.raises(ValueError, match="must be between 1 and 20"):
             RetrievalTool(retrieval_agent_jid="retrieval@localhost", default_k=0)
-        
+
         with pytest.raises(ValueError, match="must be between 1 and 20"):
             RetrievalTool(retrieval_agent_jid="retrieval@localhost", default_k=21)
 
@@ -82,7 +83,7 @@ class TestRetrievalToolInitialization:
         """Test that initialization raises ValueError for non-positive timeout."""
         with pytest.raises(ValueError, match="must be a positive integer"):
             RetrievalTool(retrieval_agent_jid="retrieval@localhost", timeout=0)
-            
+
         with pytest.raises(ValueError, match="must be a positive integer"):
             RetrievalTool(retrieval_agent_jid="retrieval@localhost", timeout=-10)
 
@@ -135,13 +136,15 @@ class TestRetrievalToolRetrieveDocuments:
 
         # Mock the response with specific documents
         custom_response = Mock(spec=Message)
-        custom_response.body = json.dumps({
-            "documents": [
-                {"content": "Doc 1", "metadata": {}, "rank": 1},
-                {"content": "Doc 2", "metadata": {}, "rank": 2}
-            ]
-        })
-        
+        custom_response.body = json.dumps(
+            {
+                "documents": [
+                    {"content": "Doc 1", "metadata": {}, "rank": 1},
+                    {"content": "Doc 2", "metadata": {}, "rank": 2},
+                ]
+            }
+        )
+
         tool._send_and_wait_for_response = AsyncMock(return_value=custom_response)
 
         result = await tool._retrieve_documents("test query")
@@ -154,10 +157,7 @@ class TestRetrievalToolRetrieveDocuments:
     @pytest.mark.asyncio
     async def test_retrieve_with_custom_k(self, mock_agent):
         """Test retrieval with custom k parameter."""
-        tool = RetrievalTool(
-            retrieval_agent_jid="retrieval@localhost",
-            default_k=4
-        )
+        tool = RetrievalTool(retrieval_agent_jid="retrieval@localhost", default_k=4)
         tool.set_agent(mock_agent)
         tool._send_and_wait_for_response = AsyncMock(return_value=self.mock_response)
 
@@ -187,10 +187,7 @@ class TestRetrievalToolRetrieveDocuments:
     @pytest.mark.asyncio
     async def test_retrieve_timeout_handling(self, mock_agent):
         """Test handling of retrieval timeout."""
-        tool = RetrievalTool(
-            retrieval_agent_jid="retrieval@localhost",
-            timeout=30
-        )
+        tool = RetrievalTool(retrieval_agent_jid="retrieval@localhost", timeout=30)
         tool.set_agent(mock_agent)
 
         # Simulate timeout (no response)
@@ -210,9 +207,7 @@ class TestRetrievalToolRetrieveDocuments:
         tool.set_agent(mock_agent)
 
         # Simulate exception
-        tool._send_and_wait_for_response = AsyncMock(
-            side_effect=Exception("Connection error")
-        )
+        tool._send_and_wait_for_response = AsyncMock(side_effect=Exception("Connection error"))
 
         result = await tool._retrieve_documents("test query")
 
@@ -223,9 +218,7 @@ class TestRetrievalToolRetrieveDocuments:
     @pytest.mark.asyncio
     async def test_retrieve_message_structure(self, mock_agent):
         """Test that query message has correct structure."""
-        tool = RetrievalTool(
-            retrieval_agent_jid="retrieval@localhost"
-        )
+        tool = RetrievalTool(retrieval_agent_jid="retrieval@localhost")
         tool.set_agent(mock_agent)
         tool._send_and_wait_for_response = AsyncMock(return_value=self.mock_response)
 
@@ -234,7 +227,7 @@ class TestRetrievalToolRetrieveDocuments:
         # Verify message structure
         sent_msg = tool._send_and_wait_for_response.call_args[0][0]
         assert sent_msg.to == "retrieval@localhost"
-        
+
         sent_data = json.loads(sent_msg.body)
         assert sent_data["query"] == "test query"
         assert sent_data["k"] == 5
@@ -248,12 +241,9 @@ class TestRetrievalToolFormatResponse:
         """Test formatting response with documents."""
         tool = RetrievalTool(retrieval_agent_jid="retrieval@localhost")
 
-        response_body = json.dumps({
-            "documents": [
-                {"content": "Doc 1", "metadata": {"id": 1}},
-                {"content": "Doc 2", "metadata": {"id": 2}}
-            ]
-        })
+        response_body = json.dumps(
+            {"documents": [{"content": "Doc 1", "metadata": {"id": 1}}, {"content": "Doc 2", "metadata": {"id": 2}}]}
+        )
 
         result = tool._format_response(response_body)
         data = json.loads(result)
@@ -303,13 +293,7 @@ class TestRetrievalToolFormatResponse:
         """Test that ranks are added to documents."""
         tool = RetrievalTool(retrieval_agent_jid="retrieval@localhost")
 
-        response_body = json.dumps({
-            "documents": [
-                {"content": "First"},
-                {"content": "Second"},
-                {"content": "Third"}
-            ]
-        })
+        response_body = json.dumps({"documents": [{"content": "First"}, {"content": "Second"}, {"content": "Third"}]})
 
         result = tool._format_response(response_body)
         data = json.loads(result)
@@ -326,7 +310,7 @@ class TestRetrievalToolSendAndWaitForResponse:
     async def test_send_and_wait_without_agent_instance(self):
         """Test that method raises error without agent instance."""
         tool = RetrievalTool(retrieval_agent_jid="retrieval@localhost")
-        
+
         msg = Mock(spec=Message)
         msg.to = "retrieval@localhost"
         msg.body = json.dumps({"query": "test"})
@@ -395,13 +379,13 @@ class TestRetrievalToolSendAndWaitForResponse:
 
         # Create a real mock for add_behaviour to track calls
         add_behaviour_calls = []
-        
+
         def track_add_behaviour(behaviour, template):
             add_behaviour_calls.append((behaviour, template))
             # Mock the join to return immediately
             behaviour.join = AsyncMock()
             behaviour.response = None
-        
+
         mock_agent.add_behaviour = track_add_behaviour
 
         await tool._send_and_wait_for_response(msg)
@@ -409,7 +393,7 @@ class TestRetrievalToolSendAndWaitForResponse:
         # Verify add_behaviour was called
         assert len(add_behaviour_calls) == 1
         behaviour, template = add_behaviour_calls[0]
-        
+
         # Verify template configuration
         assert template.sender == "retrieval@localhost"
         assert template.metadata.get("message_type") == "retrieval_response"
@@ -418,10 +402,7 @@ class TestRetrievalToolSendAndWaitForResponse:
     async def test_send_and_wait_uses_correct_timeout(self, mock_agent):
         """Test that the correct timeout value is used."""
         custom_timeout = 45
-        tool = RetrievalTool(
-            retrieval_agent_jid="retrieval@localhost",
-            timeout=custom_timeout
-        )
+        tool = RetrievalTool(retrieval_agent_jid="retrieval@localhost", timeout=custom_timeout)
         tool.set_agent(mock_agent)
 
         msg = Mock(spec=Message)
@@ -430,12 +411,12 @@ class TestRetrievalToolSendAndWaitForResponse:
 
         # Track the behaviour creation
         created_behaviours = []
-        
+
         def track_add_behaviour(behaviour, template):
             created_behaviours.append(behaviour)
             behaviour.join = AsyncMock()
             behaviour.response = None
-        
+
         mock_agent.add_behaviour = track_add_behaviour
 
         await tool._send_and_wait_for_response(msg)
@@ -456,13 +437,13 @@ class TestRetrievalToolSendAndWaitForResponse:
 
         # Track behaviour creation and execution
         behaviour_instance = None
-        
+
         def track_add_behaviour(behaviour, template):
             nonlocal behaviour_instance
             behaviour_instance = behaviour
             behaviour.join = AsyncMock()
             behaviour.response = None
-        
+
         mock_agent.add_behaviour = track_add_behaviour
 
         await tool._send_and_wait_for_response(msg)
@@ -494,11 +475,12 @@ class TestRetrievalToolIntegration:
 
     def test_retrieval_response_behaviour_is_nested(self):
         """Test that _WaitForResponseBehaviour is nested inside RetrievalTool."""
-        from spade_llm.tools.retrieval_tool import RetrievalTool
         from spade.behaviour import OneShotBehaviour
-        
+
+        from spade_llm.tools.retrieval_tool import RetrievalTool
+
         # Verify it's a nested class
-        assert hasattr(RetrievalTool, '_WaitForResponseBehaviour')
+        assert hasattr(RetrievalTool, "_WaitForResponseBehaviour")
         nested_class = RetrievalTool._WaitForResponseBehaviour
         assert isinstance(nested_class, type)
         assert issubclass(nested_class, OneShotBehaviour)
@@ -584,7 +566,7 @@ class TestRetrievalToolEdgeCases:
 
         # Should process without error
         assert isinstance(result, str)
-        
+
         # Verify the k value was sent to the retrieval agent
         call_args = tool._send_and_wait_for_response.call_args[0][0]
         sent_data = json.loads(call_args.body)
@@ -610,17 +592,15 @@ class TestRetrievalToolEdgeCases:
         """Test formatting response with special characters."""
         tool = RetrievalTool(retrieval_agent_jid="retrieval@localhost")
 
-        response_body = json.dumps({
-            "documents": [
-                {"content": 'Document with "quotes" and \n newlines', "metadata": {}}
-            ]
-        })
+        response_body = json.dumps(
+            {"documents": [{"content": 'Document with "quotes" and \n newlines', "metadata": {}}]}
+        )
 
         result = tool._format_response(response_body)
         data = json.loads(result)
 
         assert "documents" in data
-        assert 'quotes' in data["documents"][0]["content"]
+        assert "quotes" in data["documents"][0]["content"]
 
     def test_init_with_empty_jid(self):
         """Test initialization with empty JID."""
@@ -644,12 +624,13 @@ class TestRetrievalToolLogging:
         with patch("spade_llm.tools.retrieval_tool.logger") as mock_logger:
             await tool._retrieve_documents("test query")
             mock_logger.info.assert_called()
-            
+
             # Verify specific content in log message
             log_call_args = mock_logger.info.call_args_list
             log_messages = [str(call[0][0]) for call in log_call_args]
-            assert any("retrieval@localhost" in msg and "test query" in msg for msg in log_messages), \
+            assert any("retrieval@localhost" in msg and "test query" in msg for msg in log_messages), (
                 "Expected log to contain both JID and query"
+            )
 
     @pytest.mark.asyncio
     async def test_retrieve_logs_timeout(self, mock_agent):
@@ -662,7 +643,7 @@ class TestRetrievalToolLogging:
         with patch("spade_llm.tools.retrieval_tool.logger") as mock_logger:
             await tool._retrieve_documents("test")
             mock_logger.warning.assert_called()
-            
+
             # Verify timeout details in log message
             warning_msg = str(mock_logger.warning.call_args[0][0])
             assert "timeout" in warning_msg.lower(), "Expected 'timeout' in warning message"
@@ -679,7 +660,7 @@ class TestRetrievalToolLogging:
         with patch("spade_llm.tools.retrieval_tool.logger") as mock_logger:
             await tool._retrieve_documents("test")
             mock_logger.error.assert_called()
-            
+
             # Verify error details in log message
             error_msg = str(mock_logger.error.call_args[0][0])
             assert "error" in error_msg.lower(), "Expected 'error' in error message"
@@ -692,8 +673,9 @@ class TestRetrievalToolLogging:
         with patch("spade_llm.tools.retrieval_tool.logger") as mock_logger:
             tool._format_response("invalid json")
             mock_logger.error.assert_called()
-            
+
             # Verify parse error details in log message
             error_msg = str(mock_logger.error.call_args[0][0])
-            assert "parse" in error_msg.lower() or "json" in error_msg.lower(), \
+            assert "parse" in error_msg.lower() or "json" in error_msg.lower(), (
                 "Expected 'parse' or 'json' in error message"
+            )

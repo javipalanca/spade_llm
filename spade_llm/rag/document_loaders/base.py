@@ -1,8 +1,8 @@
 """Base classes for document loaders."""
 
 import logging
-from typing import List, AsyncGenerator, Set
 from abc import ABC, abstractmethod
+from typing import AsyncGenerator, List, Set
 
 from ..core.document import Document
 
@@ -15,7 +15,7 @@ class BaseDocumentLoader(ABC):
     @abstractmethod
     async def load_stream(self) -> AsyncGenerator[Document, None]:
         """Stream documents from the source as an async generator.
-        
+
         Yields:
             Document objects as they become available
         """
@@ -54,6 +54,6 @@ class BaseDocumentLoader(ABC):
         Returns:
             True if the extension is supported, False otherwise
         """
-        if not extension.startswith('.'):
-            extension = '.' + extension
+        if not extension.startswith("."):
+            extension = "." + extension
         return extension.lower() in cls.get_supported_extensions()

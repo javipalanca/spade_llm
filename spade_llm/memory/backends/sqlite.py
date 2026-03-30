@@ -39,8 +39,7 @@ class SQLiteMemoryBackend(MemoryBackend):
         """
         if aiosqlite is None:
             raise ImportError(
-                "aiosqlite is required for SQLite backend. "
-                "Install it with: pip install aiosqlite>=0.17.0"
+                "aiosqlite is required for SQLite backend. Install it with: pip install aiosqlite>=0.17.0"
             )
 
         # Handle in-memory database
@@ -55,9 +54,7 @@ class SQLiteMemoryBackend(MemoryBackend):
             self.db_path.parent.mkdir(parents=True, exist_ok=True)
             self.is_in_memory = False
             self._connection = None
-            logger.info(
-                f"SQLite memory backend initialized with database: {self.db_path}"
-            )
+            logger.info(f"SQLite memory backend initialized with database: {self.db_path}")
 
         self._initialized = False
 
@@ -211,16 +208,8 @@ class SQLiteMemoryBackend(MemoryBackend):
                         entry.content,
                         entry.context,
                         entry.confidence,
-                        (
-                            entry.created_at.isoformat()
-                            if entry.created_at
-                            else datetime.now().isoformat()
-                        ),
-                        (
-                            entry.last_accessed.isoformat()
-                            if entry.last_accessed
-                            else datetime.now().isoformat()
-                        ),
+                        (entry.created_at.isoformat() if entry.created_at else datetime.now().isoformat()),
+                        (entry.last_accessed.isoformat() if entry.last_accessed else datetime.now().isoformat()),
                         entry.access_count,
                     ),
                 )
@@ -241,16 +230,8 @@ class SQLiteMemoryBackend(MemoryBackend):
                             entry.content,
                             entry.context,
                             entry.confidence,
-                            (
-                                entry.created_at.isoformat()
-                                if entry.created_at
-                                else datetime.now().isoformat()
-                            ),
-                            (
-                                entry.last_accessed.isoformat()
-                                if entry.last_accessed
-                                else datetime.now().isoformat()
-                            ),
+                            (entry.created_at.isoformat() if entry.created_at else datetime.now().isoformat()),
+                            (entry.last_accessed.isoformat() if entry.last_accessed else datetime.now().isoformat()),
                             entry.access_count,
                         ),
                     )
@@ -263,9 +244,7 @@ class SQLiteMemoryBackend(MemoryBackend):
             logger.error(f"Failed to store memory {entry.id}: {e}")
             raise
 
-    async def get_memories_by_category(
-        self, agent_id: str, category: str, limit: int = 50
-    ) -> List[MemoryEntry]:
+    async def get_memories_by_category(self, agent_id: str, category: str, limit: int = 50) -> List[MemoryEntry]:
         """
         Retrieve memories for an agent by category.
 
@@ -305,9 +284,7 @@ class SQLiteMemoryBackend(MemoryBackend):
                         context=row[4],
                         confidence=row[5],
                         created_at=datetime.fromisoformat(row[6]) if row[6] else None,
-                        last_accessed=(
-                            datetime.fromisoformat(row[7]) if row[7] else None
-                        ),
+                        last_accessed=(datetime.fromisoformat(row[7]) if row[7] else None),
                         access_count=row[8],
                     )
                 )
@@ -316,18 +293,14 @@ class SQLiteMemoryBackend(MemoryBackend):
 
         try:
             memories = await self._execute_with_connection(query_func)
-            logger.debug(
-                f"Retrieved {len(memories)} memories for agent {agent_id}, category {category}"
-            )
+            logger.debug(f"Retrieved {len(memories)} memories for agent {agent_id}, category {category}")
             return memories
 
         except Exception as e:
             logger.error(f"Failed to retrieve memories by category: {e}")
             raise
 
-    async def search_memories(
-        self, agent_id: str, query: str, limit: int = 10
-    ) -> List[MemoryEntry]:
+    async def search_memories(self, agent_id: str, query: str, limit: int = 10) -> List[MemoryEntry]:
         """
         Search memories by content using SQLite's LIKE operator.
 
@@ -370,9 +343,7 @@ class SQLiteMemoryBackend(MemoryBackend):
                         context=row[4],
                         confidence=row[5],
                         created_at=datetime.fromisoformat(row[6]) if row[6] else None,
-                        last_accessed=(
-                            datetime.fromisoformat(row[7]) if row[7] else None
-                        ),
+                        last_accessed=(datetime.fromisoformat(row[7]) if row[7] else None),
                         access_count=row[8],
                     )
                 )
@@ -381,18 +352,14 @@ class SQLiteMemoryBackend(MemoryBackend):
 
         try:
             memories = await self._execute_with_connection(query_func)
-            logger.debug(
-                f"Found {len(memories)} memories for agent {agent_id} matching '{query}'"
-            )
+            logger.debug(f"Found {len(memories)} memories for agent {agent_id} matching '{query}'")
             return memories
 
         except Exception as e:
             logger.error(f"Failed to search memories: {e}")
             raise
 
-    async def get_recent_memories(
-        self, agent_id: str, limit: int = 10
-    ) -> List[MemoryEntry]:
+    async def get_recent_memories(self, agent_id: str, limit: int = 10) -> List[MemoryEntry]:
         """
         Get the most recently accessed memories for an agent.
 
@@ -431,19 +398,13 @@ class SQLiteMemoryBackend(MemoryBackend):
                             content=row[3],
                             context=row[4],
                             confidence=row[5],
-                            created_at=(
-                                datetime.fromisoformat(row[6]) if row[6] else None
-                            ),
-                            last_accessed=(
-                                datetime.fromisoformat(row[7]) if row[7] else None
-                            ),
+                            created_at=(datetime.fromisoformat(row[6]) if row[6] else None),
+                            last_accessed=(datetime.fromisoformat(row[7]) if row[7] else None),
                             access_count=row[8],
                         )
                     )
 
-                logger.debug(
-                    f"Retrieved {len(memories)} recent memories for agent {agent_id}"
-                )
+                logger.debug(f"Retrieved {len(memories)} recent memories for agent {agent_id}")
                 return memories
 
         except Exception as e:
@@ -577,8 +538,6 @@ class SQLiteMemoryBackend(MemoryBackend):
         if self.is_in_memory and self._connection:
             await self._connection.close()
             self._connection = None
-            logger.info(
-                "SQLite memory backend cleanup completed (in-memory database automatically deleted)"
-            )
+            logger.info("SQLite memory backend cleanup completed (in-memory database automatically deleted)")
         else:
             logger.info("SQLite memory backend cleanup completed")

@@ -5,10 +5,10 @@ import logging
 import time
 from collections import deque
 from typing import Any, Callable, Dict, List, Optional
-from typing_extensions import TypedDict
 
 from spade.behaviour import CyclicBehaviour
 from spade.message import Message
+from typing_extensions import TypedDict
 
 from ..rag.retrievers import BaseRetriever
 from ..utils.retrieval_utils import create_retrieval_response_body
@@ -18,6 +18,7 @@ logger = logging.getLogger("spade_llm.behaviour")
 
 class RetrievalStats(TypedDict):
     """Type definition for retrieval statistics."""
+
     total_queries: int
     successful_retrievals: int
     failed_retrievals: int
@@ -109,20 +110,14 @@ class RetrievalBehaviour(CyclicBehaviour):
             # Validate query is not empty or None
             if not query or (isinstance(query, str) and not query.strip()):
                 logger.error("Query is empty or None")
-                await self._send_error_response(
-                    msg, "Query cannot be empty or None. Expected non-empty 'query' field."
-                )
+                await self._send_error_response(msg, "Query cannot be empty or None. Expected non-empty 'query' field.")
                 return
 
-            logger.info(
-                f"Processing retrieval query: '{query}' (k={k}, search_type={search_type})"
-            )
+            logger.info(f"Processing retrieval query: '{query}' (k={k}, search_type={search_type})")
 
             # Perform retrieval
             start_time = time.time()
-            results = await self._perform_retrieval(
-                query, k, filters, search_type
-            )
+            results = await self._perform_retrieval(query, k, filters, search_type)
             retrieval_time = time.time() - start_time
 
             # Update statistics
@@ -133,9 +128,7 @@ class RetrievalBehaviour(CyclicBehaviour):
                 self.on_retrieval_complete(query, results)
 
             # Send response
-            await self._send_retrieval_response(
-                msg, query, results, retrieval_time
-            )
+            await self._send_retrieval_response(msg, query, results, retrieval_time)
 
         except Exception as e:
             logger.error(f"Error processing retrieval request: {e}", exc_info=True)
@@ -191,12 +184,7 @@ class RetrievalBehaviour(CyclicBehaviour):
             kwargs["filters"] = filters
 
         # Use the unified retrieve method with search_type
-        results = await self.retriever.retrieve(
-            query, 
-            k, 
-            search_type=search_type,
-            **kwargs
-        )
+        results = await self.retriever.retrieve(query, k, search_type=search_type, **kwargs)
 
         return results
 
@@ -227,7 +215,7 @@ class RetrievalBehaviour(CyclicBehaviour):
         reply = Message(to=recipient)
         reply.body = create_retrieval_response_body(results)
         reply.thread = original_msg.thread
-        
+
         # Metadata for observability
         reply.set_metadata("message_type", "retrieval_response")
         reply.set_metadata("query", query)
@@ -235,7 +223,7 @@ class RetrievalBehaviour(CyclicBehaviour):
         reply.set_metadata("retrieval_time", str(round(retrieval_time, 3)))
 
         logger.info(f"Sending {len(results)} results to {recipient}")
-        
+
         try:
             await self.send(reply)
             logger.info(f"Retrieval response sent successfully to {recipient}")
@@ -282,9 +270,7 @@ class RetrievalBehaviour(CyclicBehaviour):
         # Update rolling average for retrieval time
         total = self._stats["total_queries"]
         current_avg = self._stats["average_retrieval_time"]
-        self._stats["average_retrieval_time"] = (
-            current_avg * (total - 1) + retrieval_time
-        ) / total
+        self._stats["average_retrieval_time"] = (current_avg * (total - 1) + retrieval_time) / total
 
     def update_retriever(self, new_retriever: BaseRetriever) -> None:
         """

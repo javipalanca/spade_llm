@@ -10,20 +10,18 @@ Setup:
 """
 
 import asyncio
+import logging
 import os
+
 import spade
 
-from spade_llm.agent import LLMAgent, ChatAgent
+from spade_llm.agent import ChatAgent, LLMAgent
 from spade_llm.agent.coordinator_agent import CoordinatorAgent
 from spade_llm.providers import LLMProvider
 from spade_llm.tools import LLMTool
 from spade_llm.utils import load_env_vars
 
-import logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logging.getLogger("spade_llm").setLevel(logging.INFO)
 
 # 1. AGENT PROMPTS
@@ -208,6 +206,7 @@ When everything is complete, end your response with <TASK_COMPLETE>
     except Exception as e:
         print(f"\nError: {e}")
         import traceback
+
         traceback.print_exc()
 
     finally:

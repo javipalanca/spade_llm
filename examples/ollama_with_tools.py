@@ -11,9 +11,10 @@ Setup:
 
 import os
 from datetime import datetime
+
 import spade
 
-from spade_llm.agent import LLMAgent, ChatAgent
+from spade_llm.agent import ChatAgent, LLMAgent
 from spade_llm.providers import LLMProvider
 from spade_llm.tools import LLMTool
 from spade_llm.utils import load_env_vars

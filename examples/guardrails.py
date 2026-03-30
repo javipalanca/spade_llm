@@ -14,16 +14,14 @@ Setup:
 
 import logging
 import os
+from typing import List
+
 import spade
 
-from spade_llm.agent import LLMAgent, ChatAgent
+from spade_llm.agent import ChatAgent, LLMAgent
+from spade_llm.guardrails import GuardrailAction, InputGuardrail, KeywordGuardrail, LLMGuardrail, OutputGuardrail
 from spade_llm.providers import LLMProvider
-from spade_llm.guardrails import (
-    KeywordGuardrail, LLMGuardrail,
-    GuardrailAction, InputGuardrail, OutputGuardrail
-)
 from spade_llm.utils import load_env_vars
-from typing import List
 
 logging.basicConfig(level=logging.INFO)
 
@@ -36,16 +34,16 @@ def create_input_guardrails() -> List[InputGuardrail]:
         blocked_keywords=["hack", "exploit", "malware", "virus", "illegal", "bomb"],
         action=GuardrailAction.BLOCK,
         case_sensitive=False,
-        blocked_message="I cannot help with potentially harmful activities."
+        blocked_message="I cannot help with potentially harmful activities.",
     )
-    
+
     # 2. Profanity filter - replaces inappropriate words
     profanity_guardrail = KeywordGuardrail(
-        name="profanity_filter", 
+        name="profanity_filter",
         blocked_keywords=["damn", "hell", "stupid", "idiot", "crap"],
         action=GuardrailAction.MODIFY,
         replacement="[FILTERED]",
-        case_sensitive=False
+        case_sensitive=False,
     )
 
     return [keyword_guardrail, profanity_guardrail]
@@ -65,9 +63,9 @@ def create_output_guardrails(safety_provider: LLMProvider) -> List[OutputGuardra
         
         AI Response: {content}
         """,
-        blocked_message="I apologize, but I cannot provide that response due to safety concerns."
+        blocked_message="I apologize, but I cannot provide that response due to safety concerns.",
     )
-    
+
     return [safety_guardrail]
 
 
