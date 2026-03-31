@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://spadeagents.eu/docs/spade_llm/sitemap.xml
+
+# Block specific paths that shouldn't be crawled
+Disallow: /assets/javascripts/
+Disallow: /search/
+
+# Allow important sections
+Allow: /getting-started/
+Allow: /guides/
+Allow: /reference/
+Allow: /contributing/
+
+# Crawl delay (be nice to servers)
+Crawl-delay: 1

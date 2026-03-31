@@ -92,15 +92,11 @@ class AgentBaseMemory:
         # Validate category
         valid_categories = ["fact", "pattern", "preference", "capability"]
         if category not in valid_categories:
-            raise ValueError(
-                f"Invalid category '{category}'. Must be one of: {valid_categories}"
-            )
+            raise ValueError(f"Invalid category '{category}'. Must be one of: {valid_categories}")
 
         # Validate confidence
         if not 0.0 <= confidence <= 1.0:
-            raise ValueError(
-                f"Confidence must be between 0.0 and 1.0, got {confidence}"
-            )
+            raise ValueError(f"Confidence must be between 0.0 and 1.0, got {confidence}")
 
         entry = MemoryEntry(
             agent_id=self.agent_id,
@@ -136,9 +132,7 @@ class AgentBaseMemory:
         logger.debug(f"Retrieved {len(memories)} memories for search query: {query}")
         return memories
 
-    async def get_memories_by_category(
-        self, category: str, limit: int = 50
-    ) -> List[MemoryEntry]:
+    async def get_memories_by_category(self, category: str, limit: int = 50) -> List[MemoryEntry]:
         """
         Get memories by category.
 
@@ -151,9 +145,7 @@ class AgentBaseMemory:
         """
         await self._ensure_initialized()
 
-        memories = await self.backend.get_memories_by_category(
-            self.agent_id, category, limit
-        )
+        memories = await self.backend.get_memories_by_category(self.agent_id, category, limit)
 
         # Update access counts for retrieved memories
         for memory in memories:
@@ -183,9 +175,7 @@ class AgentBaseMemory:
         logger.debug(f"Retrieved {len(memories)} recent memories")
         return memories
 
-    async def get_relevant_memories(
-        self, context: Optional[str] = None, limit: int = 10
-    ) -> List[MemoryEntry]:
+    async def get_relevant_memories(self, context: Optional[str] = None, limit: int = 10) -> List[MemoryEntry]:
         """
         Get memories relevant to the current context.
 

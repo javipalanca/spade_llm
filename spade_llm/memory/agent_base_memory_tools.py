@@ -65,9 +65,7 @@ class AgentBaseMemoryStoreTool(LLMTool):
             func=self._store_memory,
         )
 
-    async def _store_memory(
-        self, category: str, content: str, context: str = None, confidence: float = 1.0
-    ) -> str:
+    async def _store_memory(self, category: str, content: str, context: str = None, confidence: float = 1.0) -> str:
         """
         Store a memory entry.
 

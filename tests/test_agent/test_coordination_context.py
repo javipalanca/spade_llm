@@ -1,24 +1,19 @@
 """Tests for CoordinationContextManager class."""
 
-import pytest
 from unittest.mock import Mock
 
 from spade.message import Message
+
 from spade_llm.agent.coordinator_agent import CoordinationContextManager
-from spade_llm.context._types import create_user_message, create_assistant_message
+from spade_llm.context._types import create_user_message
 
 
 class TestCoordinationContextManagerInitialization:
     """Test CoordinationContextManager initialization."""
 
-    def test_initialization_with_coordination_session(
-        self, coordination_session_id, subagent_ids
-    ):
+    def test_initialization_with_coordination_session(self, coordination_session_id, subagent_ids):
         """Test initialization with coordination parameters."""
-        ccm = CoordinationContextManager(
-            coordination_session=coordination_session_id,
-            subagent_ids=set(subagent_ids)
-        )
+        ccm = CoordinationContextManager(coordination_session=coordination_session_id, subagent_ids=set(subagent_ids))
 
         assert ccm.coordination_session == coordination_session_id
         assert ccm.subagent_ids == set(subagent_ids)
@@ -29,61 +24,43 @@ class TestCoordinationContextManagerInitialization:
 
     def test_initialization_with_empty_subagent_list(self, coordination_session_id):
         """Test initialization with empty subagent set."""
-        ccm = CoordinationContextManager(
-            coordination_session=coordination_session_id,
-            subagent_ids=set()
-        )
+        ccm = CoordinationContextManager(coordination_session=coordination_session_id, subagent_ids=set())
 
         assert ccm.subagent_ids == set()
         assert ccm.coordination_session == coordination_session_id
 
-    def test_initialization_with_system_prompt(
-        self, coordination_session_id, subagent_ids
-    ):
+    def test_initialization_with_system_prompt(self, coordination_session_id, subagent_ids):
         """Test system prompt propagation to parent."""
         system_prompt = "Test coordinator system prompt"
         ccm = CoordinationContextManager(
-            coordination_session=coordination_session_id,
-            subagent_ids=set(subagent_ids),
-            system_prompt=system_prompt
+            coordination_session=coordination_session_id, subagent_ids=set(subagent_ids), system_prompt=system_prompt
         )
 
         assert ccm._system_prompt == system_prompt
 
-    def test_initialization_with_context_management_strategy(
-        self, coordination_session_id, subagent_ids
-    ):
+    def test_initialization_with_context_management_strategy(self, coordination_session_id, subagent_ids):
         """Test context management strategy integration."""
         from spade_llm.context.management import WindowSizeContext
 
         strategy = WindowSizeContext(max_messages=10)
         ccm = CoordinationContextManager(
-            coordination_session=coordination_session_id,
-            subagent_ids=set(subagent_ids),
-            context_management=strategy
+            coordination_session=coordination_session_id, subagent_ids=set(subagent_ids), context_management=strategy
         )
 
         assert ccm.context_management == strategy
 
-    def test_sanitize_jid_for_name_assignment(
-        self, coordination_session_id, subagent_ids
-    ):
+    def test_sanitize_jid_for_name_assignment(self, coordination_session_id, subagent_ids):
         """Test that sanitization function is available."""
-        ccm = CoordinationContextManager(
-            coordination_session=coordination_session_id,
-            subagent_ids=set(subagent_ids)
-        )
+        ccm = CoordinationContextManager(coordination_session=coordination_session_id, subagent_ids=set(subagent_ids))
 
-        assert hasattr(ccm, '_sanitize_jid_for_name')
+        assert hasattr(ccm, "_sanitize_jid_for_name")
         assert callable(ccm._sanitize_jid_for_name)
 
 
 class TestConversationIDOverrideLogic:
     """Test conversation ID override logic for coordination."""
 
-    def test_conversation_id_override_subagent_sender(
-        self, coordination_context_manager, coordination_session_id
-    ):
+    def test_conversation_id_override_subagent_sender(self, coordination_context_manager, coordination_session_id):
         """Test coordination_session used when sender is subagent."""
         msg = Mock(spec=Message)
         msg.sender = "subagent1@localhost"
@@ -94,9 +71,7 @@ class TestConversationIDOverrideLogic:
 
         assert conv_id == coordination_session_id
 
-    def test_conversation_id_override_subagent_receiver(
-        self, coordination_context_manager, coordination_session_id
-    ):
+    def test_conversation_id_override_subagent_receiver(self, coordination_context_manager, coordination_session_id):
         """Test coordination_session used when receiver is subagent."""
         msg = Mock(spec=Message)
         msg.sender = "coordinator@localhost"
@@ -107,9 +82,7 @@ class TestConversationIDOverrideLogic:
 
         assert conv_id == coordination_session_id
 
-    def test_conversation_id_override_matching_thread(
-        self, coordination_context_manager, coordination_session_id
-    ):
+    def test_conversation_id_override_matching_thread(self, coordination_context_manager, coordination_session_id):
         """Test coordination_session used when thread matches."""
         msg = Mock(spec=Message)
         msg.sender = "other@localhost"
@@ -120,9 +93,7 @@ class TestConversationIDOverrideLogic:
 
         assert conv_id == coordination_session_id
 
-    def test_conversation_id_external_message(
-        self, coordination_context_manager, coordination_session_id
-    ):
+    def test_conversation_id_external_message(self, coordination_context_manager, coordination_session_id):
         """Test external messages use standard logic."""
         msg = Mock(spec=Message)
         msg.sender = "external_user@localhost"
@@ -134,9 +105,7 @@ class TestConversationIDOverrideLogic:
         assert conv_id == "external_thread_789"
         assert conv_id != coordination_session_id
 
-    def test_conversation_id_external_with_thread(
-        self, coordination_context_manager, coordination_session_id
-    ):
+    def test_conversation_id_external_with_thread(self, coordination_context_manager, coordination_session_id):
         """Test external messages with custom thread."""
         msg = Mock(spec=Message)
         msg.sender = "user@localhost"
@@ -147,9 +116,7 @@ class TestConversationIDOverrideLogic:
 
         assert conv_id == "custom_thread"
 
-    def test_conversation_id_external_without_thread(
-        self, coordination_context_manager
-    ):
+    def test_conversation_id_external_without_thread(self, coordination_context_manager):
         """Test external messages without thread."""
         msg = Mock(spec=Message)
         msg.sender = "user@localhost"
@@ -158,12 +125,9 @@ class TestConversationIDOverrideLogic:
 
         conv_id = coordination_context_manager._get_coordination_conversation_id(msg)
 
-        expected = f"{msg.sender}_{msg.to}"
-        assert conv_id == expected
+        assert conv_id.startswith("user_coordinator_")
 
-    def test_conversation_id_mixed_scenarios(
-        self, coordination_context_manager, coordination_session_id
-    ):
+    def test_conversation_id_mixed_scenarios(self, coordination_context_manager, coordination_session_id):
         """Test multiple messages with different routing."""
         # Message 1: Subagent to coordinator
         msg1 = Mock(spec=Message)
@@ -192,9 +156,7 @@ class TestConversationIDOverrideLogic:
         conv_id3 = coordination_context_manager._get_coordination_conversation_id(msg3)
         assert conv_id3 == "external_thread"
 
-    def test_conversation_id_with_partial_jid_match(
-        self, coordination_context_manager, coordination_session_id
-    ):
+    def test_conversation_id_with_partial_jid_match(self, coordination_context_manager, coordination_session_id):
         """Test that exact JID matching is required (not substring)."""
         msg = Mock(spec=Message)
         msg.sender = "subagent123@localhost"  # Not in subagent_ids
@@ -211,9 +173,7 @@ class TestConversationIDOverrideLogic:
 class TestMessageAdditionAndContextUpdates:
     """Test message addition and context update functionality."""
 
-    def test_add_message_uses_coordination_logic(
-        self, coordination_context_manager, coordination_session_id
-    ):
+    def test_add_message_uses_coordination_logic(self, coordination_context_manager, coordination_session_id):
         """Test that add_message uses override logic."""
         msg = Mock(spec=Message)
         msg.body = "Test message from subagent"
@@ -228,9 +188,7 @@ class TestMessageAdditionAndContextUpdates:
         assert coordination_session_id in coordination_context_manager._conversations
         assert len(coordination_context_manager._conversations[coordination_session_id]) == 1
 
-    def test_add_message_explicit_conversation_id(
-        self, coordination_context_manager, coordination_session_id
-    ):
+    def test_add_message_explicit_conversation_id(self, coordination_context_manager, coordination_session_id):
         """Test that explicit conversation_id parameter is respected."""
         msg = Mock(spec=Message)
         msg.body = "Test message"
@@ -245,14 +203,16 @@ class TestMessageAdditionAndContextUpdates:
         assert custom_conv_id in coordination_context_manager._conversations
         assert len(coordination_context_manager._conversations[custom_conv_id]) == 1
 
-    def test_add_coordination_command(
-        self, coordination_context_manager, coordination_session_id
-    ):
-        """Test specialized method for coordination commands."""
+    def test_add_coordination_message_dict(self, coordination_context_manager, coordination_session_id):
+        """Test coordination-style commands via the current message-dict API."""
         target_agent = "subagent1@localhost"
         command = "do task"
+        message = create_user_message(
+            f"[TO: {target_agent}] {command}",
+            name=coordination_context_manager._sanitize_jid_for_name(target_agent),
+        )
 
-        coordination_context_manager.add_coordination_command(target_agent, command)
+        coordination_context_manager.add_message_dict(message, coordination_session_id)
 
         # Check message added to coordination_session
         assert coordination_session_id in coordination_context_manager._conversations
@@ -264,26 +224,24 @@ class TestMessageAdditionAndContextUpdates:
         assert msg["role"] == "user"
         assert f"[TO: {target_agent}]" in msg["content"]
         assert command in msg["content"]
-        assert "name" in msg
+        assert msg["name"] == "subagent1@localhost"
 
-    def test_add_coordination_command_custom_conversation(
-        self, coordination_context_manager
-    ):
-        """Test override conversation_id in coordination command."""
+    def test_add_message_dict_custom_conversation(self, coordination_context_manager):
+        """Test override conversation_id when adding a message dict."""
         custom_conv_id = "custom_coordination"
-        coordination_context_manager.add_coordination_command(
-            "subagent1@localhost",
+        message = create_user_message(
             "test command",
-            conversation_id=custom_conv_id
+            name=coordination_context_manager._sanitize_jid_for_name("subagent1@localhost"),
         )
+
+        coordination_context_manager.add_message_dict(message, custom_conv_id)
 
         # Should be added to specified conversation
         assert custom_conv_id in coordination_context_manager._conversations
         assert len(coordination_context_manager._conversations[custom_conv_id]) == 1
+        assert coordination_context_manager._conversations[custom_conv_id][0] == message
 
-    def test_multiple_subagent_messages_same_conversation(
-        self, coordination_context_manager, coordination_session_id
-    ):
+    def test_multiple_subagent_messages_same_conversation(self, coordination_context_manager, coordination_session_id):
         """Test that all subagent messages share context."""
         # Add messages from different subagents
         for i, agent_id in enumerate(["subagent1@localhost", "subagent2@localhost", "subagent3@localhost"]):
@@ -299,9 +257,7 @@ class TestMessageAdditionAndContextUpdates:
         messages = coordination_context_manager._conversations[coordination_session_id]
         assert len(messages) == 3
 
-    def test_message_metadata_preservation(
-        self, coordination_context_manager, coordination_session_id
-    ):
+    def test_message_metadata_preservation(self, coordination_context_manager, coordination_session_id):
         """Test that SPADE message metadata is preserved."""
         msg = Mock(spec=Message)
         msg.body = "Test message"
@@ -323,22 +279,45 @@ class TestMessageAdditionAndContextUpdates:
 class TestContextIsolationAndVisibility:
     """Test context isolation and visibility patterns."""
 
-    def test_coordinator_sees_all_subagent_messages(
-        self, coordination_context_manager, coordination_session_id
-    ):
+    def test_coordinator_sees_all_subagent_messages(self, coordination_context_manager, coordination_session_id):
         """Test that coordinator has full context visibility."""
         # Simulate full workflow
         messages_to_add = [
             # User to coordinator
-            {"body": "Please coordinate task", "sender": "user@localhost", "to": "coordinator@localhost", "thread": "ext"},
+            {
+                "body": "Please coordinate task",
+                "sender": "user@localhost",
+                "to": "coordinator@localhost",
+                "thread": "ext",
+            },
             # Coordinator to subagent1
-            {"body": "Do step 1", "sender": "coordinator@localhost", "to": "subagent1@localhost", "thread": coordination_session_id},
+            {
+                "body": "Do step 1",
+                "sender": "coordinator@localhost",
+                "to": "subagent1@localhost",
+                "thread": coordination_session_id,
+            },
             # Subagent1 to coordinator
-            {"body": "Step 1 done", "sender": "subagent1@localhost", "to": "coordinator@localhost", "thread": coordination_session_id},
+            {
+                "body": "Step 1 done",
+                "sender": "subagent1@localhost",
+                "to": "coordinator@localhost",
+                "thread": coordination_session_id,
+            },
             # Coordinator to subagent2
-            {"body": "Do step 2", "sender": "coordinator@localhost", "to": "subagent2@localhost", "thread": coordination_session_id},
+            {
+                "body": "Do step 2",
+                "sender": "coordinator@localhost",
+                "to": "subagent2@localhost",
+                "thread": coordination_session_id,
+            },
             # Subagent2 to coordinator
-            {"body": "Step 2 done", "sender": "subagent2@localhost", "to": "coordinator@localhost", "thread": coordination_session_id},
+            {
+                "body": "Step 2 done",
+                "sender": "subagent2@localhost",
+                "to": "coordinator@localhost",
+                "thread": coordination_session_id,
+            },
         ]
 
         for msg_data in messages_to_add:
@@ -360,9 +339,7 @@ class TestContextIsolationAndVisibility:
         user_and_assistant_msgs = [m for m in prompt if m["role"] in ["user", "assistant"]]
         assert len(user_and_assistant_msgs) == 4
 
-    def test_external_conversations_isolated(
-        self, coordination_context_manager, coordination_session_id
-    ):
+    def test_external_conversations_isolated(self, coordination_context_manager, coordination_session_id):
         """Test that non-coordination conversations remain separate."""
         # Add coordination messages
         msg1 = Mock(spec=Message)
@@ -389,9 +366,7 @@ class TestContextIsolationAndVisibility:
         assert len(coordination_context_manager._conversations[coordination_session_id]) == 1
         assert len(coordination_context_manager._conversations["external_thread"]) == 1
 
-    def test_subagent_context_isolation_simulation(
-        self, coordination_context_manager, coordination_session_id
-    ):
+    def test_subagent_context_isolation_simulation(self, coordination_context_manager, coordination_session_id):
         """Test simulated subagent's isolated view."""
         from spade_llm.context import ContextManager
 
@@ -425,19 +400,11 @@ class TestContextIsolationAndVisibility:
         subagent_messages = subagent_context._conversations[coordination_session_id]
         assert len(subagent_messages) == 1
 
-    def test_concurrent_coordination_sessions(
-        self, coordination_session_id, subagent_ids
-    ):
+    def test_concurrent_coordination_sessions(self, coordination_session_id, subagent_ids):
         """Test that multiple coordination sessions don't interfere."""
         # Create two separate coordination context managers
-        ccm1 = CoordinationContextManager(
-            coordination_session="session_1",
-            subagent_ids=set(subagent_ids)
-        )
-        ccm2 = CoordinationContextManager(
-            coordination_session="session_2",
-            subagent_ids=set(subagent_ids)
-        )
+        ccm1 = CoordinationContextManager(coordination_session="session_1", subagent_ids=set(subagent_ids))
+        ccm2 = CoordinationContextManager(coordination_session="session_2", subagent_ids=set(subagent_ids))
 
         # Add messages to session 1
         msg1 = Mock(spec=Message)
@@ -465,9 +432,7 @@ class TestContextIsolationAndVisibility:
 class TestEdgeCasesAndErrorHandling:
     """Test edge cases and error handling."""
 
-    def test_message_without_thread_attribute(
-        self, coordination_context_manager, coordination_session_id
-    ):
+    def test_message_without_thread_attribute(self, coordination_context_manager, coordination_session_id):
         """Test handling of messages without thread field."""
         msg = Mock(spec=Message)
         msg.sender = "subagent1@localhost"
@@ -478,30 +443,31 @@ class TestEdgeCasesAndErrorHandling:
         conv_id = coordination_context_manager._get_coordination_conversation_id(msg)
         assert conv_id == coordination_session_id
 
-    def test_message_with_hasattr_to_check(
-        self, coordination_context_manager
-    ):
+    def test_message_with_hasattr_to_check(self, coordination_context_manager):
         """Test message 'to' attribute check with hasattr."""
         msg = Mock(spec=Message)
         msg.sender = "external@localhost"
         # Deliberately don't set 'to' attribute
-        if hasattr(msg, 'to'):
-            delattr(msg, 'to')
+        if hasattr(msg, "to"):
+            delattr(msg, "to")
         msg.thread = "test_thread"
 
         # Should handle gracefully
         conv_id = coordination_context_manager._get_coordination_conversation_id(msg)
         assert conv_id == "test_thread"
 
-    def test_coordination_command_with_special_characters(
-        self, coordination_context_manager
-    ):
-        """Test coordination command with special characters in agent ID."""
+    def test_add_message_dict_with_special_characters(self, coordination_context_manager):
+        """Test message dict content and sanitized names with special characters."""
         agent_id = "agent.with_special-chars@domain.com"
         command = "Do task with 'quotes' and \"double quotes\""
+        message = create_user_message(
+            command,
+            name=coordination_context_manager._sanitize_jid_for_name(agent_id),
+        )
 
-        coordination_context_manager.add_coordination_command(agent_id, command)
+        coordination_context_manager.add_message_dict(message, coordination_context_manager.coordination_session)
 
         messages = list(coordination_context_manager._conversations.values())[0]
         assert len(messages) == 1
         assert command in messages[0]["content"]
+        assert messages[0]["name"] == agent_id

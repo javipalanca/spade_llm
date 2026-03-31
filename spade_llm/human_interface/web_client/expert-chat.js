@@ -1,6 +1,6 @@
 /**
  * SPADE LLM Human Expert Interface
- * 
+ *
  * This web client allows human experts to receive and respond to queries
  * from SPADE LLM agents via XMPP.
  */
@@ -43,7 +43,7 @@ function updateConnectionStatus(status, text) {
 function parseQuery(body) {
     // Expected format: [Query ID] Question\n\nContext: context\n\n(Please reply...)
     const queryMatch = body.match(/\[Query ([^\]]+)\] (.+?)(?:\n\nContext: (.+?))?(?:\n\n\(Please reply|$)/s);
-    
+
     if (queryMatch) {
         return {
             shortId: queryMatch[1],
@@ -51,7 +51,7 @@ function parseQuery(body) {
             context: queryMatch[3] ? queryMatch[3].trim() : null
         };
     }
-    
+
     // Fallback: treat entire body as question
     return {
         shortId: 'unknown',
@@ -64,34 +64,34 @@ function parseQuery(body) {
 function createQueryCard(query) {
     const template = document.getElementById('queryTemplate');
     const card = template.content.cloneNode(true);
-    
+
     const cardElement = card.querySelector('.query-card');
     cardElement.dataset.queryId = query.id;
-    
+
     // Fill in query details
     card.querySelector('.query-id').textContent = `Query ${query.shortId}`;
     card.querySelector('.query-from').textContent = query.from;
     card.querySelector('.query-time').textContent = query.timestamp.toLocaleTimeString();
     card.querySelector('.query-status').textContent = 'Pending';
     card.querySelector('.query-question').textContent = query.question;
-    
+
     if (query.context) {
         card.querySelector('.query-context').innerHTML = `<strong>Context:</strong> ${query.context}`;
     } else {
         card.querySelector('.query-context').style.display = 'none';
     }
-    
+
     // Add event listener for send button
     const sendBtn = card.querySelector('.send-response');
     const responseInput = card.querySelector('.response-input');
-    
+
     sendBtn.addEventListener('click', () => {
         const response = responseInput.value.trim();
         if (response) {
             sendResponse(query, response);
         }
     });
-    
+
     // Allow Enter key to send (Shift+Enter for new line)
     responseInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -102,7 +102,7 @@ function createQueryCard(query) {
             }
         }
     });
-    
+
     return cardElement;
 }
 
@@ -110,7 +110,7 @@ function createQueryCard(query) {
 function addQuery(stanza) {
     let queryId = stanza.attrs.thread;
     const body = stanza.getChildText('body');
-    
+
     // If no thread ID in attributes, try to extract from metadata
     if (!queryId) {
         const metadata = stanza.getChild('x', 'jabber:x:data');
@@ -121,7 +121,7 @@ function addQuery(stanza) {
             }
         }
     }
-    
+
     // If still no queryId, extract from body
     if (!queryId && body) {
         const match = body.match(/\[Query ([^\]]+)\]/);
@@ -129,18 +129,18 @@ function addQuery(stanza) {
             queryId = match[1];
         }
     }
-    
+
     if (!queryId || !body) {
         debug(`Received message without thread ID or body. Thread: ${queryId}, Body: ${body ? 'present' : 'missing'}`, 'warn');
         return;
     }
-    
+
     // Skip if we already have this query
     if (queries.has(queryId)) {
         debug(`Duplicate query received: ${queryId}`, 'warn');
         return;
     }
-    
+
     const parsed = parseQuery(body);
     const query = {
         id: queryId,
@@ -152,21 +152,21 @@ function addQuery(stanza) {
         answered: false,
         response: null
     };
-    
+
     queries.set(queryId, query);
-    
+
     // Remove "no queries" message if present
     const noQueries = queriesList.querySelector('.no-queries');
     if (noQueries) {
         noQueries.remove();
     }
-    
+
     // Add query card to UI
     const card = createQueryCard(query);
     queriesList.insertBefore(card, queriesList.firstChild);
-    
+
     debug(`New query received: ${query.shortId} from ${query.from}`);
-    
+
     // Optional: Show notification
     if ('Notification' in window && Notification.permission === 'granted') {
         new Notification('New Query', {
@@ -182,7 +182,7 @@ async function sendResponse(query, responseText) {
         debug('Cannot send response: not connected', 'error');
         return;
     }
-    
+
     try {
         const { xml } = window.XMPP;
         const message = xml(
@@ -194,14 +194,14 @@ async function sendResponse(query, responseText) {
             },
             xml('body', {}, responseText)
         );
-        
+
         await xmppClient.send(message);
-        
+
         // Update query state
         query.answered = true;
         query.response = responseText;
         queries.set(query.id, query);
-        
+
         // Update UI
         const card = document.querySelector(`[data-query-id="${query.id}"]`);
         if (card) {
@@ -211,9 +211,9 @@ async function sendResponse(query, responseText) {
             card.querySelector('.query-answered').style.display = 'block';
             card.querySelector('.answered-response').textContent = responseText;
         }
-        
+
         debug(`Response sent for query ${query.shortId}`);
-        
+
     } catch (error) {
         debug(`Failed to send response: ${error.message}`, 'error');
     }
@@ -222,20 +222,20 @@ async function sendResponse(query, responseText) {
 // Connect to XMPP server
 async function connect(credentials) {
     debug('Starting connection function');
-    
+
     if (!window.XMPP) {
         debug('XMPP library not loaded!', 'error');
         updateConnectionStatus('error', 'XMPP library not loaded');
         return;
     }
-    
+
     const { client } = window.XMPP;
     debug('XMPP client function found');
-    
+
     try {
         updateConnectionStatus('connecting', 'Connecting...');
         debug('Creating XMPP client...');
-        
+
         const clientConfig = {
             service: credentials.service,
             domain: credentials.jid.split('@')[1],
@@ -243,45 +243,45 @@ async function connect(credentials) {
             password: credentials.password
         };
         debug(`Client config: ${JSON.stringify({...clientConfig, password: '***'})}`);
-        
+
         xmppClient = client(clientConfig);
         expertJid = credentials.jid;
         debug('XMPP client created successfully');
-        
+
         // Set up event handlers
         xmppClient.on('error', (err) => {
             debug(`Error: ${err.message}`, 'error');
             updateConnectionStatus('error', 'Error');
         });
-        
+
         xmppClient.on('offline', () => {
             debug('Disconnected from server');
             updateConnectionStatus('offline', 'Disconnected');
             loginForm.style.display = 'block';
             mainInterface.style.display = 'none';
         });
-        
+
         xmppClient.on('online', (address) => {
             debug(`Connected as ${address.toString()}`);
             updateConnectionStatus('online', `Connected as ${address.toString()}`);
             loginForm.style.display = 'none';
             mainInterface.style.display = 'block';
-            
+
             // Send presence
             xmppClient.send(window.XMPP.xml('presence'));
         });
-        
+
         xmppClient.on('stanza', (stanza) => {
             debug(`Received stanza: ${stanza.toString()}`, 'debug');
-            
+
             if (stanza.is('message') && stanza.attrs.type === 'chat') {
                 addQuery(stanza);
             }
         });
-        
+
         // Start connection
         await xmppClient.start();
-        
+
     } catch (error) {
         debug(`Connection failed: ${error.message}`, 'error');
         updateConnectionStatus('error', 'Connection failed');
@@ -291,17 +291,17 @@ async function connect(credentials) {
 // Event Listeners
 connectForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     debug('Connect form submitted');
-    
+
     const credentials = {
         service: document.getElementById('service').value,
         jid: document.getElementById('jid').value,
         password: document.getElementById('password').value
     };
-    
+
     debug(`Attempting connection with: ${JSON.stringify({...credentials, password: '***'})}`);
-    
+
     await connect(credentials);
 });
 
@@ -319,7 +319,7 @@ clearAnsweredBtn.addEventListener('click', () => {
         queries.delete(queryId);
         card.remove();
     });
-    
+
     if (queries.size === 0) {
         queriesList.innerHTML = '<p class="no-queries">No queries yet. Waiting for agents to ask questions...</p>';
     }

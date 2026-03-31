@@ -30,9 +30,7 @@ class GuardrailResult:
 class Guardrail(ABC):
     """Abstract base class for all guardrails."""
 
-    def __init__(
-        self, name: str, enabled: bool = True, blocked_message: Optional[str] = None
-    ):
+    def __init__(self, name: str, enabled: bool = True, blocked_message: Optional[str] = None):
         """
         Initialize a guardrail.
 

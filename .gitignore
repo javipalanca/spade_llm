@@ -45,13 +45,21 @@ coverage.xml
 *.cover
 .tox/
 
+# ruff
+.ruff_cache/
+
 # MyPy
 .mypy_cache/
 
+# uv
+uv.lock
+
 # Documentation
-docs/_build/
+site/
 
 # Logs
 *.log
-/docs/site/
 /.claude/
+
+# other
+notes/

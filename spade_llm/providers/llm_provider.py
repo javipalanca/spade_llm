@@ -1,246 +1,100 @@
 """Unified LLM provider implementation for SPADE_LLM."""
 
-import asyncio
 import json
 import logging
-from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
 
-from openai import OpenAI, OpenAIError
+import litellm
 
 from ..context import ContextManager
 from ..tools import LLMTool
+from .base_provider import BaseLLMProvider
 
 logger = logging.getLogger("spade_llm.providers")
 
 
-class ModelFormat(Enum):
-    """Supported model format conventions."""
-
-    OPENAI = "openai"  # Standard OpenAI format (e.g., "gpt-4")
-    OLLAMA = "ollama"  # Ollama format (e.g., "llama3:latest")
-    CUSTOM = "custom"  # Custom format (e.g., "custom/model-name")
-
-
-class LLMProvider:
+class LLMProvider(BaseLLMProvider):
     """
-    Unified provider for different LLM services with a consistent interface.
-
-    This class abstracts the differences between various LLM APIs (OpenAI, Ollama, etc.)
-    and provides a consistent interface for SPADE agents to interact with LLMs.
+    Unified provider for different LLM services with a consistent interface using LiteLLM.
     """
 
     def __init__(
         self,
-        api_key: str = "dummy",
-        model: str = "gpt-4o-mini",
-        temperature: float = 0.7,
+        model: str,
+        api_key: Optional[str] = None,
         base_url: Optional[str] = None,
-        timeout: Optional[float] = None,
+        temperature: float = 1.0,
+        timeout: float = 600.0,
         max_tokens: Optional[int] = None,
-        model_format: Optional[ModelFormat] = None,
-        provider_name: Optional[str] = None,
+        num_retries: int = 0,
+        **kwargs,
     ):
         """
-        Initialize the LLM provider.
-
-        Note: Users should not call this constructor directly.
-        Use the create_* class methods instead.
+        Initialize the LLM provider with LiteLLM.
 
         Args:
-            api_key: API key. For local models without auth, can be any string.
-            model: The model to use. Format depends on the service.
-            temperature: Temperature for generation (0.0 to 1.0).
-            base_url: Base URL for the API endpoint.
-            timeout: Timeout in seconds for API calls.
-            max_tokens: Maximum tokens to generate.
-            model_format: Format convention for model names.
-            provider_name: Name of the provider for logging purposes.
+            model: Model identifier in 'provider/model' format (see supported LLMs: https://docs.litellm.ai/docs/providers/)
+            api_key: API key for the provider. Optional for local providers.
+            base_url: Custom base URL for the API endpoint (for custom deployments)
+            temperature: Sampling temperature
+            timeout: Request timeout in seconds
+            max_tokens: Maximum tokens to generate
+            num_retries: Number of retries on failure
+            **kwargs: Additional parameters passed to LiteLLM (e.g., fallbacks,
+                             cache, custom_llm_provider, etc.)
         """
-        self.api_key = api_key
         self.model = model
-        self.temperature = temperature
+        self.api_key = api_key
         self.base_url = base_url
-        self.timeout = timeout or 60.0
+        self.temperature = temperature
+        self.timeout = timeout
         self.max_tokens = max_tokens
-        self.model_format = model_format or self._detect_model_format(model, base_url)
-        self.provider_name = provider_name or self._detect_provider_name(
-            base_url, self.model_format
-        )
+        self.num_retries = num_retries
+        self.kwargs = kwargs
 
-        # Initialize client
-        client_kwargs = {"api_key": self.api_key}
+        logger.info(f"Initializing provider with model: {self.model}")
         if self.base_url:
-            client_kwargs["base_url"] = self.base_url
+            logger.info(f"Using custom base URL: {self.base_url}")
 
-        logger.info(
-            f"Initializing {self.provider_name} provider with model: {self.model}"
-        )
+    def _build_completion_kwargs(
+        self, context: ContextManager, messages: Sequence[Any], tools: Optional[List[Dict[str, Any]]] = None
+    ) -> Dict[str, Any]:
+        """Build kwargs for LiteLLM completion call."""
+        kwargs = {
+            "model": self.model,
+            "messages": messages,
+            "temperature": self.temperature,
+            "timeout": self.timeout,
+            "num_retries": self.num_retries,
+            **self.kwargs,
+        }
+
+        if self.api_key:
+            kwargs["api_key"] = self.api_key
+
         if self.base_url:
-            logger.info(f"Using base URL: {self.base_url}")
+            kwargs["api_base"] = self.base_url
 
-        self.client = OpenAI(**client_kwargs)
+        if self.max_tokens:
+            kwargs["max_tokens"] = self.max_tokens
 
-    def _detect_model_format(self, model: str, base_url: Optional[str]) -> ModelFormat:
-        """Detect the model format based on the model name and base URL."""
-        if model.startswith("ollama/"):
-            return ModelFormat.OLLAMA
-        elif model.startswith("gpt-") or model.startswith("o1-"):
-            return ModelFormat.OPENAI
-        elif "/" in model:
-            return ModelFormat.CUSTOM
-        else:
-            # Default based on base_url
-            if base_url and "ollama" in base_url.lower():
-                return ModelFormat.OLLAMA
-            return ModelFormat.OPENAI
+        if tools:
+            kwargs["tools"] = tools
+            kwargs["tool_choice"] = "auto"
 
-    def _detect_provider_name(
-        self, base_url: Optional[str], model_format: ModelFormat
-    ) -> str:
-        """Detect the provider name for logging."""
-        if not base_url:
-            return "OpenAI"
-
-        url_lower = base_url.lower()
-        if "ollama" in url_lower:
-            return "Ollama"
-        elif "vllm" in url_lower:
-            return "vLLM"
-        elif "lmstudio" in url_lower:
-            return "LM Studio"
-        elif "localhost" in url_lower or "127.0.0.1" in url_lower:
-            return "Local OpenAI-compatible"
-        else:
-            return "OpenAI-compatible"
-
-    def _prepare_model_name(self, model: str) -> str:
-        """Prepare the model name for the API call based on the format."""
-        if self.model_format == ModelFormat.OLLAMA and model.startswith("ollama/"):
-            # Remove the "ollama/" prefix for Ollama API
-            return model[7:]
-        return model
-
-    @classmethod
-    def create_openai(
-        cls,
-        api_key: str,
-        model: str = "gpt-4o-mini",
-        temperature: float = 0.7,
-        **kwargs,
-    ) -> "LLMProvider":
-        """
-        Create a provider configured for OpenAI API.
-
-        Args:
-            api_key: OpenAI API key
-            model: Model name to use (e.g., "gpt-4", "gpt-3.5-turbo")
-            temperature: Sampling temperature (0.0 to 1.0)
-            **kwargs: Additional model parameters
-
-        Returns:
-            Configured LLMProvider instance
-        """
-        return cls(
-            api_key=api_key,
-            model=model,
-            temperature=temperature,
-            provider_name="OpenAI",
-            **kwargs,
-        )
-
-    @classmethod
-    def create_ollama(
-        cls,
-        model: str = "llama3:1b",
-        base_url: str = "http://localhost:11434/v1",
-        temperature: float = 0.7,
-        timeout: float = 120.0,
-        **kwargs,
-    ) -> "LLMProvider":
-        """
-        Create a provider configured for Ollama API.
-
-        Args:
-            model: Model name to use (e.g., "llama3:8b", "gemma:2b")
-            base_url: URL for the Ollama API (must include /v1)
-            temperature: Sampling temperature (0.0 to 1.0)
-            timeout: Timeout in seconds for API calls
-            **kwargs: Additional model parameters
-
-        Returns:
-            Configured LLMProvider instance
-        """
-        # Add ollama/ prefix if not present
-        if not model.startswith("ollama/"):
-            model = f"ollama/{model}"
-
-        return cls(
-            api_key="dummy",
-            model=model,
-            base_url=base_url,
-            temperature=temperature,
-            timeout=timeout,
-            provider_name="Ollama",
-            model_format=ModelFormat.OLLAMA,
-            **kwargs,
-        )
-
-    @classmethod
-    def create_lm_studio(
-        cls,
-        model: str = "local-model",
-        base_url: str = "http://localhost:1234/v1",
-        temperature: float = 0.7,
-        **kwargs,
-    ) -> "LLMProvider":
-        """
-        Create a provider configured for LM Studio.
-
-        Args:
-            model: Model name as defined in LM Studio
-            base_url: URL for the LM Studio API
-            temperature: Sampling temperature (0.0 to 1.0)
-            **kwargs: Additional model parameters
-
-        Returns:
-            Configured LLMProvider instance
-        """
-        return cls(
-            api_key="dummy",
-            model=model,
-            base_url=base_url,
-            temperature=temperature,
-            provider_name="LM Studio",
-            **kwargs,
-        )
-
-    @classmethod
-    def create_vllm(
-        cls, model: str, base_url: str = "http://localhost:8000/v1", **kwargs
-    ) -> "LLMProvider":
-        """
-        Create a provider configured for vLLM.
-
-        Args:
-            model: Model name to use
-            base_url: URL for the vLLM API
-            **kwargs: Additional model parameters
-
-        Returns:
-            Configured LLMProvider instance
-        """
-        return cls(
-            api_key="dummy",
-            model=model,
-            base_url=base_url,
-            provider_name="vLLM",
-            **kwargs,
-        )
+        metadata = context.get_tracing_metadata()
+        kwargs["metadata"] = {
+            "session_id": metadata.get("conversation_id"),
+            "tags": [x for x in [metadata.get("sender_id"), metadata.get("receiver_id")] if x],
+        }
+        return kwargs
 
     async def get_llm_response(
-        self, context: ContextManager, tools: Optional[List[LLMTool]] = None,
-        conversation_id: Optional[str] = None
+        self,
+        context: ContextManager,
+        tools: Optional[List[LLMTool]] = None,
+        conversation_id: Optional[str] = None,
+        output_schema: Optional[Any] = None,
     ) -> Dict[str, Any]:
         """
         Get complete response from the LLM including both text and tool calls.
@@ -249,59 +103,67 @@ class LLMProvider:
             context: The conversation context manager
             tools: Optional list of tools available for this specific call
             conversation_id: Optional conversation ID to retrieve specific conversation context
+            output_schema: Optional Pydantic model for structured output
 
         Returns:
             Dictionary containing:
-            - 'text': The text response (None if there are tool calls)
+            - 'text': The text response (None if there are tool calls or structured output)
             - 'tool_calls': List of tool calls (empty if there are none)
+            - 'structured': Parsed Pydantic model instance (None if no output_schema)
         """
         prompt = context.get_prompt(conversation_id)
-        logger.info(f"Sending prompt to {self.provider_name} ({self.model})")
+        logger.info(f"Sending prompt to {self.model}")
         logger.debug(f"Prompt: {prompt}")
 
         # Prepare tools if they are provided
         formatted_tools = None
         if tools:
             formatted_tools = [tool.to_openai_tool() for tool in tools]
-            logger.debug(
-                f"Available tools: {[tool['function']['name'] for tool in formatted_tools]}"
-            )
+            logger.debug(f"Available tools: {[tool['function']['name'] for tool in formatted_tools]}")
 
         try:
-            # Prepare the completion kwargs
-            completion_kwargs = {
-                "model": self._prepare_model_name(self.model),
-                "messages": prompt,
-                "temperature": self.temperature,
-                "timeout": self.timeout,
-            }
+            # Build base completion kwargs
+            completion_kwargs = self._build_completion_kwargs(context, prompt, formatted_tools)
 
-            # Add optional parameters
-            if self.max_tokens:
-                completion_kwargs["max_tokens"] = self.max_tokens
+            # Add response_format for structured output if provided and no tools
+            use_parse_api = output_schema is not None and not formatted_tools
+            if use_parse_api:
+                logger.info(f"Using structured output with response_format: {output_schema.__name__}")
+                completion_kwargs["response_format"] = output_schema
 
-            if formatted_tools:
-                completion_kwargs["tools"] = formatted_tools
-                completion_kwargs["tool_choice"] = "auto"
-
-                # Note for Ollama users
-                if self.provider_name == "Ollama":
-                    logger.info(
-                        "Using Ollama with tool support. Ensure you're using a tool-capable model (e.g., Llama 3.1+)"
-                    )
-
-            response = await asyncio.to_thread(
-                self.client.chat.completions.create, **completion_kwargs
-            )
-
+            # Call LiteLLM async completion
+            response = await litellm.acompletion(**completion_kwargs)
             message = response.choices[0].message
-            result = {"tool_calls": [], "text": None}
+            result = {"tool_calls": [], "text": None, "structured": None}
+
+            # Handle structured output if using parse API
+            if use_parse_api:
+                # For structured output, LiteLLM may return the parsed object or content
+                if hasattr(message, "parsed") and message.parsed:
+                    result["structured"] = message.parsed
+                    logger.info(f"Successfully parsed structured output: {output_schema.__name__}")
+                elif hasattr(message, "refusal") and message.refusal:
+                    logger.warning(f"Model refused to provide structured output: {message.refusal}")
+                    result["text"] = message.refusal
+                else:
+                    # Try to parse from content if available
+                    content = message.content or ""
+                    if content:
+                        try:
+                            parsed_data = json.loads(content)
+                            result["structured"] = output_schema(**parsed_data)
+                            logger.info(f"Parsed structured output from content: {output_schema.__name__}")
+                        except Exception as e:
+                            logger.warning(f"Failed to parse structured output from content: {e}")
+                            result["text"] = content
+                    else:
+                        result["text"] = content
+                        logger.warning("Structured parsing failed, falling back to text response")
+                return result
 
             # Process tool calls if present
             if hasattr(message, "tool_calls") and message.tool_calls:
-                logger.info(
-                    f"{self.provider_name} suggested {len(message.tool_calls)} tool calls"
-                )
+                logger.info(f"LLM suggested {len(message.tool_calls)} tool calls")
 
                 tool_calls = []
                 for tc in message.tool_calls:
@@ -311,9 +173,7 @@ class LLMProvider:
                         else:
                             args = tc.function.arguments
                     except json.JSONDecodeError as e:
-                        logger.error(
-                            f"Failed to parse tool arguments: {tc.function.arguments}, error: {e}"
-                        )
+                        logger.error(f"Failed to parse tool arguments: {tc.function.arguments}, error: {e}")
                         args = {}
 
                     tool_call = {
@@ -328,28 +188,19 @@ class LLMProvider:
             else:
                 content = message.content or ""
                 if content:
-                    logger.info(
-                        f"Received text response from {self.provider_name}: {content[:100]}..."
-                    )
+                    logger.info(f"Received text response: {content[:100]}...")
                 else:
-                    logger.warning(f"Received empty response from {self.provider_name}")
+                    logger.warning("Received empty response from LLM")
                 result["text"] = content
 
             return result
 
-        except OpenAIError as e:
-            logger.error(f"OpenAI API error with {self.provider_name}: {e}")
-            raise
         except Exception as e:
-            logger.error(
-                f"Unexpected error with {self.provider_name}: {e}", exc_info=True
-            )
+            logger.error(f"LLM completion error: {e}", exc_info=True)
             raise
 
     # Legacy methods that delegate to the main method (for backwards compatibility)
-    async def get_response(
-        self, context: ContextManager, tools: Optional[List[LLMTool]] = None
-    ) -> Optional[str]:
+    async def get_response(self, context: ContextManager, tools: Optional[List[LLMTool]] = None) -> Optional[str]:
         """
         Get a response from the LLM based on the current context.
 
@@ -378,3 +229,47 @@ class LLMProvider:
         """
         response = await self.get_llm_response(context, tools)
         return response.get("tool_calls", [])
+
+    async def get_embeddings(self, texts: List[str]) -> List[List[float]]:
+        """
+        Generate embeddings for a list of texts.
+
+        Args:
+            texts: List of strings to generate embeddings for
+
+        Returns:
+            List of embedding vectors (one per input text)
+
+        Raises:
+            Exception: If the API call fails
+        """
+        logger.info(f"Generating embeddings for {len(texts)} texts using {self.model}")
+
+        try:
+            # Build embedding kwargs
+            embedding_kwargs = {
+                "model": self.model,
+                "input": texts,
+            }
+
+            if self.api_key:
+                embedding_kwargs["api_key"] = self.api_key
+
+            if self.base_url:
+                embedding_kwargs["api_base"] = self.base_url
+
+            # Call LiteLLM async embedding
+            response = await litellm.aembedding(**embedding_kwargs)
+
+            # Extract embeddings from response
+            embeddings = [item["embedding"] for item in response.data]
+
+            logger.debug(
+                f"Generated {len(embeddings)} embeddings, dimension: {len(embeddings[0]) if embeddings else 0}"
+            )
+
+            return embeddings
+
+        except Exception as e:
+            logger.error(f"Embedding error: {e}", exc_info=True)
+            raise

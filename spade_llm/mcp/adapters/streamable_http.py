@@ -27,11 +27,9 @@ class StreamableHttpMCPToolAdapter(MCPToolAdapter):
             tool: The MCP tool to adapt.
         """
         if not isinstance(server_config, StreamableHttpServerConfig):
-            raise TypeError(
-                f"Expected StreamableHttpServerConfig, got {type(server_config)}"
-            )
+            raise TypeError(f"Expected StreamableHttpServerConfig, got {type(server_config)}")
 
         super().__init__(server_config=server_config, tool=tool)
 
         # Override the name with a more descriptive one
-        self.name = f"streamable_{self.server_config.name}_{self.tool.name}"
+        self.name = f"{self.server_config.name}_{self.tool.name}"

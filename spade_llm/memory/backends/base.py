@@ -80,9 +80,7 @@ class MemoryBackend(ABC):
         pass
 
     @abstractmethod
-    async def get_memories_by_category(
-        self, agent_id: str, category: str, limit: int = 50
-    ) -> List[MemoryEntry]:
+    async def get_memories_by_category(self, agent_id: str, category: str, limit: int = 50) -> List[MemoryEntry]:
         """
         Retrieve memories for an agent by category.
 
@@ -97,9 +95,7 @@ class MemoryBackend(ABC):
         pass
 
     @abstractmethod
-    async def search_memories(
-        self, agent_id: str, query: str, limit: int = 10
-    ) -> List[MemoryEntry]:
+    async def search_memories(self, agent_id: str, query: str, limit: int = 10) -> List[MemoryEntry]:
         """
         Search memories by content.
 
@@ -114,9 +110,7 @@ class MemoryBackend(ABC):
         pass
 
     @abstractmethod
-    async def get_recent_memories(
-        self, agent_id: str, limit: int = 10
-    ) -> List[MemoryEntry]:
+    async def get_recent_memories(self, agent_id: str, limit: int = 10) -> List[MemoryEntry]:
         """
         Get the most recently accessed memories for an agent.
 

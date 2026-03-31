@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/docs/assets/images/spade_llm_logo.png" alt="SPADE-LLM Logo" width="200"/>
+  <img src="docs/assets/images/spade_llm_logo.png" alt="SPADE-LLM Logo" width="200"/>
 </div>
 
 <div align="center">
@@ -10,7 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/spade-llm?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/spade-llm)
 [![Coverage Status](https://coveralls.io/repos/github/javipalanca/spade_llm/badge.svg?branch=main)](https://coveralls.io/github/javipalanca/spade_llm?branch=main)
-![Python Version](https://img.shields.io/badge/python-3.10%20to%203.12-orange?logo=python&logoColor=green)
+![Python Version](https://img.shields.io/badge/python-3.11%20to%203.12-orange?logo=python&logoColor=green)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/javipalanca/spade_llm/python-app.yml?label=build)](https://github.com/javipalanca/spade_llm/actions)
 [![Docs Status](https://img.shields.io/github/actions/workflow/status/javipalanca/spade_llm/docs.yml?label=docs)](https://github.com/javipalanca/spade_llm/actions/workflows/docs.yml)
 
@@ -26,30 +26,34 @@
 
 ## Table of Contents
 
-- [Key Features](#key-features)
-- [Built-in XMPP Server](#built-in-xmpp-server)
-- [Quick Start](#quick-start)
-- [Installation](#installation)
-- [Architecture](#architecture)
-- [Documentation](#documentation)
-- [Examples](#examples)
-  - [Multi-Provider Support](#multi-provider-support)
-  - [Tools and Function Calling](#tools-and-function-calling)
-  - [Content Safety with Guardrails](#content-safety-with-guardrails)
-  - [Message Routing](#message-routing)
-  - [Interactive Chat](#interactive-chat)
-  - [Memory Extensions](#memory-extensions)
-  - [Context Management](#context-management)
-  - [Human-in-the-Loop](#human-in-the-loop)
-- [Requirements](#requirements)
-- [Contributing](#contributing)
-- [License](#license)
+- [SPADE-LLM: Large Language Model Integration for Multi-Agent Systems](#spade-llm-large-language-model-integration-for-multi-agent-systems)
+  - [Table of Contents](#table-of-contents)
+  - [Key Features](#key-features)
+  - [Installation instructions](#installation-instructions)
+    - [Requirements](#requirements)
+    - [Install](#install)
+  - [Built-in XMPP Server](#built-in-xmpp-server)
+    - [Start the Server](#start-the-server)
+  - [Quick Start](#quick-start)
+    - [Step 1: Start the Built-in XMPP Server](#step-1-start-the-built-in-xmpp-server)
+    - [Step 2: Create and Run Your LLM Agent](#step-2-create-and-run-your-llm-agent)
+  - [Examples](#examples)
+    - [Multi-Provider Support](#multi-provider-support)
+    - [Tools and Function Calling](#tools-and-function-calling)
+    - [Structured Outputs](#structured-outputs)
+    - [RAG (Retrieval-Augmented Generation)](#rag-retrieval-augmented-generation)
+  - [Documentation](#documentation)
+  - [Contributing](#contributing)
+  - [License](#license)
 
 ## Key Features
 
 
 - **Built-in XMPP Server** - No external server setup needed! Start agents with one command
-- **Multi-LLM Provider Support** - Integrate OpenAI models, Ollama local models, LM Studio and more.
+- **Multi-LLM Provider Support** - Integrate OpenAI models, Ollama local models, LM Studio and more via LiteLLM
+- **RAG System** - Retrieval-Augmented Generation with document loading, text splitting, and vector store retrieval (ChromaDB)
+- **Structured Outputs** - Type-safe LLM responses using Pydantic models; define the schema, get back structured data
+- **Coordinator Agents** - LLM-driven orchestration of SPADE subagents with shared context and automatic routing
 - **Advanced Tool System** - Function calling, async execution, LangChain tool integration, custom tool development
 - **Smart Context Management** - Multi-conversation support, automatic cleanup, sliding window, token-aware context
 - **Persistent Memory** - Agent-based memory, conversation threading, long-term state persistence across sessions
@@ -57,6 +61,37 @@
 - **Content Safety Guardrails** - Input/output filtering, keyword blocking, content moderation, safety controls
 - **MCP Integration** - Model Context Protocol server support for external tools and services
 - **Human-in-the-Loop** - Web interface for human expert consultation, interactive decision making
+<!-- --8<-- [start:setup_instructions] -->
+## Installation instructions
+
+### Requirements
+
+- Python 3.11+
+- (recommended) `uv` [installation](https://docs.astral.sh/uv/getting-started/installation/) for environment management
+
+### Install
+
+```bash
+# Install with uv (recommended)
+uv pip install spade_llm
+
+# Or install with pip
+pip install spade_llm
+
+# If working on a project with uv
+uv add spade_llm
+```
+
+For optional features:
+
+```bash
+# RAG support with ChromaDB
+pip install spade_llm[chroma]   # or: uv add spade_llm --extra chroma
+
+# LangChain tool integration
+pip install spade_llm[langchain]   # or: uv add spade_llm --extra langchain
+```
+<!-- --8<-- [end:setup_instructions] -->
 
 ## Built-in XMPP Server
 
@@ -96,18 +131,18 @@ import spade
 from spade_llm import LLMAgent, LLMProvider
 
 async def main():
-    provider = LLMProvider.create_openai(
+    provider = LLMProvider(
+        model="gpt-5-nano",
         api_key="your-api-key",
-        model="gpt-4o-mini"
     )
-    
+
     agent = LLMAgent(
         jid="assistant@localhost",  # Connects to built-in server
         password="password",
         provider=provider,
         system_prompt="You are a helpful assistant"
     )
-    
+
     await agent.start()
 
 if __name__ == "__main__":
@@ -120,24 +155,19 @@ python your_agent.py
 ```
 
 
-## Installation
-
-```bash
-pip install spade_llm
-```
 ## Examples
 
 ### Multi-Provider Support
 
 ```python
 # OpenAI
-provider = LLMProvider.create_openai(api_key="key", model="gpt-4o-mini")
+provider = LLMProvider(model="gpt-5-nano", api_key="key")
 
 # Ollama (local)
-provider = LLMProvider.create_ollama(model="llama3.1:8b")
+provider = LLMProvider(model="ollama/llama3.1:8b")
 
-# LM Studio (local)
-provider = LLMProvider.create_lm_studio(model="local-model")
+# Any OpenAI-compatible API (LM Studio, vLLM, etc.)
+provider = LLMProvider(model="openai/local-model", base_url="http://localhost:1234/v1")
 ```
 
 ### Tools and Function Calling
@@ -167,154 +197,47 @@ agent = LLMAgent(
 )
 ```
 
-### Content Safety with Guardrails
+### Structured Outputs
 
 ```python
-from spade_llm.guardrails import KeywordGuardrail, GuardrailAction
+from pydantic import BaseModel
+from spade_llm import LLMAgent, LLMProvider
 
-# Block harmful content
-safety_filter = KeywordGuardrail(
-    name="safety_filter",
-    blocked_keywords=["hack", "exploit", "malware"],
-    action=GuardrailAction.BLOCK,
-    blocked_message="I cannot help with potentially harmful activities."
-)
+class WeatherReport(BaseModel):
+    city: str
+    temperature: float
+    conditions: str
 
+provider = LLMProvider(model="gpt-5-nano", api_key="key")
 agent = LLMAgent(
-    jid="assistant@localhost",  # Uses built-in server
+    jid="weather@localhost",
     password="password",
     provider=provider,
-    input_guardrails=[safety_filter]  # Filter incoming messages
+    system_prompt="Extract weather information",
+    output_schema=WeatherReport,
 )
 ```
 
-### Message Routing
+### RAG (Retrieval-Augmented Generation)
 
 ```python
-def router(msg, response, context):
-    if "technical" in response.lower():
-        return "tech-support@example.com"
-    return str(msg.sender)
+from spade_llm import RetrievalAgent, LLMProvider
+from spade_llm.rag import DirectoryLoader, RecursiveCharacterTextSplitter, ChromaVectorStore, VectorStoreRetriever
 
-agent = LLMAgent(
-    jid="router@localhost",  # Uses built-in server
+# Load, split, and index documents
+loader = DirectoryLoader("./docs")
+splitter = RecursiveCharacterTextSplitter(chunk_size=500)
+docs = splitter.split_documents(loader.load())
+store = ChromaVectorStore(collection_name="my_docs")
+await store.add_documents(docs)
+
+retriever = VectorStoreRetriever(vector_store=store)
+agent = RetrievalAgent(
+    jid="rag@localhost",
     password="password",
-    provider=provider,
-    routing_function=router
+    provider=LLMProvider(model="gpt-5-nano", api_key="key"),
+    retriever=retriever,
 )
-```
-
-### Interactive Chat
-
-```python
-from spade_llm import ChatAgent
-
-# Create chat interface
-chat_agent = ChatAgent(
-    jid="human@localhost",  # Uses built-in server
-    password="password",
-    target_agent_jid="assistant@localhost"
-)
-
-await chat_agent.start()
-await chat_agent.run_interactive()  # Start interactive chat
-```
-
-### Memory Extensions
-
-```python
-# Agent-based memory: Single shared memory per agent
-agent = LLMAgent(
-    jid="assistant@localhost",  # Uses built-in server
-    password="password",
-    provider=provider,
-    agent_base_memory=(True, "./memory.db")  # Enabled with custom path
-)
-
-# Agent-thread memory: Separate memory per conversation
-agent = LLMAgent(
-    jid="assistant@localhost",  # Uses built-in server
-    password="password",
-    provider=provider,
-    agent_thread_memory=(True, "./thread_memory.db")  # Enabled with custom path
-)
-
-# Default memory paths (if path not specified)
-agent = LLMAgent(
-    jid="assistant@localhost",  # Uses built-in server
-    password="password",
-    provider=provider,
-    agent_base_memory=(True, None)  # Uses default path
-)
-```
-
-### Context Management
-
-```python
-from spade_llm.context import SmartWindowSizeContext, FixedWindowSizeContext
-
-# Smart context: Dynamic window sizing based on content
-smart_context = SmartWindowSizeContext(
-    max_tokens=4000,
-    include_system_prompt=True,
-    preserve_last_k_messages=5
-)
-
-# Fixed context: Traditional sliding window
-fixed_context = FixedWindowSizeContext(
-    max_messages=20,
-    include_system_prompt=True
-)
-
-agent = LLMAgent(
-    jid="assistant@localhost",  # Uses built-in server
-    password="password",
-    provider=provider,
-    context_manager=smart_context
-)
-```
-
-### Human-in-the-Loop
-
-```python
-from spade_llm import HumanInTheLoopTool
-
-# Create tool for human consultation
-human_tool = HumanInTheLoopTool(
-    human_expert_jid="expert@localhost",  # Uses built-in server
-    timeout=300.0  # 5 minutes
-)
-
-agent = LLMAgent(
-    jid="assistant@localhost",  # Uses built-in server
-    password="password",
-    provider=provider,
-    tools=[human_tool]  # Pass tools in constructor
-)
-
-# Start web interface for human expert
-# python -m spade_llm.human_interface.web_server
-# Open http://localhost:8080 and connect as expert
-```
-
-## Architecture
-
-```mermaid
-graph LR
-    A[LLMAgent] --> C[ContextManager]
-    A --> D[LLMProvider]
-    A --> E[LLMTool]
-    A --> G[Guardrails]
-    A --> M[Memory]
-    D --> F[OpenAI/Ollama/etc]
-    G --> H[Input/Output Filtering]
-    E --> I[Human-in-the-Loop]
-    E --> J[MCP]
-    E --> P[CustomTool/LangchainTool]
-    J --> K[STDIO]
-    J --> L[HTTP Streaming]
-    M --> N[Agent-based]
-    M --> O[Agent-thread]
 ```
 
 ## Documentation
@@ -323,33 +246,14 @@ graph LR
 - **[Quick Start](https://spadeagents.eu/docs/spade_llm/getting-started/quickstart/)** - Basic usage examples
 - **[Providers](https://spadeagents.eu/docs/spade_llm/guides/providers/)** - LLM provider configuration
 - **[Tools](https://spadeagents.eu/docs/spade_llm/guides/tools-system/)** - Function calling system
+- **[RAG](https://spadeagents.eu/docs/spade_llm/guides/rag-system/)** - Retrieval-Augmented Generation
+- **[Structured Outputs](https://spadeagents.eu/docs/spade_llm/guides/structured-output/)** - Type-safe LLM responses
 - **[Guardrails](https://spadeagents.eu/docs/spade_llm/guides/guardrails/)** - Content filtering and safety
 - **[API Reference](https://spadeagents.eu/docs/spade_llm/reference/)** - Complete API documentation
 
-## Examples Directory
-
-The `/examples` directory contains complete working examples:
-
-- `multi_provider_chat_example.py` - Chat with different LLM providers
-- `ollama_with_tools_example.py` - Local models with tool calling
-- `langchain_tools_example.py` - LangChain tool integration
-- `guardrails_example.py` - Content filtering and safety controls
-- `human_in_the_loop_example.py` - Human expert consultation via web interface
-- `valencia_multiagent_trip_planner.py` - Multi-agent workflow
-
-## Requirements
-
-- Python 3.10+
-- SPADE 3.3.0+
-
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Submit a pull request
-
-See [Contributing Guide](https://spadeagents.eu/docs/spade_llm/contributing/) for details.
+See [Contributing Guide](https://spadeagents.eu/docs/spade_llm/contributing/).
 
 ## License
 

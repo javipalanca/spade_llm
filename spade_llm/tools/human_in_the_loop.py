@@ -72,9 +72,7 @@ class HumanInTheLoopTool(LLMTool):
             func=self._ask_human,  # Use internal method as the function
         )
 
-        logger.info(
-            f"HumanInTheLoopTool initialized with expert JID: {human_expert_jid}"
-        )
+        logger.info(f"HumanInTheLoopTool initialized with expert JID: {human_expert_jid}")
 
     def set_agent(self, agent: Agent):
         """
@@ -129,9 +127,7 @@ class HumanInTheLoopTool(LLMTool):
 
         except TimeoutError:
             # The behaviour didn't complete within the timeout
-            logger.warning(
-                f"Timeout waiting for human expert response ({self.timeout}s)"
-            )
+            logger.warning(f"Timeout waiting for human expert response ({self.timeout}s)")
 
             # Clean up: remove the behaviour since it didn't complete
             self._agent.remove_behaviour(interaction)

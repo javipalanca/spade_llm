@@ -8,9 +8,7 @@ from .base import Guardrail, GuardrailAction, GuardrailResult
 class InputGuardrail(Guardrail):
     """Guardrail specifically for processing inputs before sending to LLM."""
 
-    def __init__(
-        self, name: str, enabled: bool = True, blocked_message: Optional[str] = None
-    ):
+    def __init__(self, name: str, enabled: bool = True, blocked_message: Optional[str] = None):
         """
         Initialize an input guardrail.
 
@@ -29,9 +27,7 @@ class InputGuardrail(Guardrail):
 class OutputGuardrail(Guardrail):
     """Guardrail specifically for processing outputs from LLM."""
 
-    def __init__(
-        self, name: str, enabled: bool = True, blocked_message: Optional[str] = None
-    ):
+    def __init__(self, name: str, enabled: bool = True, blocked_message: Optional[str] = None):
         """
         Initialize an output guardrail.
 
@@ -95,9 +91,7 @@ class CompositeGuardrail(Guardrail):
             if result.action == GuardrailAction.BLOCK:
                 if self.stop_on_block:
                     # Use the composite's blocked message if set, otherwise use the individual guardrail's
-                    result.custom_message = (
-                        self.blocked_message or result.custom_message
-                    )
+                    result.custom_message = self.blocked_message or result.custom_message
                     return result
                 else:
                     accumulated_reasons.append(f"{guardrail.name}: {result.reason}")

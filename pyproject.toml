@@ -1,0 +1,116 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "spade_llm"
+dynamic = ["version"]
+description = "Extension for SPADE to integrate Large Language Models in agents"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11, <3.13"
+authors = [
+    { name = "Javier Palanca Cámara", email = "jpalanca@dsic.upv.es" },
+]
+keywords = [
+    "spade",
+    "llm",
+    "ai",
+    "agents",
+    "multi-agent-systems",
+    "openai",
+    "ollama",
+    "chatbot-framework",
+    "distributed-ai",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Internet :: XMPP",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "spade>=4.0.0",
+    "litellm>=1.0.0,<=1.78.5",
+    "mcp>=1.8.0",
+    "aiosqlite>=0.17.0",
+    "aiofiles>=23.0.0",
+    "pyjabber>=0.4.1",
+]
+
+[project.optional-dependencies]
+langchain = [
+    "langchain-community>=0.3.2",
+]
+chroma = [
+    "chromadb>=1.5.5",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+    "coverage>=7.0.0",
+    "spade_llm[chroma,langchain,docs]",
+]
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.5.0",
+    "mkdocstrings[python]>=0.24.0",
+    "mkdocs-autorefs>=0.5.0",
+    "pymdown-extensions>=10.0.0",
+    "mike>=2.0.0",
+]
+
+[project.urls]
+Homepage = "https://spadeagents.eu/plugins/spade-llm/"
+Documentation = "https://spadeagents.eu/docs/spade_llm"
+Repository = "https://github.com/javipalanca/spade_llm"
+"Bug Reports" = "https://github.com/javipalanca/spade_llm/issues"
+
+[project.scripts]
+spade-llm = "spade_llm.__main__:main"
+
+[tool.hatch.version]
+path = "spade_llm/version.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "spade_llm/",
+    "README.md",
+    "LICENSE",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["spade_llm"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
+
+[tool.coverage.run]
+source = ["spade_llm"]
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.uv]
+# temporary fix until SPADE bumps jinja2 version
+override-dependencies = [
+    "jinja2>=3.1.2",
+]

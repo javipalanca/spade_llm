@@ -1,13 +1,12 @@
 """Tests for CoordinatorAgent class."""
 
 import asyncio
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from unittest.mock import Mock, AsyncMock, patch, call
-
 from spade.message import Message
-from spade_llm.agent.coordinator_agent import CoordinatorAgent, CoordinationContextManager
-from spade_llm.routing.types import RoutingResponse
+
+from spade_llm.agent.coordinator_agent import CoordinationContextManager, CoordinatorAgent
 
 
 class TestCoordinatorAgentInitialization:
@@ -16,21 +15,18 @@ class TestCoordinatorAgentInitialization:
     def test_initialization_minimal(self, mock_llm_provider, subagent_ids):
         """Test minimal valid initialization."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
         assert agent.jid == "coordinator@localhost"
         assert agent.password == "password"
         assert agent.provider == mock_llm_provider
         assert agent.subagent_ids == set(subagent_ids)
-        assert agent.coordination_session == "main_coordination"
+        assert agent.coordination_session.startswith("coordination_")
         assert agent.routing_function is not None
         assert isinstance(agent.context, CoordinationContextManager)
         assert len(agent.agent_status) == 3
-        assert all(status == "unknown" for status in agent.agent_status.values())
+        assert all(status == "idle" for status in agent.agent_status.values())
         assert agent._original_requester is None
         assert agent.termination_markers == ["<TASK_COMPLETE>", "<END>", "<DONE>"]
 
@@ -41,7 +37,7 @@ class TestCoordinatorAgentInitialization:
             password="password",
             provider=mock_llm_provider,
             subagent_ids=subagent_ids,
-            coordination_session="custom_session"
+            coordination_session="custom_session",
         )
 
         assert agent.coordination_session == "custom_session"
@@ -49,6 +45,7 @@ class TestCoordinatorAgentInitialization:
 
     def test_initialization_with_custom_routing_function(self, mock_llm_provider, subagent_ids):
         """Test custom routing function override."""
+
         def custom_routing(msg, response, context):
             return "custom_target@localhost"
 
@@ -57,7 +54,7 @@ class TestCoordinatorAgentInitialization:
             password="password",
             provider=mock_llm_provider,
             subagent_ids=subagent_ids,
-            routing_function=custom_routing
+            routing_function=custom_routing,
         )
 
         assert agent.routing_function == custom_routing
@@ -70,7 +67,7 @@ class TestCoordinatorAgentInitialization:
             password="password",
             provider=mock_llm_provider,
             subagent_ids=subagent_ids,
-            system_prompt=custom_prompt
+            system_prompt=custom_prompt,
         )
 
         assert agent.context._system_prompt == custom_prompt
@@ -79,10 +76,7 @@ class TestCoordinatorAgentInitialization:
         """Test validation of required subagent_ids."""
         with pytest.raises(ValueError, match="subagent_ids cannot be empty"):
             CoordinatorAgent(
-                jid="coordinator@localhost",
-                password="password",
-                provider=mock_llm_provider,
-                subagent_ids=[]
+                jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=[]
             )
 
     def test_context_override_injection(self, mock_llm_provider, subagent_ids):
@@ -92,7 +86,7 @@ class TestCoordinatorAgentInitialization:
             password="password",
             provider=mock_llm_provider,
             subagent_ids=subagent_ids,
-            coordination_session="test_session"
+            coordination_session="test_session",
         )
 
         assert isinstance(agent.context, CoordinationContextManager)
@@ -102,10 +96,7 @@ class TestCoordinatorAgentInitialization:
     def test_termination_markers_default(self, mock_llm_provider, subagent_ids):
         """Test default termination markers."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
         assert agent.termination_markers == ["<TASK_COMPLETE>", "<END>", "<DONE>"]
@@ -113,10 +104,7 @@ class TestCoordinatorAgentInitialization:
     def test_default_system_prompt_generation(self, mock_llm_provider, subagent_ids):
         """Test that default system prompt is generated."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
         system_prompt = agent.context._system_prompt
@@ -134,13 +122,10 @@ class TestCoordinationTools:
     async def test_send_to_agent_tool_registration(self, mock_llm_provider, subagent_ids):
         """Test that send_to_agent tool is registered during setup."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
-        with patch.object(agent, 'add_behaviour'):
+        with patch.object(agent, "add_behaviour"):
             await agent.setup()
 
         tool_names = [tool.name for tool in agent.tools]
@@ -150,13 +135,10 @@ class TestCoordinationTools:
     async def test_list_subagents_tool_registration(self, mock_llm_provider, subagent_ids):
         """Test that list_subagents tool is registered."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
-        with patch.object(agent, 'add_behaviour'):
+        with patch.object(agent, "add_behaviour"):
             await agent.setup()
 
         tool_names = [tool.name for tool in agent.tools]
@@ -170,10 +152,10 @@ class TestCoordinationTools:
             password="password",
             provider=mock_llm_provider,
             subagent_ids=subagent_ids,
-            coordination_session="test_session"
+            coordination_session="test_session",
         )
 
-        with patch.object(agent, 'add_behaviour'):
+        with patch.object(agent, "add_behaviour"):
             await agent.setup()
 
         # Mock the send method
@@ -188,10 +170,7 @@ class TestCoordinationTools:
 
         # Find and execute the send_to_agent tool
         send_tool = next(t for t in agent.tools if t.name == "send_to_agent")
-        result = await send_tool.execute(
-            agent_id="subagent1@localhost",
-            command="test command"
-        )
+        result = await send_tool.execute(agent_id="subagent1@localhost", message="test command")
 
         # Verify message was sent
         assert agent.llm_behaviour.send.called
@@ -202,8 +181,8 @@ class TestCoordinationTools:
         assert sent_msg.metadata.get("message_type") == "llm"
         assert sent_msg.metadata.get("coordination_session") == "test_session"
 
-        # Verify status updated after response handled
-        assert agent.agent_status["subagent1@localhost"] == "responded"
+        # Verify status returns to idle after response handled
+        assert agent.agent_status["subagent1@localhost"] == "idle"
 
         # Verify return message contains response information
         assert "Response from subagent1@localhost" in result
@@ -213,22 +192,16 @@ class TestCoordinationTools:
     async def test_send_to_agent_tool_invalid_agent_id(self, mock_llm_provider, subagent_ids):
         """Test error handling for unknown subagent."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
-        with patch.object(agent, 'add_behaviour'):
+        with patch.object(agent, "add_behaviour"):
             await agent.setup()
 
         agent.llm_behaviour.send = AsyncMock()
 
         send_tool = next(t for t in agent.tools if t.name == "send_to_agent")
-        result = await send_tool.execute(
-            agent_id="unknown@localhost",
-            command="test command"
-        )
+        result = await send_tool.execute(agent_id="unknown@localhost", message="test command")
 
         # Should return error message
         assert "Error" in result
@@ -244,10 +217,10 @@ class TestCoordinationTools:
             password="password",
             provider=mock_llm_provider,
             subagent_ids=subagent_ids,
-            coordination_session="test_session"
+            coordination_session="test_session",
         )
 
-        with patch.object(agent, 'add_behaviour'):
+        with patch.object(agent, "add_behaviour"):
             await agent.setup()
 
         list_tool = next(t for t in agent.tools if t.name == "list_subagents")
@@ -257,49 +230,43 @@ class TestCoordinationTools:
         assert "test_session" in result
         for subagent_id in subagent_ids:
             assert subagent_id in result
-            assert "unknown" in result  # Initial status
+            assert "idle" in result  # Initial status
 
     @pytest.mark.asyncio
     async def test_list_subagents_tool_with_status_updates(self, mock_llm_provider, subagent_ids):
         """Test that list_subagents reflects status changes."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
-        with patch.object(agent, 'add_behaviour'):
+        with patch.object(agent, "add_behaviour"):
             await agent.setup()
 
         # Update status
-        agent.agent_status["subagent1@localhost"] = "sent_command"
-        agent.agent_status["subagent2@localhost"] = "responded"
+        agent.agent_status["subagent1@localhost"] = "working"
+        agent.agent_status["subagent2@localhost"] = "timeout"
 
         list_tool = next(t for t in agent.tools if t.name == "list_subagents")
         result = await list_tool.execute()
 
         assert "subagent1@localhost" in result
-        assert "sent_command" in result
+        assert "working" in result
         assert "subagent2@localhost" in result
-        assert "responded" in result
+        assert "timeout" in result
 
     @pytest.mark.asyncio
     async def test_coordination_tools_parameter_validation(self, mock_llm_provider, subagent_ids):
         """Test tool schema parameter validation."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
-        with patch.object(agent, 'add_behaviour'):
+        with patch.object(agent, "add_behaviour"):
             await agent.setup()
 
         send_tool = next(t for t in agent.tools if t.name == "send_to_agent")
         assert "agent_id" in send_tool.parameters["required"]
-        assert "command" in send_tool.parameters["required"]
+        assert "message" in send_tool.parameters["required"]
 
         list_tool = next(t for t in agent.tools if t.name == "list_subagents")
         assert list_tool.parameters["required"] == []
@@ -311,10 +278,7 @@ class TestRoutingAndMessageFlow:
     def test_default_routing_function_subagent_response(self, mock_llm_provider, subagent_ids):
         """Test that subagent responses route to coordinator."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
         msg = Mock(spec=Message)
@@ -331,10 +295,7 @@ class TestRoutingAndMessageFlow:
     def test_default_routing_function_external_message(self, mock_llm_provider, subagent_ids):
         """Test that external messages route back to sender."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
         msg = Mock(spec=Message)
@@ -348,13 +309,10 @@ class TestRoutingAndMessageFlow:
 
         assert result == "user@localhost"
 
-    def test_default_routing_function_completion_detection(self, mock_llm_provider, subagent_ids):
-        """Test completion marker triggers routing to original requester."""
+    def test_default_routing_function_completion_requires_complete_task(self, mock_llm_provider, subagent_ids):
+        """Test response markers alone do not trigger completion routing."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
         # Set original requester
@@ -368,15 +326,12 @@ class TestRoutingAndMessageFlow:
 
         result = agent.routing_function(msg, response, context)
 
-        assert result == "user@localhost"
+        assert result == str(agent.jid)
 
     def test_default_routing_function_original_requester_tracking(self, mock_llm_provider, subagent_ids):
         """Test that first external message sets original requester."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
         assert agent._original_requester is None
@@ -400,10 +355,7 @@ class TestRoutingAndMessageFlow:
     def test_routing_without_completion_marker(self, mock_llm_provider, subagent_ids):
         """Test no premature completion routing."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
         agent._original_requester = "user@localhost"
@@ -420,13 +372,10 @@ class TestRoutingAndMessageFlow:
         assert result == str(agent.jid)
         assert result != "user@localhost"
 
-    def test_routing_with_multiple_termination_markers(self, mock_llm_provider, subagent_ids):
-        """Test that any termination marker triggers completion."""
+    def test_routing_with_complete_task_flag(self, mock_llm_provider, subagent_ids):
+        """Test completion routing is driven by the complete-task flag."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
         agent._original_requester = "user@localhost"
@@ -434,19 +383,18 @@ class TestRoutingAndMessageFlow:
         msg = Mock(spec=Message)
         msg.sender = "subagent1@localhost"
         context = {}
+        agent._task_completed = True
 
-        for marker in ["<TASK_COMPLETE>", "<END>", "<DONE>"]:
-            response = f"Work finished {marker}"
-            result = agent.routing_function(msg, response, context)
-            assert result == "user@localhost"
+        result = agent.routing_function(msg, "Work finished <TASK_COMPLETE>", context)
+
+        assert result == "user@localhost"
+        assert agent._task_completed is False
+        assert agent._original_requester is None
 
     def test_routing_function_context_parameter(self, mock_llm_provider, subagent_ids):
         """Test that context dict is passed to routing function."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
         msg = Mock(spec=Message)
@@ -463,29 +411,23 @@ class TestAgentStatusTracking:
     """Test agent status tracking functionality."""
 
     def test_agent_status_initialization(self, mock_llm_provider, subagent_ids):
-        """Test that initial status is 'unknown'."""
+        """Test that initial status is 'idle'."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
         assert len(agent.agent_status) == len(subagent_ids)
         for subagent_id in subagent_ids:
-            assert agent.agent_status[subagent_id] == "unknown"
+            assert agent.agent_status[subagent_id] == "idle"
 
     @pytest.mark.asyncio
     async def test_agent_status_update_on_send(self, mock_llm_provider, subagent_ids):
         """Test status updates when command sent."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
-        with patch.object(agent, 'add_behaviour'):
+        with patch.object(agent, "add_behaviour"):
             await agent.setup()
 
         agent.llm_behaviour.send = AsyncMock()
@@ -497,18 +439,15 @@ class TestAgentStatusTracking:
         agent.llm_behaviour.receive = AsyncMock(return_value=response_msg)
 
         send_tool = next(t for t in agent.tools if t.name == "send_to_agent")
-        await send_tool.execute(agent_id="subagent1@localhost", command="test")
+        await send_tool.execute(agent_id="subagent1@localhost", message="test")
 
-        assert agent.agent_status["subagent1@localhost"] == "responded"
+        assert agent.agent_status["subagent1@localhost"] == "idle"
 
     @pytest.mark.asyncio
     async def test_agent_status_update_on_response(self, mock_llm_provider, subagent_ids):
         """Test status updates when response received."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
         msg = Message(to="coordinator@localhost")
@@ -516,7 +455,7 @@ class TestAgentStatusTracking:
         msg.thread = agent.coordination_session
         msg.body = "Response"
 
-        with patch.object(agent, 'add_behaviour'):
+        with patch.object(agent, "add_behaviour"):
             await agent.setup()
 
         send_tool = next(t for t in agent.tools if t.name == "send_to_agent")
@@ -524,9 +463,9 @@ class TestAgentStatusTracking:
         agent.llm_behaviour.send = AsyncMock()
         agent.llm_behaviour.receive = AsyncMock(return_value=msg)
 
-        await send_tool.execute(agent_id="subagent1@localhost", command="do work")
+        await send_tool.execute(agent_id="subagent1@localhost", message="do work")
 
-        assert agent.agent_status["subagent1@localhost"] == "responded"
+        assert agent.agent_status["subagent1@localhost"] == "idle"
         conversation = agent.context._conversations.get(agent.coordination_session, [])
         assert any(entry.get("content") == "Response" for entry in conversation)
 
@@ -534,13 +473,10 @@ class TestAgentStatusTracking:
     async def test_agent_status_not_updated_for_external(self, mock_llm_provider, subagent_ids):
         """Test that external messages don't affect status."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
-        with patch.object(agent, 'add_behaviour'):
+        with patch.object(agent, "add_behaviour"):
             await agent.setup()
 
         agent.llm_behaviour.send = AsyncMock()
@@ -569,15 +505,13 @@ class TestAgentStatusTracking:
 
         send_tool = next(t for t in agent.tools if t.name == "send_to_agent")
 
-        task = asyncio.create_task(
-            send_tool.execute(agent_id="subagent1@localhost", command="test")
-        )
+        task = asyncio.create_task(send_tool.execute(agent_id="subagent1@localhost", message="test"))
 
         await event.wait()
-        assert agent.agent_status["subagent1@localhost"] == "sent_command"
+        assert agent.agent_status["subagent1@localhost"] == "working"
 
         await task
-        assert agent.agent_status["subagent1@localhost"] == "responded"
+        assert agent.agent_status["subagent1@localhost"] == "idle"
 
 
 class TestIntegration:
@@ -588,17 +522,14 @@ class TestIntegration:
         from spade_llm.agent.llm_agent import LLMAgent
 
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
         assert isinstance(agent, LLMAgent)
-        assert hasattr(agent, 'add_tool')
-        assert hasattr(agent, 'get_tools')
-        assert hasattr(agent, 'reset_conversation')
-        assert hasattr(agent, 'get_conversation_state')
+        assert hasattr(agent, "add_tool")
+        assert hasattr(agent, "get_tools")
+        assert hasattr(agent, "reset_conversation")
+        assert hasattr(agent, "get_conversation_state")
 
     def test_context_sharing_between_coordinator_and_subagents(
         self, mock_llm_provider, subagent_ids, coordination_session_id
@@ -611,7 +542,7 @@ class TestIntegration:
             password="password",
             provider=mock_llm_provider,
             subagent_ids=subagent_ids,
-            coordination_session=coordination_session_id
+            coordination_session=coordination_session_id,
         )
 
         # Add messages to coordinator's context
@@ -651,10 +582,7 @@ class TestIntegration:
         many_subagents = [f"subagent{i}@localhost" for i in range(5)]
 
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=many_subagents
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=many_subagents
         )
 
         # Simulate messages from each subagent
@@ -681,7 +609,7 @@ class TestIntegration:
             password="password",
             provider=mock_llm_provider,
             subagent_ids=subagent_ids,
-            coordination_session="session_1"
+            coordination_session="session_1",
         )
 
         agent2 = CoordinatorAgent(
@@ -689,7 +617,7 @@ class TestIntegration:
             password="password",
             provider=mock_llm_provider,
             subagent_ids=subagent_ids,
-            coordination_session="session_2"
+            coordination_session="session_2",
         )
 
         # Add messages to each
@@ -717,10 +645,7 @@ class TestIntegration:
     async def test_behaviour_configuration_propagation(self, mock_llm_provider, subagent_ids):
         """Test that configuration reaches LLMBehaviour."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
         behaviour = agent.llm_behaviour
@@ -740,7 +665,7 @@ class TestEdgeCasesAndErrorHandling:
             jid="coordinator@localhost",
             password="password",
             provider=mock_llm_provider,
-            subagent_ids=["single_agent@localhost"]
+            subagent_ids=["single_agent@localhost"],
         )
 
         assert len(agent.agent_status) == 1
@@ -748,17 +673,10 @@ class TestEdgeCasesAndErrorHandling:
 
     def test_coordinator_with_special_characters_in_jids(self, mock_llm_provider):
         """Test JID handling with special characters."""
-        special_jids = [
-            "agent.with.dots@localhost",
-            "agent_with_underscores@localhost",
-            "agent123@localhost"
-        ]
+        special_jids = ["agent.with.dots@localhost", "agent_with_underscores@localhost", "agent123@localhost"]
 
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=special_jids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=special_jids
         )
 
         assert agent.subagent_ids == set(special_jids)
@@ -781,7 +699,7 @@ class TestEdgeCasesAndErrorHandling:
             password="password",
             provider=mock_llm_provider,
             subagent_ids=subagent_ids,
-            coordination_session=long_session
+            coordination_session=long_session,
         )
 
         assert agent.coordination_session == long_session
@@ -792,7 +710,7 @@ class TestEdgeCasesAndErrorHandling:
             jid="coordinator@localhost",
             password="password",
             provider=mock_llm_provider,
-            subagent_ids=["Agent@localhost"]  # Capital A
+            subagent_ids=["Agent@localhost"],  # Capital A
         )
 
         msg = Mock(spec=Message)
@@ -812,7 +730,7 @@ class TestEdgeCasesAndErrorHandling:
             password="password",
             provider=mock_llm_provider,
             subagent_ids=subagent_ids,
-            system_prompt=None
+            system_prompt=None,
         )
 
         # Should still work, with None prompt
@@ -822,13 +740,10 @@ class TestEdgeCasesAndErrorHandling:
     async def test_tool_execution_with_mock_behaviour(self, mock_llm_provider, subagent_ids):
         """Test tool execution with properly mocked behaviour."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
-        with patch.object(agent, 'add_behaviour'):
+        with patch.object(agent, "add_behaviour"):
             await agent.setup()
 
         # Mock the send method as AsyncMock
@@ -843,10 +758,7 @@ class TestEdgeCasesAndErrorHandling:
         send_tool = next(t for t in agent.tools if t.name == "send_to_agent")
 
         # Execute tool
-        result = await send_tool.execute(
-            agent_id="subagent1@localhost",
-            command="test command"
-        )
+        result = await send_tool.execute(agent_id="subagent1@localhost", message="test command")
 
         assert "Response from subagent1@localhost" in result
         assert "test command response" in result
@@ -855,10 +767,7 @@ class TestEdgeCasesAndErrorHandling:
     def test_routing_function_with_none_original_requester(self, mock_llm_provider, subagent_ids):
         """Test routing when original requester is None."""
         agent = CoordinatorAgent(
-            jid="coordinator@localhost",
-            password="password",
-            provider=mock_llm_provider,
-            subagent_ids=subagent_ids
+            jid="coordinator@localhost", password="password", provider=mock_llm_provider, subagent_ids=subagent_ids
         )
 
         msg = Mock(spec=Message)

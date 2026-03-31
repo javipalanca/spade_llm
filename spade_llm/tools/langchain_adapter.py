@@ -29,9 +29,7 @@ class LangChainToolAdapter(LLMTool):
 
         # Extract information from the LangChain tool
         name = getattr(langchain_tool, "name", "unknown_tool")
-        description = getattr(
-            langchain_tool, "description", "No description available for this tool."
-        )
+        description = getattr(langchain_tool, "description", "No description available for this tool.")
 
         # Convert the parameters schema if it exists
         parameters = self._convert_parameters_schema(langchain_tool)
@@ -74,9 +72,7 @@ class LangChainToolAdapter(LLMTool):
                     return schema
                 else:
                     # For pydantic v2 or other schemas
-                    logger.warning(
-                        f"Unsupported schema type for tool {tool.name}. Using default schema."
-                    )
+                    logger.warning(f"Unsupported schema type for tool {tool.name}. Using default schema.")
             except Exception as e:
                 logger.error(f"Error converting schema for tool {tool.name}: {e}")
 
@@ -132,14 +128,10 @@ class LangChainToolAdapter(LLMTool):
 
             # Determine if the tool is async
             if hasattr(self.lc_tool, "_acall") or hasattr(self.lc_tool, "acall"):
-                acall = getattr(self.lc_tool, "_acall", None) or getattr(
-                    self.lc_tool, "acall"
-                )
+                acall = getattr(self.lc_tool, "_acall", None) or getattr(self.lc_tool, "acall")
                 return await acall(**lc_args)
             elif hasattr(self.lc_tool, "_call") or hasattr(self.lc_tool, "call"):
-                call = getattr(self.lc_tool, "_call", None) or getattr(
-                    self.lc_tool, "call"
-                )
+                call = getattr(self.lc_tool, "_call", None) or getattr(self.lc_tool, "call")
                 # Execute in a thread to avoid blocking
                 return await asyncio.to_thread(call, **lc_args)
             elif hasattr(self.lc_tool, "run") or hasattr(self.lc_tool, "__call__"):
@@ -186,9 +178,7 @@ class LangChainToolAdapter(LLMTool):
 
         # Try to infer from schema if both schema and kwargs contain the same properties
         # but with different names
-        if hasattr(self.lc_tool, "args_schema") and hasattr(
-            self.lc_tool.args_schema, "schema"
-        ):
+        if hasattr(self.lc_tool, "args_schema") and hasattr(self.lc_tool.args_schema, "schema"):
             schema = self.lc_tool.args_schema.schema()
             if "properties" in schema and len(schema["properties"]) == len(kwargs):
                 # Try to match parameters by position assuming they're ordered similarly
@@ -197,9 +187,7 @@ class LangChainToolAdapter(LLMTool):
 
                 if len(schema_props) == len(kwargs_props):
                     result = {}
-                    for i, (schema_prop, kwarg_prop) in enumerate(
-                        zip(schema_props, kwargs_props)
-                    ):
+                    for i, (schema_prop, kwarg_prop) in enumerate(zip(schema_props, kwargs_props)):
                         if schema_prop != kwarg_prop:
                             result[schema_prop] = kwargs[kwarg_prop]
                         else:

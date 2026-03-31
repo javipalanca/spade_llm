@@ -38,11 +38,7 @@ class KeywordGuardrail(InputGuardrail):
             blocked_message: Custom message when content is blocked
         """
         super().__init__(name, enabled, blocked_message)
-        self.blocked_keywords = (
-            blocked_keywords
-            if case_sensitive
-            else [kw.lower() for kw in blocked_keywords]
-        )
+        self.blocked_keywords = blocked_keywords if case_sensitive else [kw.lower() for kw in blocked_keywords]
         self.action = action
         self.replacement = replacement
         self.case_sensitive = case_sensitive
@@ -101,8 +97,7 @@ class LLMGuardrail(OutputGuardrail):
         self.provider = provider
         self.safety_prompt = (
             safety_prompt
-            or
-            """
+            or """
         Analyze the following text for safety and appropriateness.
         Respond with JSON: {"safe": true/false, "reason": "explanation if unsafe"}
 
@@ -134,9 +129,7 @@ class LLMGuardrail(OutputGuardrail):
                     custom_message=self.blocked_message,
                 )
         except Exception as e:
-            self._logger.warning(
-                f"Error in LLM safety check: {e}. Assuming content is safe."
-            )
+            self._logger.warning(f"Error in LLM safety check: {e}. Assuming content is safe.")
 
         return GuardrailResult(action=GuardrailAction.PASS, content=content)
 
@@ -179,9 +172,7 @@ class RegexGuardrail(InputGuardrail):
                         )
                 else:
                     # It's a replacement string
-                    modified_content = re.sub(
-                        pattern, action_or_replacement, modified_content
-                    )
+                    modified_content = re.sub(pattern, action_or_replacement, modified_content)
                     modifications_made = True
 
         if modifications_made:
@@ -224,9 +215,7 @@ class CustomFunctionGuardrail(InputGuardrail):
             result = await asyncio.to_thread(self.check_function, content, context)
 
         # Apply custom message if blocking and not already set
-        if (result.action == GuardrailAction.BLOCK
-                and self.blocked_message
-                and not result.custom_message):
+        if result.action == GuardrailAction.BLOCK and self.blocked_message and not result.custom_message:
             result.custom_message = self.blocked_message
 
         return result

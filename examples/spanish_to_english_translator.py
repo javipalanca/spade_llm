@@ -1,26 +1,19 @@
 """
-Spanish to English Translator Example
+Spanish to English Translator
 
-Demonstrates a SPADE agent that translates Spanish text to English using OpenAI.
-The agent terminates when it receives non-Spanish text.
+An LLM agent that translates Spanish text to English. Terminates on non-Spanish input.
 
-PREREQUISITES:
-1. Start SPADE built-in server in another terminal:
-   spade run
-   
-   (Advanced server configuration available but not needed)
-
-2. Install dependencies:
-   pip install spade_llm
-
-This example uses SPADE's default built-in server (localhost:5222) - no account registration needed!
+Setup:
+  1. cp .env.example .env  (fill in LLM_MODEL)
+  2. spade run
+  3. python examples/spanish_to_english_translator.py
 """
 
-import asyncio
-import getpass
 import os
+
 import spade
-from spade_llm.agent import LLMAgent, ChatAgent
+
+from spade_llm.agent import ChatAgent, LLMAgent
 from spade_llm.providers import LLMProvider
 from spade_llm.utils import load_env_vars
 
@@ -35,42 +28,28 @@ Rules:
 
 
 async def main():
-    # Load environment
     load_env_vars()
+    model = os.environ.get("LLM_MODEL")
+    if not model:
+        raise SystemExit("LLM_MODEL is not set — copy .env.example to .env and configure it.")
+    xmpp_server = os.environ.get("XMPP_SERVER", "localhost")
 
-    # Get API key
-    api_key = os.environ.get("OPENAI_API_KEY") or input("OpenAI API key: ")
-
-    # XMPP server configuration - using default SPADE settings
-    xmpp_server = "localhost"
-    print("🌐 Using SPADE built-in server (localhost:5222)")
-    print("  No account registration needed!")
-    # Advanced server configuration available but not needed
-    
-    # Translator agent setup
     translator_jid = f"translator@{xmpp_server}"
-    translator_password = "translator_pass"  # Simple password (auto-registration with SPADE server)
-
     translator = LLMAgent(
         jid=translator_jid,
-        password=translator_password,
-        provider=LLMProvider.create_openai(
-            api_key=api_key,
-            model="gpt-4o-mini",
-            temperature=0.3
+        password="translator_pass",
+        provider=LLMProvider(
+            model=model,
+            temperature=0.3,
         ),
         system_prompt=TRANSLATOR_PROMPT,
-        termination_markers=["[DONE]"]
+        termination_markers=["[DONE]"],
     )
 
     await translator.start()
     print(f"Translator started: {translator_jid}")
 
-    # Chat agent setup
     human_jid = f"human@{xmpp_server}"
-    human_password = "human_pass"  # Simple password (auto-registration with SPADE server)
-
-    # Simple callback to detect shutdown
     shutdown = False
 
     def check_response(message: str, sender: str):
@@ -81,10 +60,7 @@ async def main():
             print("\nNon-Spanish detected. Shutting down...")
 
     chat = ChatAgent(
-        jid=human_jid,
-        password=human_password,
-        target_agent_jid=translator_jid,
-        display_callback=check_response
+        jid=human_jid, password="human_pass", target_agent_jid=translator_jid, display_callback=check_response
     )
 
     await chat.start()
@@ -93,10 +69,8 @@ async def main():
     print("\nType Spanish text to translate (or non-Spanish to exit)")
     print("Type 'exit' to quit\n")
 
-    # Run interactive chat
     await chat.run_interactive(exit_command="exit")
 
-    # Cleanup
     await chat.stop()
     await translator.stop()
     print("Agents stopped.")

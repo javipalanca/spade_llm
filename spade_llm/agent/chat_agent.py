@@ -37,9 +37,7 @@ class ChatAgent(Agent):
                 # Log if verbose mode is enabled
                 verbose = self.get("verbose")
                 if verbose:
-                    logger.info(
-                        f"ChatAgent sending: '{message_to_send}' to {target_jid}"
-                    )
+                    logger.info(f"ChatAgent sending: '{message_to_send}' to {target_jid}")
 
                 await self.send(msg)
                 self.set("message_to_send", None)
@@ -110,9 +108,7 @@ class ChatAgent(Agent):
 
     async def setup(self):
         """Set up the chat agent with send and receive behaviours."""
-        logger.info(
-            f"ChatAgent {self.jid} starting, will communicate with {self.target_agent_jid}"
-        )
+        logger.info(f"ChatAgent {self.jid} starting, will communicate with {self.target_agent_jid}")
 
         # Store configuration in agent's data
         self.set("target_agent_jid", self.target_agent_jid)
@@ -170,11 +166,11 @@ class ChatAgent(Agent):
         Returns:
             True if response was received, False if timeout
         """
-        start_time = asyncio.get_event_loop().time()
+        start_time = asyncio.get_running_loop().time()
 
         while not self.get("response_received"):
             await asyncio.sleep(0.1)
-            if asyncio.get_event_loop().time() - start_time > timeout:
+            if asyncio.get_running_loop().time() - start_time > timeout:
                 return False
 
         return True

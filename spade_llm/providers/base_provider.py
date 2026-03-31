@@ -10,7 +10,7 @@ from ..tools import LLMTool
 logger = logging.getLogger("spade_llm.providers")
 
 
-class LLMProvider(ABC):
+class BaseLLMProvider(ABC):
     """
     Abstract base class for LLM providers.
 
@@ -27,8 +27,11 @@ class LLMProvider(ABC):
 
     @abstractmethod
     async def get_llm_response(
-        self, context: ContextManager, tools: Optional[List[LLMTool]] = None,
-        conversation_id: Optional[str] = None
+        self,
+        context: ContextManager,
+        tools: Optional[List[LLMTool]] = None,
+        conversation_id: Optional[str] = None,
+        output_schema: Optional[Any] = None,
     ) -> Dict[str, Any]:
         """
         Get complete response from the LLM including both text and tool calls.
@@ -37,18 +40,18 @@ class LLMProvider(ABC):
             context: The conversation context manager
             tools: Optional list of tools available for this specific call
             conversation_id: Optional conversation ID to retrieve specific conversation context
+            output_schema: Optional Pydantic BaseModel class for structured output
 
         Returns:
             Dictionary containing:
-            - 'text': The text response (None if there are tool calls)
+            - 'text': The text response (None if there are tool calls or structured output)
             - 'tool_calls': List of tool calls (empty if there are none)
+            - 'structured': Parsed Pydantic model instance (None if no output_schema)
         """
         pass
 
     # Legacy methods that delegate to the new unified method
-    async def get_response(
-        self, context: ContextManager, tools: Optional[List[LLMTool]] = None
-    ) -> Optional[str]:
+    async def get_response(self, context: ContextManager, tools: Optional[List[LLMTool]] = None) -> Optional[str]:
         """
         Get a response from the LLM based on the current context.
 

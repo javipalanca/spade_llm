@@ -2,17 +2,17 @@ name: Build and Deploy Docs
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main", "dev" ]
     paths:
-      - 'docs/**'
-      - 'spade_llm/**'
-      - '.github/workflows/docs.yml'
+      - docs/**
+      - spade_llm/**
+      - .github/workflows/docs.yml
   pull_request:
-    branches: [ main ]
+    branches: [ "main", "dev" ]
     paths:
-      - 'docs/**'
-      - 'spade_llm/**'
-      - '.github/workflows/docs.yml'
+      - docs/**
+      - spade_llm/**
+      - .github/workflows/docs.yml
   workflow_dispatch:
 
 permissions:
@@ -29,36 +29,32 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - uses: astral-sh/setup-uv@v7
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies
-        run: |
-          pip install -r docs/requirements.txt
-          pip install -e .
+        run: uv sync --extra docs
 
       - name: Build mkdocs
         run: |
-          cd docs
-          mkdocs build --strict
-          
+          uv run mkdocs build --strict
+
       - name: Add SEO files
         run: |
           # Copy robots.txt to build output
-          cp docs/docs/robots.txt docs/site/robots.txt
+          cp docs/robots.txt site/robots.txt
           # Ensure .nojekyll exists
-          touch docs/site/.nojekyll
+          touch site/.nojekyll
 
       - name: Deploy to gh-pages branch
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/site
+          publish_dir: ./site
           force_orphan: true
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'

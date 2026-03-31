@@ -47,9 +47,7 @@ class AgentInteractionMemory:
         # Load existing interactions
         self.interactions = self._load_interactions()
 
-        logger.info(
-            f"Initialized AgentInteractionMemory for {agent_id} at {self.storage_path}"
-        )
+        logger.info(f"Initialized AgentInteractionMemory for {agent_id} at {self.storage_path}")
 
     def _load_interactions(self) -> Dict:
         """Load interactions from JSON file."""
@@ -58,9 +56,7 @@ class AgentInteractionMemory:
                 with open(self.storage_path, "r", encoding="utf-8") as f:
                     return json.load(f)
             except (json.JSONDecodeError, FileNotFoundError) as e:
-                logger.warning(
-                    f"Could not load interactions from {self.storage_path}: {e}"
-                )
+                logger.warning(f"Could not load interactions from {self.storage_path}: {e}")
                 return {"agent_id": self.agent_id, "interactions": {}}
 
         return {"agent_id": self.agent_id, "interactions": {}}
@@ -114,10 +110,7 @@ class AgentInteractionMemory:
             return []
 
         # Extract just the content from stored entries
-        return [
-            entry["content"]
-            for entry in self.interactions["interactions"][conversation_id]
-        ]
+        return [entry["content"] for entry in self.interactions["interactions"][conversation_id]]
 
     def get_all_interactions(self) -> Dict:
         """Get all stored interactions."""
@@ -217,9 +210,7 @@ class AgentMemoryTool(LLMTool):
 
         # This is a placeholder - the actual conversation_id should be injected
         # by the calling context in LLMBehaviour
-        conversation_id = getattr(
-            self, "_current_conversation_id", "unknown_conversation"
-        )
+        conversation_id = getattr(self, "_current_conversation_id", "unknown_conversation")
 
         return self.interaction_memory.add_information(conversation_id, information)
 

@@ -21,7 +21,6 @@ except ImportError:
 
 import logging
 
-
 from .config import (
     MCPServerConfig,
     SseServerConfig,
@@ -84,9 +83,7 @@ async def create_mcp_session(
                 timeout=config.timeout,
                 sse_read_timeout=config.sse_read_timeout,
             ) as (read, write):
-                async with ClientSession(
-                    read_stream=read, write_stream=write
-                ) as session:
+                async with ClientSession(read_stream=read, write_stream=write) as session:
                     yield session
         elif isinstance(config, StreamableHttpServerConfig):
             if not HAS_STREAMABLE_HTTP:
@@ -164,18 +161,14 @@ class MCPSession:
 
                     return tools_response.tools
             except Exception as e:
-                logger.error(
-                    f"Error fetching tools from MCP server {self.config.name}: {e}"
-                )
+                logger.error(f"Error fetching tools from MCP server {self.config.name}: {e}")
                 raise RuntimeError(f"Failed to fetch tools from MCP server: {e}") from e
 
     def invalidate_cache(self) -> None:
         """Invalidate the tools cache."""
         self._tools_cache = None
 
-    async def call_tool(
-        self, tool_name: str, arguments: Dict[str, Any]
-    ) -> mcp.types.CallToolResult:
+    async def call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> mcp.types.CallToolResult:
         """Call a tool on the server.
 
         Args:
@@ -196,7 +189,5 @@ class MCPSession:
                 # Call the tool
                 return await session.call_tool(tool_name, arguments)
         except Exception as e:
-            logger.error(
-                f"Error calling tool {tool_name} on MCP server {self.config.name}: {e}"
-            )
+            logger.error(f"Error calling tool {tool_name} on MCP server {self.config.name}: {e}")
             raise RuntimeError(f"Failed to call tool {tool_name}: {e}") from e
