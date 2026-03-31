@@ -1178,7 +1178,7 @@ class TestContextManagementPerformance:
         for strategy in strategies:
             start_time = time.time()
             cm.update_context_management(strategy)
-            prompt = cm.get_prompt(conversation_id)
+            cm.get_prompt(conversation_id)
             switch_time = time.time() - start_time
             switch_times.append(switch_time)
 

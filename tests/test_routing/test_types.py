@@ -108,7 +108,10 @@ class TestRoutingResponse:
 
     def test_dataclass_equality(self):
         """Test dataclass equality comparison."""
-        transform_func = lambda x: x.upper()
+
+        def transform_func(x):
+            return x.upper()
+
         metadata = {"key": "value"}
 
         response1 = RoutingResponse(recipients="test@localhost", transform=transform_func, metadata=metadata)
@@ -259,7 +262,9 @@ class TestRoutingFunctionType:
 
             # Add transformation if multiple recipients
             if len(recipients) > 1:
-                transform = lambda x: f"[MULTI-CAST] {x}"
+
+                def transform(x):
+                    return f"[MULTI-CAST] {x}"
 
             return RoutingResponse(recipients=recipients, transform=transform, metadata=metadata)
 

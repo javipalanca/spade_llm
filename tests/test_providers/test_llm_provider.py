@@ -399,7 +399,7 @@ class TestGetLLMResponse:
         }
 
         provider = LLMProvider(model="ollama/llama3:8b")
-        result = await provider.get_llm_response(self.mock_context, tools=[mock_tool])
+        await provider.get_llm_response(self.mock_context, tools=[mock_tool])
 
         call_kwargs = mock_acompletion.call_args[1]
         assert "tools" in call_kwargs

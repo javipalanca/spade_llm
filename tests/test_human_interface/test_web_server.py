@@ -329,7 +329,7 @@ class TestCommandLineExecution:
             sys.argv = ["web_server.py", "invalid"]
 
             with pytest.raises(ValueError):
-                port = int(sys.argv[1]) if len(sys.argv) > 1 else 8080
+                int(sys.argv[1]) if len(sys.argv) > 1 else 8080
 
         finally:
             sys.argv = original_argv

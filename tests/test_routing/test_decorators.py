@@ -409,10 +409,6 @@ class TestRoutingRuleDecoratorEdgeCases:
         def protected_rule(msg, response, context):
             return "protected@localhost"
 
-        original_priority = protected_rule._priority
-        original_name = protected_rule._rule_name
-        original_flag = protected_rule._is_routing_rule
-
         # Try to modify (this should work but would be unexpected behavior)
         protected_rule._priority = 999
         protected_rule._rule_name = "modified"

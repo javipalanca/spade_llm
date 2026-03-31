@@ -359,7 +359,7 @@ class TestEdgeCasesAndBoundaryConditions:
 
         # Test successful logging for create_base_memory_tools
         with patch("spade_llm.memory.agent_base_memory_tools.logger") as mock_logger:
-            tools = create_base_memory_tools(mock_base_memory)
+            create_base_memory_tools(mock_base_memory)
 
             mock_logger.info.assert_called_once()
             log_message = mock_logger.info.call_args[0][0]
