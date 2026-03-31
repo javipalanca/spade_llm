@@ -36,6 +36,18 @@ fix:
     {{ruff}} format .
     {{ruff}} check --fix .
 
+# Install pre-commit git hooks (run once per clone)
+pre-commit-install:
+    uvx pre-commit install
+
+# Run all pre-commit hooks against the entire codebase
+pre-commit:
+    uvx pre-commit run --all-files
+
+# Update pre-commit hook revisions to latest
+pre-commit-update:
+    uvx pre-commit autoupdate
+
 # Build and upload to PyPI
 ship:
     uv build
