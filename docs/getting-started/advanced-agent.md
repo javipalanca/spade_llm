@@ -28,17 +28,17 @@ graph LR
     C -->|XMPP Message| D[Storage Agent]
     D -->|XMPP Message| E[Notification Agent]
     E <-->|HITL Tool| F[Human Expert]
-    
+
     %% MCP Servers (rounded rectangles)
     C -.->|MCP Call| G((GitHub MCP))
     D -.->|MCP Call| H((Notion MCP))
     E -.->|MCP Call| I((Gmail MCP))
-    
+
     %% Styling for both light and dark themes
     classDef agent fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#ffffff
     classDef mcp fill:#7b1fa2,stroke:#4a148c,stroke-width:2px,color:#ffffff
     classDef human fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#ffffff
-    
+
     class A,B,C,D,E agent
     class G,H,I mcp
     class F human
@@ -82,7 +82,7 @@ agent_a = LLMAgent(
 
 # Agent B receives from Agent A and sends to Agent C
 agent_b = LLMAgent(
-    jid="agent_b@server.com", 
+    jid="agent_b@server.com",
     password="password_b",
     provider=provider,
     reply_to="agent_c@server.com"  # Forward to Agent C
@@ -112,7 +112,7 @@ async def create_agent_pipeline():
         password="pwd1",
         target_agent_jid="analyzer@server.com"
     )
-    
+
     # Step 1: Chat Agent → Analyzer Agent
     analyzer_agent = LLMAgent(
         jid="analyzer@server.com",
@@ -120,7 +120,7 @@ async def create_agent_pipeline():
         provider=provider,
         reply_to="storage@server.com"  # Forward to storage
     )
-    
+
     # Step 2: Analyzer → Storage Agent
     storage_agent = LLMAgent(
         jid="storage@server.com",
@@ -128,7 +128,7 @@ async def create_agent_pipeline():
         provider=provider,
         reply_to="notification@server.com"  # Forward to notification
     )
-    
+
     # Step 3: Storage → Notification Agent (end of pipeline)
     notification_agent = LLMAgent(
         jid="notification@server.com",
@@ -136,7 +136,7 @@ async def create_agent_pipeline():
         provider=provider,
         # No reply_to = end of pipeline
     )
-    
+
     return chat_agent, analyzer_agent, storage_agent, notification_agent
 ```
 
@@ -183,20 +183,20 @@ from typing import Dict, Any
 
 class GitHubOnlyGuardrail(Guardrail):
     """Custom guardrail that only allows GitHub-related requests."""
-    
+
     def __init__(self, name: str = "github_only_filter", enabled: bool = True):
         super().__init__(name, enabled, "I only help with GitHub-related requests. Please ask about issues, pull requests, or repository monitoring.")
         self.github_keywords = [
-            "github", "issue", "issues", "pull request", "pr", "prs", 
+            "github", "issue", "issues", "pull request", "pr", "prs",
             "repository", "repo", "commit", "branch", "merge", "review",
             "bug", "feature", "enhancement", "milestone", "project",
             "analyze", "monitor", "check", "status", "activity"
         ]
-    
+
     async def check(self, content: str, context: Dict[str, Any]) -> GuardrailResult:
         """Check if content is GitHub-related."""
         content_lower = content.lower()
-        
+
         # Check if any GitHub keyword is present
         if any(keyword in content_lower for keyword in self.github_keywords):
             return GuardrailResult(
@@ -225,7 +225,7 @@ from spade_llm.mcp import StreamableHttpServerConfig
 
 def create_mcp_servers():
     """Create MCP server configurations."""
-    
+
     # GitHub MCP server
     github_mcp = StreamableHttpServerConfig(
         name="GitHubMCP",
@@ -239,7 +239,7 @@ def create_mcp_servers():
         terminate_on_close=True,
         cache_tools=True
     )
-    
+
     # Notion MCP server
     notion_mcp = StreamableHttpServerConfig(
         name="NotionMCP",
@@ -253,7 +253,7 @@ def create_mcp_servers():
         terminate_on_close=True,
         cache_tools=True
     )
-    
+
     # Gmail MCP server
     gmail_mcp = StreamableHttpServerConfig(
         name="GmailMCP",
@@ -267,7 +267,7 @@ def create_mcp_servers():
         terminate_on_close=True,
         cache_tools=True
     )
-    
+
     return github_mcp, notion_mcp, gmail_mcp
 ```
 
@@ -287,7 +287,7 @@ Your workflow:
 3. Analyze the collected data for patterns, priorities, and insights
 4. Generate a structured summary with actionable information
 
-IMPORTANT: 
+IMPORTANT:
 - Always specify which repository you're analyzing
 - Include actual numbers and real data from the GitHub API
 - Focus on actionable insights and trends
@@ -311,7 +311,7 @@ Response format:
 
 📈 RECENT TRENDS (Last 30 days)
 - New Issues Created: [X]
-- Issues Closed: [X] 
+- Issues Closed: [X]
 - PRs Merged: [X]
 - Most Active Contributors: [list top 3]
 - Common Labels/Categories: [list most frequent]
@@ -410,8 +410,8 @@ Email Content:
 ---
 # GitHub Repository Analysis Report
 
-**Repository:** [owner/repo-name]  
-**Analysis Date:** [date]  
+**Repository:** [owner/repo-name]
+**Analysis Date:** [date]
 **Period Analyzed:** Last 30 days
 
 ## Executive Summary
@@ -494,20 +494,20 @@ logger = logging.getLogger(__name__)
 
 class GitHubOnlyGuardrail(Guardrail):
     """Custom guardrail that only allows GitHub-related requests."""
-    
+
     def __init__(self, name: str = "github_only_filter", enabled: bool = True):
         super().__init__(name, enabled, "I only help with GitHub-related requests. Please ask about issues, pull requests, or repository monitoring.")
         self.github_keywords = [
-            "github", "issue", "issues", "pull request", "pr", "prs", 
+            "github", "issue", "issues", "pull request", "pr", "prs",
             "repository", "repo", "commit", "branch", "merge", "review",
             "bug", "feature", "enhancement", "milestone", "project",
             "analyze", "monitor", "check", "status", "activity"
         ]
-    
+
     async def check(self, content: str, context: Dict[str, Any]) -> GuardrailResult:
         """Check if content is GitHub-related."""
         content_lower = content.lower()
-        
+
         if any(keyword in content_lower for keyword in self.github_keywords):
             return GuardrailResult(
                 action=GuardrailAction.PASS,
@@ -527,7 +527,7 @@ def create_github_guardrails():
 
 def create_mcp_servers():
     """Create MCP server configurations."""
-    
+
     # GitHub MCP server
     github_mcp = StreamableHttpServerConfig(
         name="GitHubMCP",
@@ -541,7 +541,7 @@ def create_mcp_servers():
         terminate_on_close=True,
         cache_tools=True
     )
-    
+
     # Notion MCP server
     notion_mcp = StreamableHttpServerConfig(
         name="NotionMCP",
@@ -555,7 +555,7 @@ def create_mcp_servers():
         terminate_on_close=True,
         cache_tools=True
     )
-    
+
     # Gmail MCP server
     gmail_mcp = StreamableHttpServerConfig(
         name="GmailMCP",
@@ -569,28 +569,28 @@ def create_mcp_servers():
         terminate_on_close=True,
         cache_tools=True
     )
-    
+
     return github_mcp, notion_mcp, gmail_mcp
 
 async def main():
     print("🚀 Advanced Multi-Agent GitHub Monitor System")
     print("=" * 60)
-    
+
     # Load environment variables
     load_env_vars()
-    
+
     # Get API keys
     openai_key = os.environ.get("OPENAI_API_KEY")
     if not openai_key:
         openai_key = getpass.getpass("Enter your OpenAI API key: ")
-    
+
     # Using SPADE's built-in server (recommended)
     print("🚀 Using SPADE's built-in server")
     print("Make sure you started it with: spade run")
     input("Press Enter when the server is running...")
-    
+
     spade_server = "localhost"
-    
+
     # Agent credentials
     agents_config = {
         "chat": (f"github_chat@{spade_server}", "GitHub Chat Interface"),
@@ -599,23 +599,23 @@ async def main():
         "email": (f"email_manager@{spade_server}", "Email Manager Agent"),
         "human": (f"human_expert@{spade_server}", "Human Expert")
     }
-    
+
     # Get passwords
     passwords = {}
     for role, (jid, label) in agents_config.items():
         passwords[role] = getpass.getpass(f"{label} password: ")
-    
+
     # Create LLM provider
     provider = LLMProvider(
         model="gpt-5-nano",
         api_key=openai_key,
         temperature=0.7,
     )
-    
+
     # Create MCP servers
     print("\\n🔧 Configuring MCP servers...")
     github_mcp, notion_mcp, gmail_mcp = create_mcp_servers()
-    
+
     # Create human-in-the-loop tool
     human_tool = HumanInTheLoopTool(
         human_expert_jid=agents_config["human"][0],
@@ -623,22 +623,22 @@ async def main():
         name="ask_human_expert",
         description="Ask human expert for email sending confirmation and recipient details"
     )
-    
+
     # Create guardrails
     input_guardrails = create_github_guardrails()
-    
+
     # Create agents with structured message flow
     print("\\n🤖 Creating specialized agents...")
-    
+
     # AGENT CONNECTION SETUP:
     # User → Chat Agent → Analyzer Agent → Notion Agent → Email Agent → Human Expert
-    
+
     # 1. Chat Agent with Guardrails (Entry Point)
     # Receives user input and forwards to analyzer
     def display_response(message: str, sender: str):
         print(f"\\n🤖 GitHub Monitor: {message}")
         print("-" * 50)
-    
+
     user_chat = ChatAgent(
         jid=agents_config["chat"][0],
         password=passwords["chat"],
@@ -657,7 +657,7 @@ async def main():
         mcp_servers=[github_mcp],  # Uses GitHub MCP for data collection
         reply_to=agents_config["notion"][0]  # → Forwards to Notion Agent
     )
-    
+
     # 3. Notion Manager Agent (Storage & Forwarding)
     # Receives from Analyzer Agent, uses Notion MCP, forwards to Email Agent
     notion_agent = LLMAgent(
@@ -668,7 +668,7 @@ async def main():
         mcp_servers=[notion_mcp],  # Uses Notion MCP for data storage
         reply_to=agents_config["email"][0]  # → Forwards to Email Agent
     )
-    
+
     # 4. Email Manager Agent (HITL & Email Sending)
     # Receives from Notion Agent, uses Human-in-the-Loop tool and Gmail MCP
     # NO reply_to = End of pipeline
@@ -682,23 +682,23 @@ async def main():
         termination_markers=["<EMAIL_PROCESS_COMPLETE>"]  # End conversation after email process
         # No reply_to = This is the end of the pipeline
     )
-    
+
     # Start all agents
     print("\\n🚀 Starting multi-agent system...")
     agents = {
         "chat": user_chat,
-        "analyzer": analyzer_agent, 
+        "analyzer": analyzer_agent,
         "notion": notion_agent,
         "email": email_agent,
     }
-    
+
     for name, agent in agents.items():
         await agent.start()
         print(f"✅ {name.capitalize()} agent started")
-    
+
     # Wait for connections
     await asyncio.sleep(3.0)
-    
+
     print("\\n" + "="*70)
     print("🐙 ADVANCED GITHUB MONITOR SYSTEM READY")
     print("="*70)
@@ -717,13 +717,13 @@ async def main():
     print("Ensure human expert is available for email confirmations.")
     print("\\nType 'exit' to quit\\n")
     print("-" * 70)
-    
+
     # Instructions for human expert
     print(f"\\n👤 Human Expert Instructions:")
     print(f"🌐 Open web interface: http://localhost:8080")
     print(f"🔑 Connect as: {agents_config['human'][0]}")
     print("📧 You'll be asked about email sending decisions")
-    
+
     try:
         # Run interactive chat
         await user_chat.run_interactive(
@@ -740,7 +740,7 @@ async def main():
         for name, agent in agents.items():
             await agent.stop()
             print(f"✅ {name.capitalize()} agent stopped")
-    
+
     print("\\n✅ Advanced GitHub Monitor system shutdown complete!")
 
 if __name__ == "__main__":
@@ -751,7 +751,7 @@ if __name__ == "__main__":
     print("• MCP servers configured for GitHub/Notion/Gmail")
     print("• Human expert web interface: python -m spade_llm.human_interface.web_server")
     print()
-    
+
     try:
         spade.run(main())
     except KeyboardInterrupt:

@@ -19,7 +19,7 @@ RoutingFunction = Callable[[Message, str, Dict[str, Any]], Union[str, RoutingRes
 **Returns:**
 
 - `str` - Single recipient JID
-- `List[str]` - Multiple recipient JIDs  
+- `List[str]` - Multiple recipient JIDs
 - `RoutingResponse` - Advanced routing
 - `None` - Send to original sender
 
@@ -77,10 +77,10 @@ from spade_llm.routing import RoutingResponse
 
 def advanced_router(msg, response, context):
     """Advanced routing with transformation."""
-    
+
     def add_signature(text):
         return f"{text}\n\n--\nProcessed by AI Assistant"
-    
+
     if "urgent" in response.lower():
         return RoutingResponse(
             recipients="emergency@example.com",
@@ -91,7 +91,7 @@ def advanced_router(msg, response, context):
                 "original_sender": str(msg.sender)
             }
         )
-    
+
     return str(msg.sender)
 ```
 
@@ -103,18 +103,18 @@ def advanced_router(msg, response, context):
 def content_router(msg, response, context):
     """Route based on response keywords."""
     response_lower = response.lower()
-    
+
     routing_map = {
         "tech-support@example.com": ["error", "bug", "technical", "debug"],
         "sales@example.com": ["price", "cost", "purchase", "buy"],
         "billing@example.com": ["payment", "invoice", "billing"],
         "urgent@example.com": ["urgent", "emergency", "critical"]
     }
-    
+
     for recipient, keywords in routing_map.items():
         if any(keyword in response_lower for keyword in keywords):
             return recipient
-    
+
     return "general@example.com"
 ```
 
@@ -125,7 +125,7 @@ def sender_router(msg, response, context):
     """Route based on message sender."""
     sender = str(msg.sender)
     sender_domain = sender.split('@')[1]
-    
+
     # Internal vs external routing
     if sender_domain == "company.com":
         return "internal-support@example.com"
@@ -140,7 +140,7 @@ def context_router(msg, response, context):
     """Route based on conversation context."""
     state = context.get("state", {})
     interaction_count = state.get("interaction_count", 0)
-    
+
     # Long conversations need escalation
     if interaction_count > 10:
         return RoutingResponse(
@@ -150,7 +150,7 @@ def context_router(msg, response, context):
                 "interaction_count": interaction_count
             }
         )
-    
+
     return "standard@example.com"
 ```
 
@@ -160,14 +160,14 @@ def context_router(msg, response, context):
 def broadcast_router(msg, response, context):
     """Route to multiple recipients."""
     recipients = ["primary@example.com"]
-    
+
     # Add recipients based on content
     if "error" in response.lower():
         recipients.append("monitoring@example.com")
-    
+
     if "sales" in response.lower():
         recipients.append("sales-team@example.com")
-    
+
     return RoutingResponse(
         recipients=recipients,
         metadata={
@@ -186,4 +186,3 @@ def broadcast_router(msg, response, context):
 - **Handle edge cases** - Provide fallback routing
 - **Document routing rules** - Clear rule descriptions
 - **Test thoroughly** - Test all routing paths
-

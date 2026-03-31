@@ -7,7 +7,7 @@ Complete API documentation for Human-in-the-Loop components.
 The Human Interface API consists of three main components:
 
 - **`HumanInTheLoopTool`**: LLM tool for consulting human experts
-- **`HumanInteractionBehaviour`**: SPADE behaviour for handling individual consultations  
+- **`HumanInteractionBehaviour`**: SPADE behaviour for handling individual consultations
 - **Web Interface**: Browser-based interface for human experts
 
 ## HumanInTheLoopTool
@@ -20,7 +20,7 @@ LLM tool that enables agents to consult with human experts via XMPP messaging.
 HumanInTheLoopTool(
     human_expert_jid: str,
     timeout: float = 300.0,
-    name: str = "ask_human_expert", 
+    name: str = "ask_human_expert",
     description: Optional[str] = None
 )
 ```
@@ -55,7 +55,7 @@ Binds the tool to an agent instance. Called automatically when tool is added to 
 
 **Note:** This method is called internally by `LLMAgent._register_tool()` and should not be called manually.
 
-#### `_ask_human(question: str, context: Optional[str] = None) -> str` 
+#### `_ask_human(question: str, context: Optional[str] = None) -> str`
 
 Internal method that executes the human consultation. Called by the LLM system.
 
@@ -197,7 +197,7 @@ python -m spade_llm.human_interface.web_server 9000
 #### User Interface Elements
 
 - **Connection form**: XMPP credentials input
-- **Query list**: Active and historical queries  
+- **Query list**: Active and historical queries
 - **Response interface**: Text area and send button
 - **Status indicators**: Connection and query states
 
@@ -254,14 +254,14 @@ sales_expert = HumanInTheLoopTool(
 )
 
 tech_expert = HumanInTheLoopTool(
-    human_expert_jid="tech@company.com", 
+    human_expert_jid="tech@company.com",
     name="ask_tech_expert",
     description="Consult tech team about systems and architecture"
 )
 
 agent = LLMAgent(
     jid="agent@company.com",
-    password="password", 
+    password="password",
     provider=provider,
     tools=[sales_expert, tech_expert],
     system_prompt="""Choose the appropriate expert:
@@ -280,9 +280,9 @@ agent = LLMAgent(
 <message to="expert@company.com" type="chat" thread="a1b2c3d4">
   <body>
     [Query a1b2c3d4] What's our WiFi password?
-    
+
     Context: New employee needs network access
-    
+
     (Please reply to this message to provide your answer)
   </body>
   <metadata type="human_query" query_id="a1b2c3d4"/>
@@ -302,7 +302,7 @@ agent = LLMAgent(
 Messages are correlated using XMPP thread IDs:
 
 1. **Query ID generated**: 8-character UUID segment
-2. **Thread set**: `msg.thread = query_id` 
+2. **Thread set**: `msg.thread = query_id`
 3. **Response inherits**: Automatic thread inheritance in XMPP
 4. **Behaviour filters**: Only processes messages with matching thread
 
@@ -316,7 +316,7 @@ XMPP_SERVER=your-server.com
 XMPP_WEBSOCKET_PORT=7070
 
 # Expert credentials
-EXPERT_JID=expert@your-server.com  
+EXPERT_JID=expert@your-server.com
 EXPERT_PASSWORD=secure-password
 
 # Web interface
@@ -333,7 +333,7 @@ system_prompt = """You are an AI assistant with access to human experts.
 Use the ask_human_expert tool when you need:
 - Current information not in your training data
 - Human judgment or opinions
-- Company-specific information  
+- Company-specific information
 - Clarification on ambiguous requests
 
 Always explain whether information comes from human experts or your training."""
@@ -346,7 +346,7 @@ system_prompt = """You are an enterprise AI assistant with specialized expert ac
 
 Expert Consultation Rules:
 1. ask_sales_expert: pricing, deals, customer relationships, market intelligence
-2. ask_tech_expert: architecture, systems, security, technical feasibility  
+2. ask_tech_expert: architecture, systems, security, technical feasibility
 3. ask_legal_expert: compliance, contracts, regulatory questions
 4. ask_hr_expert: policies, procedures, employee-related questions
 
@@ -364,7 +364,7 @@ For general knowledge questions, answer directly without consultation."""
 ### Access Control
 
 - **XMPP authentication**: All participants must authenticate to XMPP server
-- **JID validation**: Tools validate expert JID format  
+- **JID validation**: Tools validate expert JID format
 - **Message encryption**: Use XMPP TLS/SSL in production
 - **Web interface**: No authentication by default - add auth layer for production
 
@@ -402,7 +402,7 @@ agent = LLMAgent(
 ```python
 # Tiered timeout approach
 urgent_tool = HumanInTheLoopTool("expert@company.com", timeout=60.0)   # 1 min
-normal_tool = HumanInTheLoopTool("expert@company.com", timeout=300.0)  # 5 min  
+normal_tool = HumanInTheLoopTool("expert@company.com", timeout=300.0)  # 5 min
 research_tool = HumanInTheLoopTool("expert@company.com", timeout=1800.0) # 30 min
 ```
 

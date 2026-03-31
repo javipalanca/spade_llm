@@ -43,8 +43,8 @@ def create_sample_documents() -> list[Document]:
             content="""Ollama is an open-source platform for running large language models locally.
             It enables easy download, installation, and interaction with LLMs without cloud services.
             Supports models like Llama, Mistral, CodeLlama, and embedding models like nomic-embed-text.
-            
-            Benefits: complete privacy, offline usage, cost-effective, easy model switching, 
+
+            Benefits: complete privacy, offline usage, cost-effective, easy model switching,
             REST API integration, and custom model support.""",
             metadata={"document_id": "ollama_info", "source": "tech_docs", "category": "tools"},
         ),
@@ -52,16 +52,16 @@ def create_sample_documents() -> list[Document]:
             content="""Text embeddings are numerical representations of text that capture semantic meaning
             in high-dimensional vector space. Similar texts have similar embeddings, enabling semantic
             search, clustering, and recommendations.
-            
+
             Popular models: OpenAI embeddings, Sentence-BERT, Nomic Embed, All-MiniLM, and E5 models.
             Essential for RAG systems to find relevant context for language model queries.""",
             metadata={"document_id": "embeddings_info", "source": "tech_docs", "category": "ai"},
         ),
         Document(
             content="""SPADE (Smart Python Agent Development Environment) is a multi-agent system platform
-            based on XMPP technology. It enables intelligent agents to communicate in distributed 
+            based on XMPP technology. It enables intelligent agents to communicate in distributed
             environments using behaviors, templates, and various communication patterns.
-            
+
             Features: XMPP communication, behavior-driven design, message filtering, web monitoring,
             external service integration, and LLM support via SPADE-LLM.""",
             metadata={"document_id": "spade_info", "source": "tech_docs", "category": "frameworks"},

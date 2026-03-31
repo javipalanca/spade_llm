@@ -26,7 +26,7 @@ Message routing enables you to automatically direct LLM responses to appropriate
 
 - **Technical issues** → Support team
 
-- **Sales inquiries** → Sales team  
+- **Sales inquiries** → Sales team
 
 - **General questions** → General support
 
@@ -64,9 +64,9 @@ def routing_function(msg, response, context):
     """
     Args:
         msg: Original SPADE message
-        response: LLM response text  
+        response: LLM response text
         context: Conversation context dict
-    
+
     Returns:
         str: Single recipient JID
         List[str]: Multiple recipients
@@ -86,15 +86,15 @@ Send to several agents simultaneously:
 def multi_router(msg, response, context):
     """Route to multiple recipients."""
     recipients = ["primary@example.com"]
-    
+
     # Copy errors to support
     if "error" in response.lower():
         recipients.append("support@example.com")
-    
+
     # Copy sales inquiries to sales team
     if "price" in response.lower():
         recipients.append("sales@example.com")
-    
+
     return recipients
 ```
 
@@ -107,10 +107,10 @@ from spade_llm.routing import RoutingResponse
 
 def advanced_router(msg, response, context):
     """Advanced routing with transformations."""
-    
+
     def add_signature(text):
         return f"{text}\n\n--\nProcessed by AI Assistant"
-    
+
     return RoutingResponse(
         recipients="customer@example.com",
         transform=add_signature,
@@ -126,19 +126,19 @@ def advanced_router(msg, response, context):
 def content_router(msg, response, context):
     """Route based on keywords in response."""
     text = response.lower()
-    
+
     # Technical issues
     if any(word in text for word in ["error", "bug", "crash", "problem"]):
         return "tech-support@example.com"
-    
+
     # Sales inquiries
     if any(word in text for word in ["price", "cost", "buy", "purchase"]):
         return "sales@example.com"
-    
+
     # Billing questions
     if any(word in text for word in ["payment", "invoice", "billing"]):
         return "billing@example.com"
-    
+
     return "general@example.com"  # Default
 ```
 
@@ -148,12 +148,12 @@ def content_router(msg, response, context):
 def sender_router(msg, response, context):
     """Route based on message sender."""
     sender = str(msg.sender)
-    
+
     # VIP users get priority support
     vip_users = ["ceo@company.com", "admin@company.com"]
     if sender in vip_users:
         return "vip-support@example.com"
-    
+
     # Internal vs external users
     if sender.endswith("@company.com"):
         return "internal@example.com"
@@ -168,18 +168,18 @@ def context_router(msg, response, context):
     """Route based on conversation history."""
     state = context.get("state", {})
     interaction_count = state.get("interaction_count", 0)
-    
+
     # Long conversations need escalation
     if interaction_count > 5:
         return RoutingResponse(
             recipients="escalation@example.com",
             metadata={"reason": "long_conversation"}
         )
-    
+
     # New conversations to onboarding
     if interaction_count <= 1:
         return "onboarding@example.com"
-    
+
     return "standard@example.com"
 ```
 
@@ -191,7 +191,7 @@ def context_router(msg, response, context):
 ```python
 def workflow_router(msg, response, context):
     """Route through workflow steps."""
-    
+
     if "analysis complete" in response.lower():
         return "review@example.com"
     elif "review approved" in response.lower():
@@ -213,7 +213,7 @@ def workflow_router(msg, response, context):
 ```python
 def router_with_fallback(msg, response, context):
     # Your routing logic here...
-    
+
     # If no specific rule matches, return to sender
     return None  # Sends back to original sender
 ```

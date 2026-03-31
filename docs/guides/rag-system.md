@@ -244,7 +244,7 @@ tech_retrieval = RetrievalAgent(
     retriever=tech_retriever
 )
 
-# HR policies retrieval agent  
+# HR policies retrieval agent
 hr_retrieval = RetrievalAgent(
     jid="hr_docs@localhost",
     password="pass",

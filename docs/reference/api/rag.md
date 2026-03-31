@@ -67,7 +67,7 @@ class BaseDocumentLoader:
     async def load_stream(self) -> AsyncGenerator[Document, None]:
         """Stream documents from the source as an async generator."""
         raise NotImplementedError
-    
+
     async def load(self) -> list[Document]:
         """Load all documents from the source into a list."""
         return [doc async for doc in self.load_stream()]
@@ -648,15 +648,15 @@ from spade_llm.providers import LLMProvider
 async def main():
     # Setup
     provider = LLMProvider(model="ollama/nomic-embed-text")
-    
+
     vector_store = Chroma(
         collection_name="docs",
         embedding_fn=provider.get_embeddings,
         persist_directory="./my_db"
     )
-    
+
     await vector_store.initialize()
-    
+
     # Add documents
     doc1 = Document(
         content="RAG combines retrieval and generation",
@@ -667,32 +667,32 @@ async def main():
         metadata={"topic": "vectors"}
     )
     docs = [doc1, doc2]
-    
+
     await vector_store.add_documents(docs)
-    
+
     # Search
     results = await vector_store.similarity_search("What is RAG?", k=2)
     for doc in results:
         print(doc.content)
-    
+
     # Search with scores
     scored_results = await vector_store.similarity_search_with_score(
         "semantic search", k=1
     )
     for doc, score in scored_results:
         print(f"Score: {score:.3f} - {doc.content}")
-    
+
     # Get by metadata
     rag_docs = await vector_store.get(where={"topic": "rag"})
     print(f"Found {len(rag_docs['ids'])} RAG documents")
-    
+
     # Delete specific documents by ID
     await vector_store.delete([doc1.id])
-    
+
     # Check count
     count = await vector_store.get_document_count()
     print(f"Remaining: {count} documents")
-    
+
     # Cleanup
     await vector_store.cleanup()
 ```
@@ -877,13 +877,13 @@ async def setup_retrieval():
     # Load and chunk documents
     loader = DirectoryLoader(path="./docs", glob_pattern="**/*.md")
     documents = await loader.load()
-    
+
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=500,
         chunk_overlap=100
     )
     chunks = splitter.split_documents(documents)
-    
+
     # Initialize vector store
     provider = LLMProvider(model="ollama/nomic-embed-text")
     vector_store = Chroma(
@@ -892,17 +892,17 @@ async def setup_retrieval():
     )
     await vector_store.initialize()
     await vector_store.add_documents(chunks)
-    
+
     # Create retriever
     retriever = VectorStoreRetriever(vector_store=vector_store)
-    
+
     # Retrieve documents
     results = await retriever.retrieve(
         query="How do I create a custom tool?",
         k=5,
         search_type="similarity"
     )
-    
+
     return results
 ```
 

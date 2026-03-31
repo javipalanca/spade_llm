@@ -58,31 +58,31 @@ logging.basicConfig(level=logging.INFO)
 async def main():
     # Load environment variables
     env_vars = load_env_vars()
-    
+
     # Configuration
     XMPP_SERVER = "localhost"  # or your XMPP server
     AGENT_JID = f"agent@{XMPP_SERVER}"
     EXPERT_JID = f"expert@{XMPP_SERVER}"
     USER_JID = f"user@{XMPP_SERVER}"
-    
+
     # Create OpenAI provider
     provider = LLMProvider(
         model="gpt-5-nano",
         api_key=env_vars["OPENAI_API_KEY"],
         temperature=0.7,
     )
-    
+
     # System prompt encouraging human consultation
     system_prompt = """You are an AI assistant with access to human experts.
-    
+
     When you need:
     - Current information not in your training data
     - Human judgment or opinions
     - Company-specific information
     - Clarification on ambiguous requests
-    
+
     Use the ask_human_expert tool to consult with human experts."""
-    
+
     # Create human consultation tool
     human_tool = HumanInTheLoopTool(
         human_expert_jid=EXPERT_JID,
@@ -90,7 +90,7 @@ async def main():
         name="ask_human_expert",
         description="Ask human expert for current info or clarification"
     )
-    
+
     # Create LLM agent with human tool
     agent = LLMAgent(
         jid=AGENT_JID,
@@ -100,7 +100,7 @@ async def main():
         tools=[human_tool],
         verify_security=False
     )
-    
+
     # Create chat interface for testing
     chat_agent = ChatAgent(
         jid=USER_JID,
@@ -108,11 +108,11 @@ async def main():
         target_agent_jid=AGENT_JID,
         verify_security=False
     )
-    
+
     # Start agents
     await agent.start()
     await chat_agent.start()
-    
+
     print("\n" + "="*50)
     print("Human-in-the-Loop Example Running")
     print("="*50)
@@ -126,7 +126,7 @@ async def main():
     print("\n🌐 Make sure human expert is connected at:")
     print("   http://localhost:8080")
     print("\n💬 Type 'exit' to quit\n")
-    
+
     # Run interactive chat
     try:
         await chat_agent.run_interactive(
@@ -180,7 +180,7 @@ async def main():
         model="gpt-5-nano",
         api_key="your-api-key",
     )
-    
+
     # Create LLM agent
     llm_agent = LLMAgent(
         jid="assistant@jabber.at",
@@ -188,21 +188,21 @@ async def main():
         provider=provider,
         system_prompt="You are a helpful assistant"
     )
-    
+
     # Create chat interface
     chat_agent = ChatAgent(
         jid="human@jabber.at",
         password="password2",
         target_agent_jid="assistant@jabber.at"
     )
-    
+
     # Start agents
     await llm_agent.start()
     await chat_agent.start()
-    
+
     print("Type messages to chat. Enter 'exit' to quit.")
     await chat_agent.run_interactive()
-    
+
     # Cleanup
     await chat_agent.stop()
     await llm_agent.stop()
@@ -248,20 +248,20 @@ async def main():
         },
         func=get_weather
     )
-    
+
     time_tool = LLMTool(
         name="get_time",
         description="Get current date and time",
         parameters={"type": "object", "properties": {}, "required": []},
         func=get_time
     )
-    
+
     # Create provider
     provider = LLMProvider(
         model="gpt-5-nano",
         api_key="your-api-key",
     )
-    
+
     # Create agent with tools
     agent = LLMAgent(
         jid="assistant@jabber.at",
@@ -270,14 +270,14 @@ async def main():
         system_prompt="You are a helpful assistant with access to weather and time information",
         tools=[weather_tool, time_tool]
     )
-    
+
     await agent.start()
     print("Agent with tools started!")
-    
+
     # Keep running
     import asyncio
     await asyncio.sleep(60)
-    
+
     await agent.stop()
 
 if __name__ == "__main__":
@@ -310,7 +310,7 @@ async def main():
         model="gpt-5-nano",
         api_key="your-api-key",
     )
-    
+
     # Analyzer agent
     analyzer = LLMAgent(
         jid="analyzer@jabber.at",
@@ -319,8 +319,8 @@ async def main():
         system_prompt="You analyze requests and provide detailed analysis. End with 'Analysis complete.'",
         routing_function=analyzer_router
     )
-    
-    # Reviewer agent  
+
+    # Reviewer agent
     reviewer = LLMAgent(
         jid="reviewer@jabber.at",
         password="password2",
@@ -328,7 +328,7 @@ async def main():
         system_prompt="You review analysis and either approve or reject. Say 'Approved' or 'Rejected'.",
         routing_function=reviewer_router
     )
-    
+
     # Executor agent
     executor = LLMAgent(
         jid="executor@jabber.at",
@@ -336,19 +336,19 @@ async def main():
         provider=provider,
         system_prompt="You execute approved plans and report completion."
     )
-    
+
     # Start all agents
     await analyzer.start()
-    await reviewer.start() 
+    await reviewer.start()
     await executor.start()
-    
+
     print("Multi-agent workflow started!")
     print("Send a request to analyzer@jabber.at to start the workflow")
-    
+
     # Keep running
     import asyncio
     await asyncio.sleep(120)
-    
+
     # Cleanup
     await analyzer.stop()
     await reviewer.stop()
@@ -371,7 +371,7 @@ async def main():
         temperature=0.7,
         timeout=120.0,
     )
-    
+
     # Create agent
     agent = LLMAgent(
         jid="local-agent@jabber.at",
@@ -379,14 +379,14 @@ async def main():
         provider=provider,
         system_prompt="You are a helpful assistant running on a local model"
     )
-    
+
     await agent.start()
     print("Local Ollama agent started!")
-    
+
     # Keep running
     import asyncio
     await asyncio.sleep(60)
-    
+
     await agent.stop()
 
 if __name__ == "__main__":
@@ -409,7 +409,7 @@ async def main():
         model="gpt-5-nano",
         api_key="your-api-key",
     )
-    
+
     agent = LLMAgent(
         jid="managed-agent@jabber.at",
         password="password",
@@ -419,18 +419,18 @@ async def main():
         termination_markers=["DONE", "COMPLETE", "FINISHED"],
         on_conversation_end=conversation_ended
     )
-    
+
     await agent.start()
     print("Agent with conversation management started!")
-    
+
     # Test conversation state
     import asyncio
     await asyncio.sleep(30)
-    
+
     # Check conversation states
     # In a real application, you'd have actual conversation IDs
     print("Active conversations:", len(agent.context.get_active_conversations()))
-    
+
     await agent.stop()
 
 if __name__ == "__main__":
@@ -508,7 +508,7 @@ async def main():
             metadata={"topic": "spade", "id": "3"}
         )
     ]
-    
+
     # 2. Split into chunks
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=500,
@@ -516,40 +516,40 @@ async def main():
     )
     chunks = splitter.split_documents(documents)
     console.print(f"[blue]Created {len(chunks)} chunks[/blue]")
-    
+
     # 3. Setup embedding provider
     provider = LLMProvider(
         model="ollama/nomic-embed-text",
     )
-    
+
     # 4. Initialize vector store
     vector_store = Chroma(
         collection_name="rag_example",
         embedding_fn=provider.get_embeddings
     )
     await vector_store.initialize()
-    
+
     # 5. Index documents
     await vector_store.add_documents(chunks)
     count = await vector_store.get_document_count()
     console.print(f"[green]Indexed {count} documents[/green]")
-    
+
     # 6. Create retriever and search
     retriever = VectorStoreRetriever(vector_store=vector_store)
-    
+
     queries = [
         "How do embeddings work?",
         "What is SPADE?",
         "Running models locally"
     ]
-    
+
     for query in queries:
         console.print(f"\n[yellow]Query:[/yellow] {query}")
         results = await retriever.retrieve(query, k=2)
-        
+
         for i, doc in enumerate(results, 1):
             console.print(f"  {i}. {doc.content[:100]}...")
-    
+
     # Cleanup
     await vector_store.cleanup()
     console.print("\n[green]Done![/green]")
@@ -576,7 +576,7 @@ See `examples/rag_vs_no_rag.py` for a complete comparison demonstrating:
 ## Running Examples
 
 1. **Install dependencies**: `pip install spade_llm` or `uv add spade_llm`
-2. **For RAG examples**: `pip install spade_llm[chroma]` (or `uv add spade_llm --extra chroma`), `ollama pull nomic-embed-text` 
+2. **For RAG examples**: `pip install spade_llm[chroma]` (or `uv add spade_llm --extra chroma`), `ollama pull nomic-embed-text`
 3. **Set environment variables**: `export OPENAI_API_KEY="your-key"`
 4. **Run example**: `python example.py`
 

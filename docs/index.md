@@ -44,7 +44,7 @@ keywords: SPADE-LLM, multi-agent systems, large language models, OpenAI, GPT, Ol
   "requirements": "Python 3.11+",
   "featureList": [
     "Multi-LLM Provider Support",
-    "Advanced Tool System", 
+    "Advanced Tool System",
     "Context Management",
     "Memory Extensions",
     "Message Routing",
@@ -66,31 +66,31 @@ keywords: SPADE-LLM, multi-agent systems, large language models, OpenAI, GPT, Ol
     <h3>Built-in XMPP Server</h3>
     <p>No external server setup required with SPADE 4.0+. Get started instantly with zero configuration.</p>
   </div>
-  
+
   <div class="feature-card">
     <div class="feature-icon">🧠</div>
     <h3>Multi-Provider Support</h3>
     <p>140+ providers via LiteLLM. Switch providers seamlessly.</p>
   </div>
-  
+
   <div class="feature-card">
     <div class="feature-icon">⚡</div>
     <h3>Advanced Tool System</h3>
     <p>Function calling with async execution, human-in-the-loop workflows, and LangChain integration.</p>
   </div>
-  
+
   <div class="feature-card">
     <div class="feature-icon">🎯</div>
     <h3>Context Management</h3>
     <p>Multi-conversation support with automatic cleanup and intelligent context window management.</p>
   </div>
-  
+
   <div class="feature-card">
     <div class="feature-icon">🛡️</div>
     <h3>Guardrails System</h3>
     <p>Content filtering and safety controls for input/output with customizable rules and policies.</p>
   </div>
-  
+
   <div class="feature-card">
     <div class="feature-icon">🌐</div>
     <h3>MCP<br>Integration</h3>
@@ -102,7 +102,7 @@ keywords: SPADE-LLM, multi-agent systems, large language models, OpenAI, GPT, Ol
     <h3>Coordinator Agents</h3>
     <p>LLM-driven coordinators orchestrate SPADE subagents with shared context, sequential planning, and inter-organization routing.</p>
   </div>
-  
+
   <div class="feature-card">
     <div class="feature-icon">📚</div>
     <h3>RAG<br>System</h3>
@@ -157,19 +157,19 @@ from spade_llm import LLMAgent, LLMProvider
 async def main():
     # First, start SPADE's built-in server:
     # spade run
-    
+
     provider = LLMProvider(
         model="gpt-5-nano",
         api_key="your-api-key",
     )
-    
+
     agent = LLMAgent(
         jid="assistant@localhost",
         password="password",
         provider=provider,
         system_prompt="You are a helpful assistant"
     )
-    
+
     await agent.start()
 
 if __name__ == "__main__":
@@ -218,5 +218,3 @@ Explore the [examples directory](https://github.com/javipalanca/spade_llm/tree/m
 - **`rag_system_ollama_chroma.py`** - Complete RAG system demonstration
 - **`rag_vs_no_rag_demo.py`** - Comparison of responses with and without RAG
 - **`valencia_multiagent_trip_planner.py`** - Multi-agent workflow
-
-

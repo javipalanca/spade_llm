@@ -29,7 +29,7 @@ LLMAgent(
 **Parameters:**
 
 - `jid` - Jabber ID for the agent
-- `password` - Agent password  
+- `password` - Agent password
 - `provider` - LLM provider instance
 - `reply_to` - Optional fixed reply destination
 - `routing_function` - Custom routing function
@@ -119,7 +119,7 @@ ChatAgent(
 **Parameters:**
 
 - `target_agent_jid` - JID of agent to communicate with
-- `display_callback` - Custom response display function  
+- `display_callback` - Custom response display function
 - `on_message_sent` - Callback after sending message
 - `on_message_received` - Callback after receiving response
 - `verbose` - Enable detailed logging

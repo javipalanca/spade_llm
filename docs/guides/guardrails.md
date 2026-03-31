@@ -7,7 +7,7 @@ Protect your agents with **configurable content filtering** and **safety control
 ```mermaid
 flowchart TD
     A[Input Message] --> B[Input Guardrails]
-    B -->|Pass| C[LLM Processing]  
+    B -->|Pass| C[LLM Processing]
     B -->|Block| D[Send Block Response]
     B -->|Modify| E[Process Modified Content]
     E --> C
@@ -134,11 +134,11 @@ safety_checker = LLMGuardrail(
     name="ai_safety_validator",
     provider=safety_provider,
     safety_prompt="""
-    Analyze this text for harmful content including violence, harassment, 
+    Analyze this text for harmful content including violence, harassment,
     illegal activities, or inappropriate requests.
-    
+
     Respond with JSON: {"safe": true/false, "reason": "explanation if unsafe"}
-    
+
     Text: {content}
     """,
     blocked_message="This content was flagged by our safety system."
@@ -154,16 +154,16 @@ from spade_llm.guardrails import CustomFunctionGuardrail, GuardrailResult, Guard
 def business_hours_check(content: str, context: dict) -> GuardrailResult:
     """Only allow certain requests during business hours."""
     from datetime import datetime
-    
+
     current_hour = datetime.now().hour
-    
+
     if "urgent" in content.lower() and not (9 <= current_hour <= 17):
         return GuardrailResult(
             action=GuardrailAction.MODIFY,
             content=content + " [Note: Non-business hours - response may be delayed]",
             reason="Added business hours notice"
         )
-    
+
     return GuardrailResult(action=GuardrailAction.PASS, content=content)
 
 hours_filter = CustomFunctionGuardrail(
@@ -203,7 +203,7 @@ output_filters = [
 ]
 
 agent = LLMAgent(
-    jid="assistant@example.com", 
+    jid="assistant@example.com",
     password="password",
     provider=provider,
     output_guardrails=output_filters  # Validate LLM responses
@@ -230,7 +230,7 @@ content_pipeline = CompositeGuardrail(
 
 agent = LLMAgent(
     jid="assistant@example.com",
-    password="password", 
+    password="password",
     provider=provider,
     input_guardrails=[content_pipeline]
 )
@@ -250,7 +250,7 @@ agent.add_input_guardrail(safety_filter)
 # Control at runtime
 if debug_mode:
     safety_filter.enabled = False  # Disable for testing
-    
+
 if high_security_mode:
     safety_filter.enabled = True   # Enable for production
 ```
@@ -264,7 +264,7 @@ dev_guardrails = [
     KeywordGuardrail("basic", ["exploit"], GuardrailAction.WARNING)
 ]
 
-# Production: Strict filtering  
+# Production: Strict filtering
 prod_guardrails = [
     KeywordGuardrail("security", ["hack", "exploit", "malware"], GuardrailAction.BLOCK),
     LLMGuardrail("ai_safety", safety_provider),
@@ -278,6 +278,6 @@ guardrails = prod_guardrails if ENVIRONMENT == "production" else dev_guardrails
 ## Next Steps
 
 - **[API Reference](../reference/api/guardrails.md)** - Complete API documentation
-- **[Tools System](tools-system.md)** - Function calling capabilities  
+- **[Tools System](tools-system.md)** - Function calling capabilities
 - **[Architecture](architecture.md)** - Understanding system design
 - **[Examples](../reference/examples.md)** - Working code examples

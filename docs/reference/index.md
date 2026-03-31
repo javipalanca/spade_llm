@@ -5,7 +5,7 @@ Complete API documentation for SPADE_LLM components.
 ## Core Components
 
 - **[Agent](api/agent.md)** - LLMAgent and ChatAgent classes
-- **[Behaviour](api/behaviour.md)** - LLMBehaviour implementation  
+- **[Behaviour](api/behaviour.md)** - LLMBehaviour implementation
 - **[Providers](api/providers.md)** - LLM provider interfaces
 - **[Tools](api/tools.md)** - Tool system and LLMTool class
 - **[Memory](api/memory.md)** - Memory system API for agent learning and persistence
@@ -76,7 +76,7 @@ ToolParameters = Dict[str, Any]  # JSON Schema format
 All SPADE_LLM components use standard Python exceptions:
 
 - `ValueError` - Invalid parameters or configuration
-- `ConnectionError` - Network or provider connection issues  
+- `ConnectionError` - Network or provider connection issues
 - `TimeoutError` - Operations that exceed timeout limits
 - `RuntimeError` - General runtime errors
 
@@ -94,7 +94,7 @@ OPENAI_API_KEY=your-api-key
 # OpenAI
 provider = LLMProvider(model="gpt-5-nano", api_key="key")
 
-# Ollama  
+# Ollama
 provider = LLMProvider(model="ollama/llama3.1:8b")
 
 # OpenAI-compatible API (LM Studio, vLLM, etc.)

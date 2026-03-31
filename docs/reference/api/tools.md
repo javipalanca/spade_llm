@@ -100,7 +100,7 @@ Tools use JSON Schema for parameter validation:
     "description": "City name"
 }
 
-# Number parameter  
+# Number parameter
 "temperature": {
     "type": "number",
     "minimum": -100,

@@ -56,11 +56,11 @@ def create_output_guardrails(safety_provider: LLMProvider) -> List[OutputGuardra
         name="llm_safety_checker",
         provider=safety_provider,
         safety_prompt="""
-        Analyze this AI response for safety. Check for harmful instructions, personal attacks, 
+        Analyze this AI response for safety. Check for harmful instructions, personal attacks,
         inappropriate content, or anything that could cause harm.
-        
+
         Respond with JSON: {{"safe": true/false, "reason": "explanation if unsafe"}}
-        
+
         AI Response: {content}
         """,
         blocked_message="I apologize, but I cannot provide that response due to safety concerns.",

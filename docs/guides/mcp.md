@@ -34,8 +34,8 @@ server_config = StdioServerConfig(
 ### SSE Servers
 
 !!! warning "SSE Transport Deprecated"
-    The SSE transport is deprecated in favor of the new Streamable HTTP transport. 
-    While SSE is still supported for backward compatibility, new implementations 
+    The SSE transport is deprecated in favor of the new Streamable HTTP transport.
+    While SSE is still supported for backward compatibility, new implementations
     should use `StreamableHttpServerConfig` instead of `SseServerConfig`.
 
 Communicate via Server-Sent Events over HTTP:
@@ -91,7 +91,7 @@ async def main():
         args=["-m", "file_manager_mcp"],
         cache_tools=True
     )
-    
+
     # Create agent with MCP integration
     agent = LLMAgent(
         jid="assistant@example.com",
@@ -100,7 +100,7 @@ async def main():
         system_prompt="You are a helpful assistant with file management capabilities",
         mcp_servers=[mcp_server]
     )
-    
+
     await agent.start()
 
 if __name__ == "__main__":
@@ -119,7 +119,7 @@ mcp_servers = [
         env={"DB_CONNECTION": "postgresql://localhost/mydb"}
     ),
     StdioServerConfig(
-        name="WeatherService", 
+        name="WeatherService",
         command="node",
         args=["weather_mcp_server.js"],
         env={"API_KEY": "your-weather-api-key"}
@@ -175,7 +175,7 @@ class MathMCPServer:
                 "name": "sqrt",
                 "description": "Calculate square root",
                 "inputSchema": {
-                    "type": "object", 
+                    "type": "object",
                     "properties": {
                         "number": {
                             "type": "number",
@@ -186,30 +186,30 @@ class MathMCPServer:
                 }
             }
         ]
-    
+
     def handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """Handle MCP requests."""
         method = request.get("method")
-        
+
         if method == "tools/list":
             return {
                 "jsonrpc": "2.0",
                 "id": request.get("id"),
                 "result": {"tools": self.tools}
             }
-        
+
         elif method == "tools/call":
             params = request.get("params", {})
             tool_name = params.get("name")
             arguments = params.get("arguments", {})
-            
+
             if tool_name == "calculate":
                 return self._calculate(request.get("id"), arguments)
             elif tool_name == "sqrt":
                 return self._sqrt(request.get("id"), arguments)
-            
+
             return self._error(request.get("id"), "Unknown tool")
-        
+
         elif method == "initialize":
             return {
                 "jsonrpc": "2.0",
@@ -225,23 +225,23 @@ class MathMCPServer:
                     }
                 }
             }
-        
+
         return self._error(request.get("id"), "Unknown method")
-    
+
     def _calculate(self, request_id: str, args: Dict[str, Any]) -> Dict[str, Any]:
         """Handle calculate tool call."""
         try:
             expression = args.get("expression", "")
             # Safe evaluation (restrict to math operations)
             result = eval(expression, {"__builtins__": {}, "math": math})
-            
+
             return {
                 "jsonrpc": "2.0",
                 "id": request_id,
                 "result": {
                     "content": [
                         {
-                            "type": "text", 
+                            "type": "text",
                             "text": f"Result: {result}"
                         }
                     ]
@@ -249,14 +249,14 @@ class MathMCPServer:
             }
         except Exception as e:
             return self._error(request_id, f"Calculation error: {str(e)}")
-    
+
     def _sqrt(self, request_id: str, args: Dict[str, Any]) -> Dict[str, Any]:
         """Handle sqrt tool call."""
         try:
             number = float(args.get("number", 0))
             if number < 0:
                 return self._error(request_id, "Cannot calculate square root of negative number")
-            
+
             result = math.sqrt(number)
             return {
                 "jsonrpc": "2.0",
@@ -272,7 +272,7 @@ class MathMCPServer:
             }
         except Exception as e:
             return self._error(request_id, f"Square root error: {str(e)}")
-    
+
     def _error(self, request_id: str, message: str) -> Dict[str, Any]:
         """Return error response."""
         return {
@@ -283,7 +283,7 @@ class MathMCPServer:
                 "message": message
             }
         }
-    
+
     def run(self):
         """Run the MCP server."""
         for line in sys.stdin:

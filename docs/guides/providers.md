@@ -14,7 +14,7 @@ graph TD
     B --> E[Anthropic]
     B --> F[Azure OpenAI]
     B --> G[Any OpenAI-compatible API]
-    
+
     C --> H[GPT-5-nano]
     D --> I[Llama / Mistral / Gemma]
     E --> J[Claude 3.5]

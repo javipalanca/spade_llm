@@ -135,14 +135,14 @@ async def main():
         model="gpt-5-nano",
         api_key="your-api-key",
     )
-    
+
     agent = LLMAgent(
         jid="assistant@localhost",  # Connects to built-in server
         password="password",
         provider=provider,
         system_prompt="You are a helpful assistant"
     )
-    
+
     await agent.start()
 
 if __name__ == "__main__":

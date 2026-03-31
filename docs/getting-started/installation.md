@@ -99,7 +99,7 @@ See the [Development Guide](../contributing/development.md) for instructions on 
 
 ## Troubleshooting
 
-**SPADE server not starting**: 
+**SPADE server not starting**:
 ```bash
 # Check if default ports are already in use
 netstat -an | grep 5222

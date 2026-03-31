@@ -23,7 +23,7 @@ Comprehensive guides for SPADE_LLM features and concepts.
 
 Each guide covers:
 - Core concepts and configuration
-- Common usage patterns  
+- Common usage patterns
 - Best practices and troubleshooting
 - Complete code examples
 
@@ -31,4 +31,3 @@ Each guide covers:
 
 - **[API Reference](../reference/index.md)** - Detailed API documentation
 - **[Examples](../reference/examples.md)** - Working code examples
-

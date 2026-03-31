@@ -19,22 +19,22 @@ graph TB
     A[LLM Agent] --> B[Dual Memory System]
     B --> C[Interaction Memory]
     B --> D[Agent Base Memory]
-    
+
     C --> E[JSON Storage]
     C --> F[Conversation-Specific]
     C --> G[Auto-Injection]
-    
+
     D --> H[SQLite Backend]
     D --> I[Agent-Wide Learning]
     D --> J[Categorized Storage]
-    
+
     K[Memory Tools] --> C
     K --> D
     L[LLM Integration] --> K
-    
+
     M[Context Manager] --> G
     N[Search Engine] --> J
-    
+
     style A fill:#e1f5fe
     style B fill:#fff3e0
     style C fill:#f3e5f5
@@ -274,25 +274,25 @@ async def basic_memory_example():
         model="gpt-5-nano",
         api_key="your-api-key",
     )
-    
+
     agent = LLMAgent(
         jid="learning_agent@example.com",
         password="password",
         provider=provider,
         agent_base_memory=True,
         system_prompt="""You are a learning assistant with memory capabilities.
-        
+
         Use these tools to learn and remember:
         - store_memory: Save important information for future use
         - search_memories: Find relevant information from past conversations
         - list_memories: Browse your stored knowledge by category
-        
+
         Remember facts, patterns, preferences, and capabilities you discover."""
     )
-    
+
     await agent.start()
     print("Agent started with memory capabilities")
-    
+
     # Agent will automatically use memory tools during conversations
     await asyncio.sleep(3600)  # Run for 1 hour
     await agent.stop()
@@ -309,7 +309,7 @@ async def dual_memory_example():
         model="gpt-5-nano",
         api_key="your-api-key",
     )
-    
+
     agent = LLMAgent(
         jid="advanced_agent@example.com",
         password="password",
@@ -317,15 +317,15 @@ async def dual_memory_example():
         interaction_memory=True,  # Conversation-specific memory
         agent_base_memory=True,   # Long-term learning memory
         system_prompt="""You are an advanced assistant with dual memory systems.
-        
+
         You have access to:
         - Interaction memory: For conversation-specific details
         - Base memory: For long-term learning across all conversations
-        
+
         Use remember_interaction_info for conversation-specific information.
         Use store_memory, search_memories, and list_memories for long-term learning."""
     )
-    
+
     await agent.start()
     print("Agent started with dual memory systems")
     await asyncio.sleep(3600)
@@ -340,7 +340,7 @@ async def multi_agent_memory_example():
         model="gpt-5-nano",
         api_key="your-api-key",
     )
-    
+
     # Database specialist with memory
     db_agent = LLMAgent(
         jid="db_specialist@example.com",
@@ -348,11 +348,11 @@ async def multi_agent_memory_example():
         provider=provider,
         agent_base_memory=True,
         system_prompt="""You are a database specialist with memory capabilities.
-        
+
         Store database facts, patterns, and user preferences.
         Search your memory for relevant database solutions."""
     )
-    
+
     # API specialist with memory
     api_agent = LLMAgent(
         jid="api_specialist@example.com",
@@ -360,19 +360,19 @@ async def multi_agent_memory_example():
         provider=provider,
         agent_base_memory=True,
         system_prompt="""You are an API specialist with memory capabilities.
-        
+
         Remember API patterns, authentication methods, and integration details.
         Use your memory to provide consistent API guidance."""
     )
-    
+
     await db_agent.start()
     await api_agent.start()
-    
+
     print("Multi-agent system with individual memory systems started")
-    
+
     # Each agent maintains its own memory
     await asyncio.sleep(3600)
-    
+
     await db_agent.stop()
     await api_agent.stop()
 ```

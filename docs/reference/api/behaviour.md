@@ -119,10 +119,10 @@ async def run(self):
     msg = await self.receive(timeout=10)
     if not msg:
         return
-    
+
     # Update context
     self.context.add_message(msg, conversation_id)
-    
+
     # Process with LLM
     await self._process_message_with_llm(msg, conversation_id)
 ```
@@ -134,19 +134,19 @@ async def _process_message_with_llm(self, msg, conversation_id):
     """Process message with tool execution."""
     max_iterations = 20
     current_iteration = 0
-    
+
     while current_iteration < max_iterations:
         response = await self.provider.get_llm_response(self.context, self.tools)
         tool_calls = response.get('tool_calls', [])
-        
+
         if not tool_calls:
             # Final response
             break
-            
+
         # Execute tools
         for tool_call in tool_calls:
             await self._execute_tool(tool_call)
-        
+
         current_iteration += 1
 ```
 
@@ -156,7 +156,7 @@ async def _process_message_with_llm(self, msg, conversation_id):
 def _end_conversation(self, conversation_id: str, reason: str):
     """End conversation and cleanup."""
     self._active_conversations[conversation_id]["state"] = reason
-    
+
     if self.on_conversation_end:
         self.on_conversation_end(conversation_id, reason)
 ```
@@ -171,17 +171,17 @@ class CustomLLMBehaviour(LLMBehaviour):
         """Custom processing logic."""
         # Pre-processing
         await self.custom_preprocessing()
-        
+
         # Standard processing
         await super().run()
-        
+
         # Post-processing
         await self.custom_postprocessing()
-    
+
     async def custom_preprocessing(self):
         """Custom preprocessing."""
         pass
-    
+
     async def custom_postprocessing(self):
         """Custom postprocessing."""
         pass
@@ -206,7 +206,7 @@ class MyAgent(Agent):
 The behaviour handles various error conditions:
 
 - **Provider Errors**: LLM service failures
-- **Tool Errors**: Tool execution failures  
+- **Tool Errors**: Tool execution failures
 - **Timeout Errors**: Response timeouts
 - **Conversation Limits**: Max interaction limits
 

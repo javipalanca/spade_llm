@@ -31,7 +31,7 @@ graph TD
 The **conversation system** provides comprehensive management for multi-agent interactions:
 
 - **Multi-turn Context**: Maintains _complete conversation history_ across interactions
-- **Concurrent Conversations**: Supports _multiple simultaneous conversations_ per agent  
+- **Concurrent Conversations**: Supports _multiple simultaneous conversations_ per agent
 - **Automatic Lifecycle**: Manages _memory and conversation cleanup_ efficiently
 - **Flexible Termination**: Controls _interaction limits and ending conditions_
 
@@ -95,7 +95,7 @@ agent = LLMAgent(
 
 # Multiple termination markers
 agent = LLMAgent(
-    jid="assistant@example.com", 
+    jid="assistant@example.com",
     password="password",
     provider=provider,
     termination_markers=["<DONE>", "<END>", "<GOODBYE>", "<TERMINATE>"]
@@ -108,8 +108,8 @@ Train your LLM to use termination markers appropriately:
 
 ```python
 system_prompt = """
-You are a helpful assistant. When a conversation naturally comes to an end 
-or the user says goodbye, include <DONE> at the end of your response to 
+You are a helpful assistant. When a conversation naturally comes to an end
+or the user says goodbye, include <DONE> at the end of your response to
 properly close the conversation.
 
 Example:
@@ -188,19 +188,19 @@ agent = LLMAgent(
 def on_conversation_end(conversation_id: str, reason: str):
     """Called when conversation terminates."""
     print(f"Conversation {conversation_id} ended: {reason}")
-    
+
     # Possible reasons:
     # - "max_interactions_reached"
-    # - "termination_marker_found" 
+    # - "termination_marker_found"
     # - "manual_termination"
-    
+
     # Custom cleanup logic
     save_conversation_log(conversation_id)
     send_completion_notification(conversation_id)
 
 agent = LLMAgent(
     jid="assistant@example.com",
-    password="password", 
+    password="password",
     provider=provider,
     max_interactions_per_conversation=5,
     on_conversation_end=on_conversation_end

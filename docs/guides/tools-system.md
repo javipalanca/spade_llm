@@ -24,7 +24,7 @@ flowchart TD
 The **Tools System** empowers LLM agents to _extend beyond conversation_ by executing real functions. This enables agents to:
 
 - **🔧 Execute Python functions** with dynamic parameters
-- **🌐 Access external APIs** and databases  
+- **🌐 Access external APIs** and databases
 - **📁 Process files** and perform calculations
 - **🔗 Integrate with third-party services**
 
@@ -145,7 +145,7 @@ async def calculate_stats(numbers: list) -> str:
     """Calculate statistics for a list of numbers."""
     if not numbers:
         return "Error: No numbers provided"
-    
+
     stats = {
         "count": len(numbers),
         "mean": sum(numbers) / len(numbers),
@@ -212,7 +212,7 @@ agent = LLMAgent(
 **When the LLM uses this tool:**
 
 1. **Question sent** to human expert via XMPP
-2. **Expert receives** notification in web interface  
+2. **Expert receives** notification in web interface
 3. **Human provides** response through browser
 4. **Response returns** to LLM via XMPP
 5. **Agent continues** with human-informed answer
@@ -222,7 +222,7 @@ agent = LLMAgent(
 User: "What's our company policy on remote work?"
 Agent: [Uses ask_human_expert tool]
 → Human Expert: "We allow 3 days remote per week with manager approval"
-Agent: "According to our HR expert, our policy allows up to 3 days 
+Agent: "According to our HR expert, our policy allows up to 3 days
        remote work per week with manager approval."
 ```
 
@@ -384,13 +384,13 @@ from spade_llm.tools import LangChainToolAdapter
 # Create LangChain tool
 search_lc = DuckDuckGoSearchRun()
 
-# Adapt for SPADE_LLM  
+# Adapt for SPADE_LLM
 search_tool = LangChainToolAdapter(search_lc)
 
 # Use with agent
 agent = LLMAgent(
     jid="assistant@example.com",
-    password="password", 
+    password="password",
     provider=provider,
     tools=[search_tool]
 )

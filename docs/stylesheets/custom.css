@@ -13,23 +13,23 @@
   --spade-purple-700: #7c3aed;
   --spade-purple-800: #6b21a8;
   --spade-purple-900: #581c87;
-  
+
   /* Material Design Overrides */
   --md-primary-fg-color: var(--spade-purple-600);
   --md-primary-fg-color--light: var(--spade-purple-500);
   --md-primary-fg-color--dark: var(--spade-purple-700);
   --md-accent-fg-color: var(--spade-purple-500);
-  
+
   /* Force button colors for light mode */
   --md-typeset-color: #1f2937;
   --md-typeset-a-color: var(--spade-purple-600);
-  
+
   /* Modern Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  
+
   /* Modern Radius */
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
@@ -49,13 +49,13 @@
   --spade-purple-700: #c8bfec;
   --spade-purple-800: #d8d0f4;
   --spade-purple-900: #e8e2fc;
-  
+
   /* Override Material Design colors for dark mode */
   --md-primary-fg-color: #a995d4;
   --md-primary-fg-color--light: #b8aee4;
   --md-primary-fg-color--dark: #8b7aa8;
   --md-accent-fg-color: #a995d4;
-  
+
   /* Force button colors for dark mode */
   --md-typeset-color: #e2e8f0;
   --md-typeset-a-color: #a995d4;
@@ -83,7 +83,7 @@
 
 /* Force dark mode header elements to be visible */
 [data-md-color-scheme="slate"] .md-header .md-header__inner,
-[data-md-color-scheme="slate"] .md-header .md-header__button,  
+[data-md-color-scheme="slate"] .md-header .md-header__button,
 [data-md-color-scheme="slate"] .md-header .md-header__topic,
 [data-md-color-scheme="slate"] .md-header .md-header__title,
 [data-md-color-scheme="slate"] .md-header .md-icon,
@@ -394,11 +394,11 @@
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .feature-card {
     padding: 1rem;
   }
-  
+
   .md-header__button.md-logo img {
     height: 2rem;
   }
@@ -566,7 +566,7 @@ p .md-button.md-button--primary {
 [data-md-color-scheme="default"] .md-search__label {
   color: var(--spade-purple-700) !important;
 }
-[data-md-color-scheme="default"] .md-search__form, 
+[data-md-color-scheme="default"] .md-search__form,
 [data-md-toggle=search]:checked~.md-header .md-search__form {
   background-color: var(--md-default-bg-color) !important;
 }
@@ -759,7 +759,7 @@ p .md-button.md-button--primary {
   border-color: rgba(169, 149, 212, 0.2) !important;
   /* Remove problematic filters */
   filter: none !important;
-  
+
   /* Force Mermaid elements to use light colors on dark background */
   color: #e2e8f0 !important;
 }
@@ -1365,29 +1365,29 @@ p .md-button.md-button--primary {
   .hero-section {
     padding: 3rem 1.5rem;
   }
-  
+
   .hero-title {
     font-size: 2.5rem;
   }
-  
+
   .hero-subtitle {
     font-size: 1.125rem;
   }
-  
+
   .hero-buttons {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .feature-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
-  
+
   .feature-card {
     padding: 1.5rem;
   }
-  
+
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1397,7 +1397,7 @@ p .md-button.md-button--primary {
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .hero-title {
     font-size: 2rem;
   }
@@ -1543,7 +1543,7 @@ p .md-button.md-button--primary {
 
 /* FORCE all header elements to be visible in light mode */
 [data-md-color-scheme="default"] .md-header .md-header__inner,
-[data-md-color-scheme="default"] .md-header .md-header__button,  
+[data-md-color-scheme="default"] .md-header .md-header__button,
 [data-md-color-scheme="default"] .md-header .md-header__topic,
 [data-md-color-scheme="default"] .md-header .md-header__title,
 [data-md-color-scheme="default"] .md-header .md-icon,

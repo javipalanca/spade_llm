@@ -42,16 +42,16 @@ logger = logging.getLogger(__name__)
 
 async def main():
     print("🛡️ Guardrails Tutorial: Basic Keyword Filtering")
-    
+
     # Configuration
     xmpp_server = input("XMPP server domain (default: localhost): ") or "localhost"
-    
+
     # Create provider
     provider = LLMProvider(
         model="gpt-5-nano",
         api_key=getpass.getpass("OpenAI API key: "),
     )
-    
+
     # Create keyword guardrail that BLOCKS harmful content
     safety_guardrail = KeywordGuardrail(
         name="harmful_content_filter",
@@ -60,7 +60,7 @@ async def main():
         case_sensitive=False,
         blocked_message="I cannot help with potentially harmful activities."
     )
-    
+
     # Create LLM agent with input guardrail
     llm_agent = LLMAgent(
         jid=f"safe_assistant@{xmpp_server}",
@@ -69,32 +69,32 @@ async def main():
         system_prompt="You are a helpful and safe AI assistant.",
         input_guardrails=[safety_guardrail]  # Apply to incoming messages
     )
-    
+
     # Create chat agent
     def display_response(message: str, sender: str):
         print(f"\n🤖 Safe Assistant: {message}")
         print("-" * 50)
-    
+
     chat_agent = ChatAgent(
         jid=f"user@{xmpp_server}",
         password=getpass.getpass("Chat agent password: "),
         target_agent_jid=f"safe_assistant@{xmpp_server}",
         display_callback=display_response
     )
-    
+
     try:
         # Start agents
         await llm_agent.start()
         await chat_agent.start()
-        
+
         print("✅ Safe assistant started!")
         print("🧪 Test with: 'How to hack a system?' (should be blocked)")
         print("💬 Or try: 'How to protect my computer?' (should pass)")
         print("Type 'exit' to quit\n")
-        
+
         # Run interactive chat
         await chat_agent.run_interactive()
-        
+
     except KeyboardInterrupt:
         print("\n👋 Shutting down...")
     finally:
@@ -139,7 +139,7 @@ You can chain multiple guardrails together. They execute in order:
 ```python
 def create_input_guardrails():
     """Create a pipeline of input guardrails."""
-    
+
     # 1. Block harmful content
     safety_filter = KeywordGuardrail(
         name="harmful_content_filter",
@@ -148,7 +148,7 @@ def create_input_guardrails():
         case_sensitive=False,
         blocked_message="I cannot help with potentially harmful activities."
     )
-    
+
     # 2. Filter profanity
     profanity_filter = KeywordGuardrail(
         name="profanity_filter",
@@ -157,7 +157,7 @@ def create_input_guardrails():
         replacement="[FILTERED]",
         case_sensitive=False
     )
-    
+
     return [safety_filter, profanity_filter]
 
 # Use in agent
@@ -208,7 +208,7 @@ from spade_llm.guardrails import LLMGuardrail
 
 def create_output_guardrails(safety_provider):
     """Create output guardrails using LLM validation."""
-    
+
     # LLM-based safety checker
     safety_guardrail = LLMGuardrail(
         name="llm_safety_checker",
@@ -219,14 +219,14 @@ def create_output_guardrails(safety_provider):
         - Personal attacks or harassment
         - Inappropriate content
         - Anything that could cause harm
-        
+
         Respond with JSON: {"safe": true/false, "reason": "explanation if unsafe"}
-        
+
         AI Response: {content}
         """,
         blocked_message="I apologize, but I cannot provide that response due to safety concerns."
     )
-    
+
     return [safety_guardrail]
 
 # Create separate provider for safety validation
@@ -261,11 +261,11 @@ import re
 
 class EmailRedactionGuardrail(Guardrail):
     """Custom guardrail that redacts email addresses."""
-    
+
     def __init__(self, name: str = "email_redaction", enabled: bool = True):
         super().__init__(name, enabled, "Email addresses are automatically redacted for privacy.")
         self.email_pattern = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b')
-    
+
     async def check(self, content: str, context: Dict[str, Any]) -> GuardrailResult:
         """Check and redact email addresses."""
         if self.email_pattern.search(content):
@@ -316,7 +316,7 @@ logger = logging.getLogger(__name__)
 
 def create_input_guardrails():
     """Create comprehensive input guardrail pipeline."""
-    
+
     # 1. Block harmful content
     harmful_filter = KeywordGuardrail(
         name="harmful_content_filter",
@@ -325,36 +325,36 @@ def create_input_guardrails():
         case_sensitive=False,
         blocked_message="I cannot help with potentially harmful activities."
     )
-    
+
     # 2. Filter profanity
     profanity_filter = KeywordGuardrail(
-        name="profanity_filter", 
+        name="profanity_filter",
         blocked_keywords=["damn", "hell", "stupid", "idiot", "crap"],
         action=GuardrailAction.MODIFY,
         replacement="[FILTERED]",
         case_sensitive=False
     )
-    
+
     return [harmful_filter, profanity_filter]
 
 def create_output_guardrails(safety_provider):
     """Create output guardrail pipeline with LLM validation."""
-    
+
     # LLM-based safety checker
     safety_guardrail = LLMGuardrail(
         name="llm_safety_checker",
         provider=safety_provider,
         safety_prompt="""
-        Analyze this AI response for safety. Check for harmful instructions, 
+        Analyze this AI response for safety. Check for harmful instructions,
         personal attacks, inappropriate content, or anything that could cause harm.
-        
+
         Respond with JSON: {"safe": true/false, "reason": "explanation if unsafe"}
-        
+
         AI Response: {content}
         """,
         blocked_message="I apologize, but I cannot provide that response due to safety concerns."
     )
-    
+
     return [safety_guardrail]
 
 def on_guardrail_trigger(result):
@@ -363,7 +363,7 @@ def on_guardrail_trigger(result):
         name="guardrail", level=logging.INFO, pathname="", lineno=0,
         msg="", args=(), exc_info=None
     ))
-    
+
     if result.action == GuardrailAction.BLOCK:
         print(f"🚫 [{timestamp}] BLOCKED: {result.reason}")
     elif result.action == GuardrailAction.MODIFY:
@@ -373,28 +373,28 @@ def on_guardrail_trigger(result):
 
 async def main():
     print("🛡️ Multi-Layer Guardrails Example")
-    
+
     # Configuration
     xmpp_server = input("XMPP server domain (default: localhost): ") or "localhost"
     api_key = getpass.getpass("OpenAI API key: ")
-    
+
     # Create providers
     main_provider = LLMProvider(
         model="gpt-5-nano",
         api_key=api_key,
         temperature=0.7
     )
-    
+
     safety_provider = LLMProvider(
         model="gpt-5-nano",
         api_key=api_key,
         temperature=0.3
     )
-    
+
     # Create guardrails
     input_guardrails = create_input_guardrails()
     output_guardrails = create_output_guardrails(safety_provider)
-    
+
     # Create protected agent
     llm_agent = LLMAgent(
         jid=f"guardian_ai@{xmpp_server}",
@@ -405,24 +405,24 @@ async def main():
         output_guardrails=output_guardrails,
         on_guardrail_trigger=on_guardrail_trigger
     )
-    
+
     # Create chat interface
     def display_response(message: str, sender: str):
         print(f"\n🤖 Guardian AI: {message}")
         print("-" * 50)
-    
+
     chat_agent = ChatAgent(
         jid=f"user@{xmpp_server}",
         password=getpass.getpass("Chat agent password: "),
         target_agent_jid=f"guardian_ai@{xmpp_server}",
         display_callback=display_response
     )
-    
+
     try:
         # Start agents
         await llm_agent.start()
         await chat_agent.start()
-        
+
         print("✅ Guardian AI started with multi-layer protection!")
         print("🛡️ Protection layers:")
         print("• Input: Harmful content blocker, profanity filter")
@@ -432,10 +432,10 @@ async def main():
         print("• Harmful requests (will be blocked)")
         print("• Messages with profanity (will be filtered)")
         print("Type 'exit' to quit\n")
-        
+
         # Run interactive chat
         await chat_agent.run_interactive()
-        
+
     except KeyboardInterrupt:
         print("\n👋 Shutting down...")
     finally:

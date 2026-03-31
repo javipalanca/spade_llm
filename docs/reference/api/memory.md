@@ -40,8 +40,8 @@ memory = AgentInteractionMemory(
 
 ```python
 def add_information(
-    self, 
-    conversation_id: str, 
+    self,
+    conversation_id: str,
     information: str
 ) -> str
 ```
@@ -68,7 +68,7 @@ memory.add_information(
 
 ```python
 def get_information(
-    self, 
+    self,
     conversation_id: str
 ) -> List[str]
 ```
@@ -92,7 +92,7 @@ info_list = memory.get_information("user1_session")
 
 ```python
 def get_context_summary(
-    self, 
+    self,
     conversation_id: str
 ) -> Optional[str]
 ```
@@ -116,7 +116,7 @@ summary = memory.get_context_summary("user1_session")
 
 ```python
 def clear_conversation(
-    self, 
+    self,
     conversation_id: str
 ) -> bool
 ```
@@ -654,17 +654,17 @@ from typing import List, Optional, Dict, Any
 
 class MemoryBackend(ABC):
     """Abstract base class for memory storage backends"""
-    
+
     @abstractmethod
     async def initialize(self) -> None:
         """Initialize the backend"""
         pass
-    
+
     @abstractmethod
     async def store_memory(self, entry: MemoryEntry) -> str:
         """Store a memory entry"""
         pass
-    
+
     @abstractmethod
     async def search_memories(
         self,
@@ -675,7 +675,7 @@ class MemoryBackend(ABC):
     ) -> List[MemoryEntry]:
         """Search memories"""
         pass
-    
+
     @abstractmethod
     async def get_memories_by_category(
         self,
@@ -685,7 +685,7 @@ class MemoryBackend(ABC):
     ) -> List[MemoryEntry]:
         """Get memories by category"""
         pass
-    
+
     @abstractmethod
     async def get_recent_memories(
         self,
@@ -694,7 +694,7 @@ class MemoryBackend(ABC):
     ) -> List[MemoryEntry]:
         """Get recent memories"""
         pass
-    
+
     @abstractmethod
     async def update_memory(
         self,
@@ -703,17 +703,17 @@ class MemoryBackend(ABC):
     ) -> bool:
         """Update a memory entry"""
         pass
-    
+
     @abstractmethod
     async def delete_memory(self, memory_id: str) -> bool:
         """Delete a memory entry"""
         pass
-    
+
     @abstractmethod
     async def get_memory_stats(self, agent_id: str) -> Dict[str, Any]:
         """Get memory statistics"""
         pass
-    
+
     @abstractmethod
     async def cleanup(self) -> None:
         """Clean up backend resources"""
@@ -797,14 +797,14 @@ agent = LLMAgent(
     jid="agent@example.com",
     password="password",
     provider=provider,
-    
+
     # Memory configuration
     interaction_memory: Union[bool, Tuple[bool, str]] = False,
     agent_base_memory: Union[bool, Tuple[bool, str]] = False,
-    
+
     # Memory path (alternative to tuple syntax)
     memory_path: Optional[str] = None,
-    
+
     # System prompt with memory instructions
     system_prompt: str = "You have memory capabilities..."
 )
@@ -868,7 +868,7 @@ async def memory_integration_example():
         model="gpt-5-nano",
         api_key="your-api-key",
     )
-    
+
     # Create agent with both memory types
     agent = LLMAgent(
         jid="memory_agent@example.com",
@@ -877,45 +877,45 @@ async def memory_integration_example():
         interaction_memory=True,
         agent_base_memory=True,
         system_prompt="""You are an assistant with dual memory capabilities.
-        
+
         Use remember_interaction_info for conversation-specific information.
         Use store_memory, search_memories, and list_memories for long-term learning.
         """
     )
-    
+
     # Access memory instances directly
     interaction_memory = agent.interaction_memory
     base_memory = agent.agent_base_memory
-    
+
     # Direct memory operations
     if interaction_memory:
         interaction_memory.add_information("conv_1", "User prefers JSON")
         summary = interaction_memory.get_context_summary("conv_1")
         print(f"Interaction memory: {summary}")
-    
+
     if base_memory:
         await base_memory.initialize()
-        
+
         # Store a fact
         memory_id = await base_memory.store_memory(
             content="API requires authentication",
             category="fact",
             context="API integration"
         )
-        
+
         # Search memories
         results = await base_memory.search_memories("API")
         print(f"Found {len(results)} relevant memories")
-        
+
         # Get statistics
         stats = await base_memory.get_memory_stats()
         print(f"Memory statistics: {stats}")
-        
+
         await base_memory.cleanup()
-    
+
     await agent.start()
     print("Agent started with memory capabilities")
-    
+
     # Agent will automatically use memory during conversations
     await asyncio.sleep(10)
     await agent.stop()

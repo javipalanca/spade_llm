@@ -7,7 +7,7 @@ Enable LLM agents to **consult with human experts** during their reasoning proce
 The Human-in-the-Loop system allows LLM agents to ask questions to human experts when they need:
 
 - **🧠 Human judgment** or subjective opinions
-- **📊 Real-time information** not in their training data  
+- **📊 Real-time information** not in their training data
 - **🏢 Company-specific knowledge** or proprietary information
 - **❓ Clarification** on ambiguous requests
 - **✅ Verification** of important decisions
@@ -19,10 +19,10 @@ The system maintains the conversational flow while seamlessly integrating human 
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant A as LLM Agent  
+    participant A as LLM Agent
     participant H as Human Expert
     participant W as Web Interface
-    
+
     U->>A: Ask complex question
     A->>A: Analyze - needs human input
     A->>H: Send question via XMPP
@@ -58,7 +58,7 @@ from spade_llm.providers import LLMProvider
 # Create LLM agent with human tool
 # Note: Start SPADE server first: spade run
 agent = LLMAgent(
-    jid="agent@localhost", 
+    jid="agent@localhost",
     password="password",
     provider=LLMProvider(model="gpt-5-nano"),
     tools=[human_tool],
@@ -84,7 +84,7 @@ python -m spade_llm.human_interface.web_server
 # Chat agent for testing
 chat_agent = ChatAgent(
     jid="user@localhost",
-    password="password", 
+    password="password",
     target_agent_jid="agent@localhost"
 )
 
@@ -123,7 +123,7 @@ You need an XMPP server with WebSocket support:
 Create XMPP accounts for:
 
 - **Agent accounts**: `agent1@server`, `agent2@server`, etc.
-- **Human experts**: `expert1@server`, `expert2@server`, etc.  
+- **Human experts**: `expert1@server`, `expert2@server`, etc.
 - **Chat users**: `user1@server`, `user2@server`, etc.
 
 ## Configuration Options
@@ -149,7 +149,7 @@ system_prompt = """You are an AI assistant with access to human experts.
 Use the ask_human_expert tool when you need:
 - Current information not in your training data (after April 2024)
 - Human opinions or subjective judgments
-- Company-specific policies or procedures  
+- Company-specific policies or procedures
 - Clarification on ambiguous requests
 - Verification of important decisions
 
@@ -194,7 +194,7 @@ When agents ask questions:
 # Different experts for different domains
 sales_expert = HumanInTheLoopTool(
     human_expert_jid="sales@company.com",
-    name="ask_sales_expert", 
+    name="ask_sales_expert",
     description="Ask sales team about pricing, deals, customers"
 )
 
@@ -220,7 +220,7 @@ system_prompt = """You have access to human experts via ask_human_expert.
 
 Only consult humans when:
 1. The question involves information after April 2024
-2. You need subjective human judgment  
+2. You need subjective human judgment
 3. The request is ambiguous and needs clarification
 4. The decision has significant business impact
 
@@ -237,7 +237,7 @@ if "Timeout:" in response:
     # Human didn't respond in time
     print("Expert unavailable, proceeding with AI-only response")
 
-# Expert offline  
+# Expert offline
 if "Error:" in response:
     # Connection or configuration issue
     print("Expert consultation failed, using fallback approach")
@@ -249,7 +249,7 @@ if "Error:" in response:
 
 !!! warning "Agent Connection Errors"
     **Symptom**: `Agent XMPP client not available`
-    
+
     **Solution**: Ensure agent is fully connected before tool execution:
     ```python
     await agent.start()
@@ -258,7 +258,7 @@ if "Error:" in response:
 
 !!! warning "Human Expert Not Responding"
     **Symptom**: Timeouts on human consultation
-    
+
     **Solutions**:
     - Check expert is connected to web interface
     - Verify XMPP server WebSocket configuration
@@ -266,7 +266,7 @@ if "Error:" in response:
 
 !!! warning "Double Message Processing"
     **Symptom**: Human responses processed as new user messages
-    
+
     **Solution**: This is handled automatically by template-based message filtering
 
 ### Debugging

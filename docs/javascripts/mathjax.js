@@ -16,7 +16,7 @@ function configureMermaid() {
   if (typeof mermaid !== 'undefined') {
     // Get current color scheme
     const isDarkMode = document.body.getAttribute('data-md-color-scheme') === 'slate';
-    
+
     // Configure Mermaid with appropriate theme
     mermaid.initialize({
       startOnLoad: true,
@@ -61,7 +61,7 @@ function configureMermaid() {
         messageMargin: 35
       }
     });
-    
+
     // Re-render existing diagrams if they exist
     const diagrams = document.querySelectorAll('.mermaid');
     diagrams.forEach((diagram, index) => {
@@ -76,9 +76,9 @@ function configureMermaid() {
 }
 
 // Initialize on page load
-document$.subscribe(() => { 
+document$.subscribe(() => {
   MathJax.typesetPromise();
-  
+
   // Configure Mermaid after a short delay to ensure it's loaded
   setTimeout(configureMermaid, 100);
 });
@@ -87,13 +87,13 @@ document$.subscribe(() => {
 if (typeof MutationObserver !== 'undefined') {
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
-      if (mutation.type === 'attributes' && 
+      if (mutation.type === 'attributes' &&
           mutation.attributeName === 'data-md-color-scheme') {
         setTimeout(configureMermaid, 100);
       }
     });
   });
-  
+
   observer.observe(document.body, {
     attributes: true,
     attributeFilter: ['data-md-color-scheme']

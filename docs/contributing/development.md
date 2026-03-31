@@ -49,21 +49,21 @@ just
 ```python
 def example_function(param1: str, param2: int = 0) -> str:
     """Brief description of the function.
-    
+
     Longer description if needed. Explain the purpose,
     behavior, and any important details.
-    
+
     Args:
         param1: Description of first parameter
         param2: Description of second parameter with default value
-        
+
     Returns:
         Description of return value
-        
+
     Raises:
         ValueError: When invalid input is provided
         ConnectionError: When service is unavailable
-        
+
     Example:
         ```python
         result = example_function("hello", 42)
@@ -79,24 +79,24 @@ def example_function(param1: str, param2: int = 0) -> str:
 ```python
 class ExampleClass:
     """Brief description of the class.
-    
+
     Longer description explaining the class purpose,
     usage patterns, and important behavior.
-    
+
     Attributes:
         attribute1: Description of attribute
         attribute2: Description of another attribute
-        
+
     Example:
         ```python
         instance = ExampleClass(param="value")
         result = instance.method()
         ```
     """
-    
+
     def __init__(self, param: str):
         """Initialize the class.
-        
+
         Args:
             param: Configuration parameter
         """

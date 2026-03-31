@@ -23,7 +23,7 @@ This eliminates the need for external XMPP servers like Prosody. Keep this runni
 ## Step 1: Basic Agent Setup
 
 Let's start with the simplest possible SPADE-LLM agent. Create `my_first_agent.py`:
-This agent does not have the capability to interact with us except through XMPP messages. If we want to chat with it we need to use 
+This agent does not have the capability to interact with us except through XMPP messages. If we want to chat with it we need to use
 ChatAgent (next step)
 ```python
 import spade
@@ -36,7 +36,7 @@ async def main():
         api_key="your-api-key-here",
         temperature=0.7,
     )
-    
+
     # Create the LLM agent (using SPADE's built-in server)
     agent = LLMAgent(
         jid="assistant@localhost",
@@ -44,11 +44,11 @@ async def main():
         provider=provider,
         system_prompt="You are a helpful assistant.",
     )
-    
+
     # Start the agent
     await agent.start()
     print("✅ Agent started successfully!")
-    
+
 
 if __name__ == "__main__":
     spade.run(main())
@@ -93,17 +93,17 @@ from spade_llm import LLMAgent, ChatAgent, LLMProvider
 async def main():
     # Using SPADE's built-in server (make sure it's running!)
     spade_server = "localhost"
-    
+
     print("🚀 Using SPADE's built-in server")
     print("Make sure you started it with: spade run")
     input("Press Enter when the server is running...")
-    
+
     # Create LLM provider
     provider = LLMProvider(
         model="gpt-5-nano",
         api_key="your-api-key",
     )
-    
+
     # Create the LLM agent
     llm_agent = LLMAgent(
         jid=f"assistant@{spade_server}",
@@ -111,26 +111,26 @@ async def main():
         provider=provider,
         system_prompt="You are a helpful assistant. Keep responses concise and friendly.",
     )
-    
+
     # Create the chat agent for user interaction
     chat_agent = ChatAgent(
         jid=f"user@{spade_server}",
         password="user_pass",  # Simple password for built-in server
         target_agent_jid=f"assistant@{spade_server}",
     )
-    
+
     try:
         # Start both agents
         await llm_agent.start()
         await chat_agent.start()
-        
+
         print("✅ Agents started successfully!")
         print("💬 You can now chat with your AI assistant")
         print("Type 'exit' to quit\n")
-        
+
         # Run interactive chat
         await chat_agent.run_interactive()
-        
+
     except KeyboardInterrupt:
         print("\n👋 Shutting down...")
     finally:
@@ -185,7 +185,7 @@ async def main():
             api_key="your-api-key",
             timeout=30.0,
         )
-        
+
         # Create agents with error handling
         llm_agent = LLMAgent(
             jid="assistant@localhost",
@@ -193,12 +193,12 @@ async def main():
             provider=provider,
             system_prompt="You are a helpful assistant."
         )
-        
+
         await llm_agent.start()
         logger.info("✅ LLM Agent started successfully")
-        
+
         # Your chat logic here...
-        
+
     except Exception as e:
         logger.error(f"❌ Error: {e}")
         print("💡 Check your configuration and try again")
@@ -231,13 +231,13 @@ async def main():
     print("🚀 Starting your first SPADE-LLM agent!")
     print("📋 Make sure SPADE server is running: spade run")
     input("Press Enter when the server is running...")
-    
+
     # Configuration - using built-in SPADE server
     spade_server = "localhost"
-    
+
     # Create provider (choose one)
     provider_type = input("Provider (openai/ollama): ").lower()
-    
+
     if provider_type == "openai":
         api_key = getpass.getpass("OpenAI API key: ")
         provider = LLMProvider(
@@ -251,11 +251,11 @@ async def main():
             model=f"ollama/{model}",
             timeout=60.0,
         )
-    
+
     # Simple passwords for built-in server (no need for getpass)
     llm_password = "assistant_pass"
     chat_password = "user_pass"
-    
+
     # Create agents
     llm_agent = LLMAgent(
         jid=f"assistant@{spade_server}",
@@ -263,14 +263,14 @@ async def main():
         provider=provider,
         system_prompt="You are a helpful and friendly AI assistant. Keep responses concise but informative."
     )
-    
+
     def display_response(message: str, sender: str):
         print(f"\n🤖 Assistant: {message}")
         print("-" * 50)
-    
+
     def on_message_sent(message: str, recipient: str):
         print(f"👤 You: {message}")
-    
+
     chat_agent = ChatAgent(
         jid=f"user@{spade_server}",
         password=chat_password,
@@ -278,19 +278,19 @@ async def main():
         display_callback=display_response,
         on_message_sent=on_message_sent
     )
-    
+
     try:
         # Start agents
         await llm_agent.start()
         await chat_agent.start()
-        
+
         logger.info("✅ Agents started successfully!")
         print("💬 Start chatting with your AI assistant")
         print("Type 'exit' to quit\n")
-        
+
         # Run interactive chat
         await chat_agent.run_interactive()
-        
+
     except KeyboardInterrupt:
         print("\n👋 Shutting down...")
     except Exception as e:
@@ -344,7 +344,7 @@ if __name__ == "__main__":
 Now that you have a working agent, explore these advanced features:
 
 1. **[Custom Tools Tutorial](tools-tutorial.md)** - Add function calling capabilities
-2. **[Guardrails Tutorial](guardrails-tutorial.md)** - Implement safety and content filtering  
+2. **[Guardrails Tutorial](guardrails-tutorial.md)** - Implement safety and content filtering
 3. **[Advanced Agent Tutorial](advanced-agent.md)** - Multi-agent workflows and integrations
 
 Each tutorial builds on the concepts you've learned here, gradually adding more sophisticated capabilities to your agents.

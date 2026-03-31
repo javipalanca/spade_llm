@@ -164,7 +164,7 @@ extra:
         - icon: material/thumb-down-outline
           name: This page could be improved
           data: 0
-          note: >- 
+          note: >-
             Thanks for your feedback! Help us improve this page by
             using our <a href="https://github.com/javipalanca/spade_llm/issues/new/?title=[Feedback]+{title}+-+{url}" target="_blank" rel="noopener">feedback form</a>.
   version:

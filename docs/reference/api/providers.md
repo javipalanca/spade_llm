@@ -62,8 +62,8 @@ provider = LLMProvider(
 
 ```python
 async def get_llm_response(
-    self, 
-    context: ContextManager, 
+    self,
+    context: ContextManager,
     tools: Optional[List[LLMTool]] = None,
     conversation_id: Optional[str] = None,
     output_schema: Optional[Type[BaseModel]] = None
@@ -107,8 +107,8 @@ else:
 
 ```python
 async def get_response(
-    self, 
-    context: ContextManager, 
+    self,
+    context: ContextManager,
     tools: Optional[List[LLMTool]] = None
 ) -> Optional[str]
 ```
@@ -125,8 +125,8 @@ text_response = await provider.get_response(context)
 
 ```python
 async def get_tool_calls(
-    self, 
-    context: ContextManager, 
+    self,
+    context: ContextManager,
     tools: Optional[List[LLMTool]] = None
 ) -> List[Dict[str, Any]]
 ```

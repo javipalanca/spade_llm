@@ -207,7 +207,7 @@ ai_safety = LLMGuardrail(
     safety_prompt="""
     Analyze this text for harmful content.
     Respond with JSON: {"safe": true/false, "reason": "explanation"}
-    
+
     Text: {content}
     """
 )

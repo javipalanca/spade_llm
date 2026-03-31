@@ -70,10 +70,10 @@ context.add_assistant_message("Hello! How can I help?", "user1_session")
 
 ```python
 def add_tool_result(
-    self, 
-    tool_name: str, 
-    result: Any, 
-    tool_call_id: str, 
+    self,
+    tool_name: str,
+    result: Any,
+    tool_call_id: str,
     conversation_id: Optional[str] = None
 ) -> None
 ```
@@ -217,12 +217,12 @@ context = ContextManager(
 
 # Add conversation messages
 context.add_message_dict(
-    {"role": "user", "content": "Help me with Python"}, 
+    {"role": "user", "content": "Help me with Python"},
     "coding_session"
 )
 
 context.add_assistant_message(
-    "I'd be happy to help with Python!", 
+    "I'd be happy to help with Python!",
     "coding_session"
 )
 
@@ -276,8 +276,8 @@ from spade_llm.context.management import ContextManagement
 
 ```python
 def apply_context_strategy(
-    self, 
-    messages: List[ContextMessage], 
+    self,
+    messages: List[ContextMessage],
     system_prompt: Optional[str] = None
 ) -> List[ContextMessage]
 ```
@@ -356,7 +356,7 @@ stats = smart_context.get_stats(total_messages=50)
 ```python
 from spade_llm.context._types import (
     SystemMessage,
-    UserMessage, 
+    UserMessage,
     AssistantMessage,
     ToolResultMessage
 )
@@ -392,7 +392,7 @@ from spade_llm.context._types import (
 
 # With tool calls
 {
-    "role": "assistant", 
+    "role": "assistant",
     "content": None,
     "tool_calls": [
         {
@@ -416,5 +416,3 @@ from spade_llm.context._types import (
     "tool_call_id": "call_123"
 }
 ```
-
-

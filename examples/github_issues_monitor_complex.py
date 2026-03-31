@@ -53,7 +53,7 @@ Your workflow:
 3. Analyze the collected data for patterns, priorities, and insights
 4. Generate a structured summary with actionable information
 
-IMPORTANT: 
+IMPORTANT:
 - Always specify which repository you're analyzing
 - Include actual numbers and real data from the GitHub API
 - Focus on actionable insights and trends
@@ -77,7 +77,7 @@ Response format:
 
 📈 RECENT TRENDS (Last 30 days)
 - New Issues Created: [X]
-- Issues Closed: [X] 
+- Issues Closed: [X]
 - PRs Merged: [X]
 - Most Active Contributors: [list top 3]
 - Common Labels/Categories: [list most frequent]
@@ -176,8 +176,8 @@ Email Content:
 ---
 # GitHub Repository Analysis Report
 
-**Repository:** [owner/repo-name]  
-**Analysis Date:** [date]  
+**Repository:** [owner/repo-name]
+**Analysis Date:** [date]
 **Period Analyzed:** Last 30 days
 
 ## Executive Summary
@@ -203,7 +203,7 @@ Email Content:
 
 INTERACTION EXAMPLE:
 When you receive analysis, use ask_human_expert with message like:
-"GitHub analysis ready for [repo-name]. Key findings: [X] open issues, [Y] urgent items. 
+"GitHub analysis ready for [repo-name]. Key findings: [X] open issues, [Y] urgent items.
 Activity level: [level]. Would you like me to email this summary to someone?"
 
 TERMINATION:

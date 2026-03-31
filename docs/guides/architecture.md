@@ -11,7 +11,7 @@ graph TB
     B --> D[LLMProvider]
     B --> E[LLMTool]
     B --> I[Guardrails System]
-    
+
     D --> F[OpenAI/Ollama/etc]
     E --> G[Python Functions]
     E --> H[MCP Servers]
@@ -29,7 +29,7 @@ The **main agent class** that extends SPADE's `Agent` with LLM capabilities:
 - **Controls conversation limits** and termination conditions
 - Provides the _bridge_ between SPADE's XMPP messaging and LLM processing
 
-### **⚡ LLMBehaviour**  
+### **⚡ LLMBehaviour**
 The **core processing engine** that orchestrates the entire LLM workflow:
 
 1. **Receives XMPP messages** from other agents
@@ -117,7 +117,7 @@ graph LR
     C --> A
     B -->|No| F[Direct Response]
     A --> F
-    
+
     style A fill:#FF9800
     style D fill:#2196F3
     style E fill:#4CAF50

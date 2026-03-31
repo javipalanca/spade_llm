@@ -101,15 +101,15 @@ async def main():
         system_prompt="""Review documents carefully but pragmatically. Each revision represents a cost in time and resources, so find a balance between quality and efficiency.
 
         Choose one of these actions:
-        1. If the document is ready for publication (even with acceptable minor imperfections): 
+        1. If the document is ready for publication (even with acceptable minor imperfections):
            - Include the ENTIRE DOCUMENT in your response
            - Add '<TASK_COMPLETE>' at the very end of your message
-        
-        2. If there are SERIOUS issues requiring additional research: 
+
+        2. If there are SERIOUS issues requiring additional research:
            - Add '<MAJOR_REVISION>' and explain the problems
            - Do NOT include the full document
-        
-        3. If there are minor issues that don't significantly affect content quality: 
+
+        3. If there are minor issues that don't significantly affect content quality:
            - Briefly describe the necessary changes
            - Do NOT include the full document
 

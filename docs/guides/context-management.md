@@ -136,7 +136,7 @@ The SmartWindowSizeContext uses an algorithm:
 # Result: [msg1, msg2, msg3] + [msg24, msg25, ..., msg30]
 
 context = SmartWindowSizeContext(
-    max_messages=10, 
+    max_messages=10,
     preserve_initial=3
 )
 ```
@@ -154,7 +154,7 @@ context = SmartWindowSizeContext(
 ```python
 # Prioritizes all messages with role="tool"
 context = SmartWindowSizeContext(
-    max_messages=15, 
+    max_messages=15,
     prioritize_tools=True
 )
 ```
@@ -270,13 +270,13 @@ async def main():
         preserve_initial=3,
         prioritize_tools=True
     )
-    
+
     # Create LLM provider
     provider = LLMProvider(
         model="gpt-5-nano",
         api_key="your-api-key",
     )
-    
+
     # Create agent with context management
     agent = LLMAgent(
         jid="smart_agent@example.com",
@@ -285,18 +285,18 @@ async def main():
         context_management=smart_context,
         system_prompt="You are an assistant with context management."
     )
-    
+
     await agent.start()
-    
+
     # Monitor context during conversation
     while True:
         # ... agent processes messages ...
-        
+
         # Check context stats periodically
         stats = agent.get_context_stats()
         if stats['messages_in_context'] > 15:
             print("Context approaching limit")
-        
+
         await asyncio.sleep(1)
 
 if __name__ == "__main__":

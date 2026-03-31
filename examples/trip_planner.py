@@ -131,19 +131,19 @@ async def main():
         reply_to=agents_config["routeplanner"][0],
         system_prompt="""
                     You are an Airbnb accommodation specialist for Valencia, Spain.
-                    
+
                     CRITICAL: You must select ONE best apartment and include ALL detailed information in your response, as the next agent needs this complete data.
-                    
+
                     Your task:
                     1. Search for Airbnb accommodations based on user requirements
                     2. Analyze multiple options
                     3. Select THE BEST SINGLE apartment based on location, price, and value
                     4. Include COMPLETE details in your response
-                    
+
                     RESPONSE FORMAT (MANDATORY):
                     === SELECTED VALENCIA ACCOMMODATION ===
                     CHOSEN APARTMENT:
-                    
+
                     Name: [exact name]
                     Location: [full address/area with neighborhood]
                     Price: €[amount] per night
@@ -156,25 +156,25 @@ async def main():
                     Host: [host name and rating if available]
                     Neighborhood: [area description - historic center, beach area, etc.]
                     URL: [if available]
-                    
+
                     SELECTION REASONING:
-                    
+
                     Why chosen: [explain why this is the optimal choice]
                     Location advantages: [transport links, attractions, safety]
                     Value assessment: [price vs amenities vs location]
-                    
+
                     === LOCATION CONTEXT FOR ROUTE PLANNING ===
-                    
+
                     Exact address/area: [for route optimization]
-                    
+
                     === NEXT STEPS FOR ROUTE PLANNER ===
                     The route planner should consider:
-                    
+
                     Weather conditions for activity planning
                     Bike availability (ValenBici) near this specific location
                     Optimal routes from this accommodation to main attractions
                     Public transport options from this exact location
-                                        
+
                     Include EVERY detail. The route planner needs complete location information to create optimal plans.""",
         mcp_servers=[airbnb_mcp],
     )
@@ -188,7 +188,7 @@ async def main():
         system_prompt="""You are a Valencia bike route specialist with access to real-time city data focused on cycling experiences.
 
                         CRITICAL: You will receive apartment location data. Use this to create a BIKE-FOCUSED Valencia experience.
-                        
+
                         Your task:
                         1. Extract the exact apartment address/location from the previous agent
                         2. Check weather conditions for the planned dates using Valencia Smart City tools
@@ -198,11 +198,11 @@ async def main():
                         - Check air quality conditions for cycling
                         4. Create a comprehensive BIKE ROUTE from the apartment through different Valencia zones
                         5. IMPORTANT: You only need bikes available at ONE station (near the apartment)
-                        
+
                         RESPONSE FORMAT (MANDATORY):
                         === VALENCIA BIKE ROUTE PLAN ===
                         APARTMENT LOCATION:
-                        
+
                         Location: [full address/area with neighborhood]
                         Price: €[amount] per night
                         Total Cost: €[price × nights] for [X] nights
@@ -213,80 +213,80 @@ async def main():
                         Amenities: [complete list including WiFi, kitchen, AC, etc.]
                         Host: [host name and rating if available]
                         Neighborhood: [area description - historic center, beach area, etc.]
-                        URL: [if available] 
+                        URL: [if available]
                         Starting point for bike route: [precise location]
-                        
+
                         WEATHER ANALYSIS:
-                        
+
                         Current conditions: [temperature, precipitation, wind]
                         Forecast for trip dates: [day-by-day weather]
                         Cycling suitability: [GOOD/POOR for biking with reasoning]
-                        
+
                         AIR QUALITY CHECK:
-                        
+
                         Current air quality index: [number and description]
                         Pollution levels: [safe/moderate/unhealthy for cycling]
                         Best cycling hours: [morning/afternoon/evening recommendations]
-                        
+
                         VALENBICI STATION ANALYSIS:
                         Starting Station (Near Apartment):
-                        
+
                         Station name: [closest to apartment]
                         Distance from apartment: [walking time]
                         Bikes available: [current count]
                         Station status: [operational/maintenance]
-                        
+
                         Key Attractions with ValenBici Access:
-                        
+
                         Plaza Ayuntamiento: Station [name], [X] bikes available
                         City of Arts & Sciences: Station [name], [X] bikes available
                         Central Market: Station [name], [X] bikes available
                         Cathedral/Historic Center: Station [name], [X] bikes available
                         Beach (Malvarossa): Station [name], [X] bikes available
-                        
+
                         PROPOSED BIKE ROUTE:
                         🚴‍♂️ VALENCIA CYCLING TOUR - [X] KM TOTAL
                         STARTING POINT: Apartment → [X] min walk to [Station Name]
                         Pick up bike at: [Station name with current availability]
                         ROUTE ZONES:
                         Zone 1: Historic Valencia (2-3 hours)
-                        
+
                         Cathedral & Miguelete Tower
                         Central Market
                         Silk Exchange (La Lonja)
                         Plaza Ayuntamiento
                         Route: [specific streets and bike paths]
                         Distance: [X] km | Estimated time: [X] hours
-                        
+
                         Zone 2: Modern Valencia (2-3 hours)
-                        
+
                         City of Arts & Sciences
                         Oceanogràfic area
                         Turia Gardens bike path
                         Route: [specific bike paths and streets]
                         Distance: [X] km | Estimated time: [X] hours
-                        
+
                         Zone 3: Beach & Seafront (2-3 hours)
-                        
+
                         Malvarossa Beach
                         Marina Real Juan Carlos I
                         Seaside promenade
                         Route: [coastal bike paths]
                         Distance: [X] km | Estimated time: [X] hours
-                        
+
                         CYCLING CONDITIONS SUMMARY:
-                        
+
                         Weather suitability: [GOOD/FAIR/POOR with reasoning]
                         Air quality: [SAFE/MODERATE/POOR for cycling]
                         Bike availability: [CONFIRMED at starting station]
                         Route difficulty: [EASY/MODERATE/CHALLENGING]
                         Total cycling distance: [X] km
                         Estimated total time: [X] hours (including stops)
-                        
+
                         ALTERNATIVE PLAN (if weather poor):
                         [Brief indoor alternatives if cycling not recommended]
                         ROUTE_PLANNING_COMPLETE
-                        
+
                         Focus on creating the perfect bike experience using real Valencia data.""",
         mcp_servers=[valencia_mcp],
     )
@@ -331,7 +331,7 @@ async def main():
 
                    # FINAL DECISION:
                    [Choose ONE of the following]
-                   1 option : 
+                   1 option :
                    ✅ PLAN APPROVED - SEND TO PUBLISHER:
                    Both apartment and bike route are excellent. Ready for final markdown publication.
                    VALENCIA TRIP PLAN - FINAL VERSION
@@ -387,12 +387,12 @@ async def main():
 
                    <PLAN_APPROVED>
 
-                   2 option : 
+                   2 option :
                    🏠 APARTMENT TOO EXPENSIVE - NEEDS CHEAPER OPTION:
                    The apartment at €[amount]/night exceeds reasonable Valencia pricing. Need alternative accommodation.
                    <EXPENSIVE_PLAN>
 
-                    3 option : 
+                    3 option :
                    🚴‍♂️ BIKE ROUTE NEEDS REVISION:
                    Issues with the bike route: [specific problems with weather/air quality/bike availability/safety]. Route planner needs to revise.
                    <REVISION_NEEDED>

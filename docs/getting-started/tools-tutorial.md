@@ -38,7 +38,7 @@ def calculate_math(expression: str) -> str:
     try:
         # Only allow basic math operations for safety
         allowed_names = {
-            k: v for k, v in __builtins__.items() 
+            k: v for k, v in __builtins__.items()
             if k in ['abs', 'round', 'min', 'max', 'sum']
         }
         result = eval(expression, {"__builtins__": allowed_names})
@@ -60,16 +60,16 @@ def get_weather(city: str) -> str:
 
 async def main():
     print("🔧 Custom Tools Tutorial: Basic Tool Creation")
-    
+
     # Configuration
     xmpp_server = input("XMPP server domain (default: localhost): ") or "localhost"
-    
+
     # Create provider (using Ollama as in the example)
     provider = LLMProvider(
         model="ollama/qwen2.5:7b",  # Or any model that supports function calling
         temperature=0.7,
     )
-    
+
     # Create tools with proper schema definitions
     tools = [
         LLMTool(
@@ -113,7 +113,7 @@ async def main():
             func=get_weather
         )
     ]
-    
+
     # Create LLM agent with tools
     llm_agent = LLMAgent(
         jid=f"tool_assistant@{xmpp_server}",
@@ -122,24 +122,24 @@ async def main():
         system_prompt="You are a helpful assistant with access to tools: get_current_time, calculate_math, and get_weather. Use these tools when appropriate to help users.",
         tools=tools  # Pass tools to the agent
     )
-    
+
     # Create chat interface
     def display_response(message: str, sender: str):
         print(f"\n🤖 Tool Assistant: {message}")
         print("-" * 50)
-    
+
     chat_agent = ChatAgent(
         jid=f"user@{xmpp_server}",
         password=getpass.getpass("Chat agent password: "),
         target_agent_jid=f"tool_assistant@{xmpp_server}",
         display_callback=display_response
     )
-    
+
     try:
         # Start agents
         await llm_agent.start()
         await chat_agent.start()
-        
+
         print("✅ Tool assistant started!")
         print("🔧 Available tools:")
         print("• get_current_time - Get current date and time")
@@ -150,10 +150,10 @@ async def main():
         print("• 'Calculate 15 * 8 + 32'")
         print("• 'What's the weather in Madrid?'")
         print("Type 'exit' to quit\n")
-        
+
         # Run interactive chat
         await chat_agent.run_interactive()
-        
+
     except KeyboardInterrupt:
         print("\n👋 Shutting down...")
     finally:
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     print("• Model available: ollama pull qwen2.5:7b")
     print("• XMPP server running")
     print()
-    
+
     spade.run(main())
 ```
 
@@ -216,7 +216,7 @@ complex_tool = LLMTool(
             "title": {"type": "string", "description": "Reminder title"},
             "minutes": {"type": "number", "description": "Minutes from now"},
             "priority": {
-                "type": "string", 
+                "type": "string",
                 "enum": ["low", "medium", "high"],
                 "description": "Priority level"
             },
@@ -256,7 +256,7 @@ def calculate_math(expression: str) -> str:
     try:
         # Safe evaluation with limited built-ins
         safe_dict = {"__builtins__": {}}
-        safe_dict.update({name: getattr(__builtins__, name, None) 
+        safe_dict.update({name: getattr(__builtins__, name, None)
                          for name in ['abs', 'round', 'min', 'max', 'sum', 'len']})
         result = eval(expression, safe_dict)
         return str(result)
@@ -298,7 +298,7 @@ def retrieve_note(title: str) -> str:
 def list_notes() -> str:
     """List all stored notes."""
     if tool_memory:
-        notes = [f"'{title}' (stored: {note['timestamp']})" 
+        notes = [f"'{title}' (stored: {note['timestamp']})"
                 for title, note in tool_memory.items()]
         return f"Stored notes:\n" + "\n".join(notes)
     else:
@@ -349,7 +349,7 @@ def create_tools():
             },
             func=get_weather
         ),
-        
+
         # Memory tools
         LLMTool(
             name="store_note",
@@ -399,13 +399,13 @@ def create_tools():
 
 async def main():
     print("🔧 Complete Multi-Tool Agent Example")
-    
+
     # Configuration
     xmpp_server = input("XMPP server domain (default: localhost): ") or "localhost"
-    
+
     # Choose provider
     provider_type = input("Provider (openai/ollama): ").lower()
-    
+
     if provider_type == "openai":
         provider = LLMProvider(
             model="gpt-5-nano",
@@ -418,10 +418,10 @@ async def main():
             model=f"ollama/{model}",
             temperature=0.7,
         )
-    
+
     # Create tools
     tools = create_tools()
-    
+
     # Create multi-tool agent
     llm_agent = LLMAgent(
         jid=f"multi_tool_agent@{xmpp_server}",
@@ -431,7 +431,7 @@ async def main():
 
 UTILITY TOOLS:
 - get_current_time: Get current date and time
-- calculate_math: Perform mathematical calculations  
+- calculate_math: Perform mathematical calculations
 - get_weather: Get weather for major cities
 
 MEMORY TOOLS:
@@ -442,24 +442,24 @@ MEMORY TOOLS:
 Use these tools appropriately to help users. When using tools, explain what you're doing and why.""",
         tools=tools
     )
-    
+
     # Create chat interface
     def display_response(message: str, sender: str):
         print(f"\n🤖 Multi-Tool Agent: {message}")
         print("-" * 60)
-    
+
     chat_agent = ChatAgent(
         jid=f"user@{xmpp_server}",
         password=getpass.getpass("Chat agent password: "),
         target_agent_jid=f"multi_tool_agent@{xmpp_server}",
         display_callback=display_response
     )
-    
+
     try:
         # Start agents
         await llm_agent.start()
         await chat_agent.start()
-        
+
         print("✅ Multi-Tool Agent started!")
         print("🔧 Available tools:")
         print("  Utility: time, math, weather")
@@ -470,10 +470,10 @@ Use these tools appropriately to help users. When using tools, explain what you'
         print("• 'Store a note about my meeting tomorrow'")
         print("• 'Show me all my notes'")
         print("Type 'exit' to quit\n")
-        
+
         # Run interactive chat
         await chat_agent.run_interactive()
-        
+
     except KeyboardInterrupt:
         print("\n👋 Shutting down...")
     finally:
