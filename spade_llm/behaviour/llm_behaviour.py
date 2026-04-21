@@ -11,6 +11,7 @@ from spade.message import Message
 from ..context import (
     ContextManager,
     create_assistant_tool_call_message,
+    create_user_message,
 )
 from ..guardrails import (
     GuardrailResult,
@@ -26,6 +27,13 @@ from ..tools import LLMTool
 from ..utils import generate_conversation_id
 
 logger = logging.getLogger("spade_llm.behaviour")
+
+
+SOFT_TIMEOUT_FINAL_RESPONSE_NOTICE = (
+    "Soft timeout reached. Stop calling tools and produce the final response now using only the "
+    "information already gathered. If the available information is incomplete, say so briefly and "
+    "give the best possible answer from the partial results."
+)
 
 
 class ConversationState:
@@ -69,6 +77,8 @@ class LLMBehaviour(CyclicBehaviour):
         on_guardrail_trigger: Optional[Callable[[GuardrailResult], None]] = None,
         interaction_memory=None,
         output_schema: Optional[Any] = None,
+        soft_timeout: Optional[float] = None,
+        hard_timeout: Optional[float] = None,
     ):
         """
         Initialize the LLM behaviour.
@@ -87,6 +97,12 @@ class LLMBehaviour(CyclicBehaviour):
             on_guardrail_trigger: Callback when a guardrail blocks/modifies content
             interaction_memory: Optional AgentInteractionMemory instance for agent-to-agent memory
             output_schema: Optional Pydantic BaseModel for structured output
+            soft_timeout: Seconds before the tool-call loop is interrupted and the agent is asked
+                to synthesise a final answer from whatever it has gathered so far. The agent
+                completes gracefully — one final LLM call is made with tools disabled.
+            hard_timeout: Seconds before the entire message-processing coroutine is cancelled.
+                Should be larger than soft_timeout to give the wrap-up call time to finish.
+                If hit, a timeout error reply is sent and the conversation ends.
         """
         super().__init__()
         self.provider = llm_provider
@@ -119,6 +135,10 @@ class LLMBehaviour(CyclicBehaviour):
 
         # Structured output schemas
         self.output_schema = output_schema
+
+        # Soft/hard timeouts for the tool-call loop
+        self.soft_timeout = soft_timeout
+        self.hard_timeout = hard_timeout
 
         # Track active conversations
         self._active_conversations: Dict[str, Dict[str, Any]] = {}
@@ -206,7 +226,26 @@ class LLMBehaviour(CyclicBehaviour):
 
         # Process the conversation with the LLM
         try:
-            await self._process_message_with_llm(processed_msg, conversation_id)
+            if self.hard_timeout is not None:
+                import asyncio as _asyncio
+
+                try:
+                    async with _asyncio.timeout(self.hard_timeout):
+                        await self._process_message_with_llm(processed_msg, conversation_id)
+                except _asyncio.TimeoutError:
+                    logger.error(
+                        f"Hard timeout ({self.hard_timeout}s) reached for conversation "
+                        f"{conversation_id}. Sending timeout reply."
+                    )
+                    await self._end_conversation(conversation_id, ConversationState.TIMEOUT)
+                    reply = msg.make_reply()
+                    reply.body = (
+                        f"Request timed out after {self.hard_timeout} seconds. "
+                        "Partial results could not be collected in time."
+                    )
+                    await self.send(reply)
+            else:
+                await self._process_message_with_llm(processed_msg, conversation_id)
         except Exception as e:
             logger.error(f"Error processing message: {e}")
             await self._end_conversation(conversation_id, ConversationState.ERROR)
@@ -228,6 +267,8 @@ class LLMBehaviour(CyclicBehaviour):
         structured_response = None
         max_tool_iterations = 20  # Limit to prevent infinite loops -- should be parametrized
         current_iteration = 0
+        _loop_start = time.monotonic()  # wall-clock start for soft timeout
+        soft_timeout_reached = False
 
         try:
             # Prepare tools with conversation context
@@ -250,6 +291,17 @@ class LLMBehaviour(CyclicBehaviour):
             while final_response is None and current_iteration < max_tool_iterations:
                 current_iteration += 1
                 logger.info(f"Tool processing iteration {current_iteration}/{max_tool_iterations}")
+
+                # Soft-timeout check: break before the next LLM call so the
+                # existing force-final-response block below synthesises results.
+                if self.soft_timeout is not None and (time.monotonic() - _loop_start) >= self.soft_timeout:
+                    soft_timeout_reached = True
+                    logger.warning(
+                        f"Soft timeout ({self.soft_timeout}s) reached after "
+                        f"{current_iteration - 1} tool-call iterations. "
+                        "Forcing final synthesis."
+                    )
+                    break
 
                 # Pass prepared tools to provider for this specific call
                 llm_response = await self.provider.get_llm_response(
@@ -337,9 +389,23 @@ class LLMBehaviour(CyclicBehaviour):
                         final_response = structured_llm_response.get("text")
                         break
 
-            # Handle case where max iterations was reached
-            if final_response is None and structured_response is None and current_iteration >= max_tool_iterations:
-                logger.warning(f"Reached maximum tool iterations ({max_tool_iterations}), forcing final response")
+            # Handle case where the loop ended without a final response:
+            # either max iterations was reached OR soft timeout fired.
+            if final_response is None and structured_response is None:
+                elapsed = time.monotonic() - _loop_start
+                if current_iteration >= max_tool_iterations:
+                    logger.warning(f"Reached maximum tool iterations ({max_tool_iterations}), forcing final response")
+                else:
+                    logger.warning(
+                        f"Loop exited after {elapsed:.1f}s ({current_iteration} iterations) "
+                        "without final response — forcing synthesis from partial results."
+                    )
+                if soft_timeout_reached:
+                    logger.warning("Appending soft-timeout completion notice to LLM context before final synthesis")
+                    self.context.add_message_dict(
+                        create_user_message(SOFT_TIMEOUT_FINAL_RESPONSE_NOTICE),
+                        conversation_id,
+                    )
                 output_schema = self.context.get_output_schema(conversation_id) or self.output_schema
                 force_response = await self.provider.get_llm_response(
                     self.context, tools=None, conversation_id=conversation_id, output_schema=output_schema

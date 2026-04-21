@@ -52,6 +52,8 @@ class LLMAgent(Agent):
         interaction_memory: Union[bool, Tuple[bool, str]] = False,
         agent_base_memory: Union[bool, Tuple[bool, str]] = False,
         output_schema: Optional[Any] = None,
+        soft_timeout: Optional[float] = None,
+        hard_timeout: Optional[float] = None,
         verify_security: bool = False,
         **kwargs,
     ):
@@ -82,6 +84,12 @@ class LLMAgent(Agent):
                 - tuple: (True, "/custom/path") for custom path
             output_schema: Optional Pydantic BaseModel for structured output.
                           If set, the agent's response will be structured according to this schema.
+            soft_timeout: Seconds of wall-clock time before the tool-call loop is
+                interrupted and the agent synthesises a final answer from partial
+                results (one final LLM call is made with tools disabled).
+            hard_timeout: Seconds before the entire processing coroutine is
+                cancelled. Must be greater than soft_timeout to allow wrap-up.
+                On expiry an error reply is sent and the conversation is closed.
             verify_security: Whether to verify security certificates
         """
         super().__init__(jid, password, verify_security=verify_security)
@@ -143,6 +151,10 @@ class LLMAgent(Agent):
         # Structured output schema
         self.output_schema = output_schema
 
+        # Soft/hard timeouts forwarded to the behaviour
+        self.soft_timeout = soft_timeout
+        self.hard_timeout = hard_timeout
+
         # Create LLM behaviour with all parameters
         self.llm_behaviour = LLMBehaviour(
             llm_provider=provider,
@@ -158,6 +170,8 @@ class LLMAgent(Agent):
             on_guardrail_trigger=self.on_guardrail_trigger,
             interaction_memory=self.interaction_memory,
             output_schema=self.output_schema,
+            soft_timeout=self.soft_timeout,
+            hard_timeout=self.hard_timeout,
         )
 
     async def setup(self):
