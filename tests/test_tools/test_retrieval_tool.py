@@ -10,6 +10,12 @@ from spade_llm.tools.llm_tool import LLMTool
 from spade_llm.tools.retrieval_tool import RetrievalTool
 
 
+def _get_template_metadata(template, key):
+    if hasattr(template, "get_metadata"):
+        return template.get_metadata(key)
+    return getattr(template, "_metadata", getattr(template, "metadata", {})).get(key)
+
+
 @pytest.fixture
 def mock_agent():
     """Create a mock agent for testing."""
@@ -396,7 +402,7 @@ class TestRetrievalToolSendAndWaitForResponse:
 
         # Verify template configuration
         assert template.sender == "retrieval@localhost"
-        assert template.metadata.get("message_type") == "retrieval_response"
+        assert _get_template_metadata(template, "message_type") == "retrieval_response"
 
     @pytest.mark.asyncio
     async def test_send_and_wait_uses_correct_timeout(self, mock_agent):

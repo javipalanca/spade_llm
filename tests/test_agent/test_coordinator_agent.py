@@ -9,6 +9,12 @@ from spade.message import Message
 from spade_llm.agent.coordinator_agent import CoordinationContextManager, CoordinatorAgent
 
 
+def _get_message_metadata(message, key):
+    if hasattr(message, "get_metadata"):
+        return message.get_metadata(key)
+    return getattr(message, "_metadata", getattr(message, "metadata", {})).get(key)
+
+
 class TestCoordinatorAgentInitialization:
     """Test CoordinatorAgent initialization."""
 
@@ -178,8 +184,8 @@ class TestCoordinationTools:
         assert sent_msg.to == "subagent1@localhost"
         assert sent_msg.body == "test command"
         assert sent_msg.thread == "test_session"
-        assert sent_msg.metadata.get("message_type") == "llm"
-        assert sent_msg.metadata.get("coordination_session") == "test_session"
+        assert _get_message_metadata(sent_msg, "message_type") == "llm"
+        assert _get_message_metadata(sent_msg, "coordination_session") == "test_session"
 
         # Verify status returns to idle after response handled
         assert agent.agent_status["subagent1@localhost"] == "idle"
